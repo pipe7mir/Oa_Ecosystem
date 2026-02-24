@@ -9,6 +9,18 @@ Route::post('/login',    [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout',   [AuthController::class, 'logout']);
 
+// Test endpoint for CORS debugging
+Route::get('/test-cors', function() {
+    return response()->json([
+        'success' => true,
+        'message' => 'CORS funcionando correctamente',
+        'origin' => request()->header('Origin'),
+        'method' => request()->method(),
+        'timestamp' => now()->toDateTimeString(),
+        'server' => 'Railway Backend'
+    ]);
+});
+
 // Public Announcements
 Route::get('/announcements', [\App\Http\Controllers\AnnouncementController::class, 'index']);
 
