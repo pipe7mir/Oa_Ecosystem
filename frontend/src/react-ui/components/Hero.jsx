@@ -39,7 +39,8 @@ const Hero = () => {
         try {
             const res = await apiClient.get('/billboards');
             // Solo mostramos lo que el administrador marcó como activo
-            const activeItems = res.data.filter(b => b.is_active);
+            const data = Array.isArray(res.data) ? res.data : [];
+            const activeItems = data.filter(b => b.is_active);
             setBillboards(activeItems);
         } catch (e) {
             console.error('Error al cargar la cartelera:', e);

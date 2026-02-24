@@ -247,7 +247,7 @@ const Announcements = () => {
             try {
                 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
                 const response = await axios.get(`${apiUrl}/announcements`);
-                if (response.data && response.data.length > 0) {
+                if (Array.isArray(response.data) && response.data.length > 0) {
                     setAnnouncements(response.data);
                 } else {
                     setAnnouncements([{

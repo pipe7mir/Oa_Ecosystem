@@ -38,7 +38,7 @@ const AdminBillboard = () => {
         try {
             setLoading(true);
             const res = await apiClient.get('/admin/billboards');
-            setBillboards(res.data);
+            setBillboards(Array.isArray(res.data) ? res.data : []);
         } catch (e) {
             console.error('Error al cargar la cartelera:', e);
         } finally {

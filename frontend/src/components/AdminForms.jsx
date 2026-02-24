@@ -31,7 +31,7 @@ const AdminForms = () => {
         setLoading(true);
         try {
             const res = await apiClient.get('/admin/event-forms');
-            setForms(res.data);
+            setForms(Array.isArray(res.data) ? res.data : []);
         } catch (e) { console.error('Error al cargar formularios:', e); }
         finally { setLoading(false); }
     };
@@ -85,7 +85,8 @@ const AdminForms = () => {
     const fetchSubmissions = async (formId) => {
         try {
             const res = await apiClient.get('/admin/event-submissions', { params: { event_form_id: formId } });
-            setSubmissions(res.data);
+            const data = Array.isArray(res.data) ? res.data : [];
+            setSubmissions(data);
             setViewingSubmissionsFor(forms.find(f => f.id === formId));
         } catch (e) { console.error('Error al cargar inscripciones:', e); }
     };

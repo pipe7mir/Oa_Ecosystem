@@ -336,7 +336,7 @@ const AdminAnnouncements = () => {
     }, []);
 
     const fetchAnnouncements = async () => {
-        try { const res = await apiClient.get('/announcements'); setAnnouncements(res.data); }
+        try { const res = await apiClient.get('/announcements'); setAnnouncements(Array.isArray(res.data) ? res.data : []); }
         catch (e) { console.error(e); }
     };
 
