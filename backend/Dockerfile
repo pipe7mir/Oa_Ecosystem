@@ -20,6 +20,10 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Copy application files
 COPY . /var/www/html
 
+# Copy and make entrypoint executable
+COPY docker-entrypoint.sh /var/www/html/docker-entrypoint.sh
+RUN chmod +x /var/www/html/docker-entrypoint.sh
+
 # Install dependencies
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
@@ -30,5 +34,5 @@ RUN mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cac
 # Expose port (Railway uses PORT env var)
 EXPOSE 8080
 
-# Start server on all interfaces
-CMD php -S 0.0.0.0:${PORT:-8080} -t public
+# Run entrypoint script
+ENTRYPOINT ["/var/www/html/docker-entrypoint.sh"]
