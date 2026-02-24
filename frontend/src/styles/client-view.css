@@ -1,0 +1,52 @@
+/* Estilos Visuales OASIS - Vista Cliente */
+
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --neon-glow: 0 0 15px var(--nightfall-glow);
+}
+
+/* Contenedor de Anuncios (Grid Cinematográfica) */
+.anuncios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    padding: 2rem 0;
+}
+
+/* Tarjeta de Anuncio Estilo Cristal */
+.card-anuncio-client {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-anuncio-client:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--neon-glow);
+    border-color: var(--nightfall-vivid);
+}
+
+/* Títulos con MoonRising */
+.anuncio-title {
+    font-family: 'MoonRising', sans-serif;
+    color: white;
+    font-size: 1.25rem;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+/* Etiquetas y Detalles con ModernAge */
+.anuncio-tag {
+    font-family: 'ModernAge', sans-serif;
+    background: linear-gradient(45deg, var(--nightfall-vivid), var(--nightfall-purple));
+    color: white;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+}

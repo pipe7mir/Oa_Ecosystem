@@ -1,0 +1,34 @@
+--- Inspecting Tables ---
+
+--- Announcements Sample ---
+Data: [
+  {
+    "id": "6e186d8a-1bdb-4017-8c41-064244b07030",
+    "title": "Culto joven ",
+    "content": null,
+    "priority": "normal",
+    "created_at": "2026-02-14T12:01:31.417417+00:00",
+    "created_by": "10ebac77-b05a-4118-b7b1-c0a05d4965eb",
+    "description": "prueba",
+    "event_date": "2026-02-14T00:00:00+00:00",
+    "event_time": "16:30:00",
+    "image_url": "https://xcdzvzcevqwmuoklawrx.supabase.co/storage/v1/object/public/announcement-images/1771070025058_ft1.jpg",
+    "location": null,
+    "expires_at": null,
+    "theme_color": "#2a4a79"
+  }
+]
+
+--- Requests Sample ---
+Data: [
+  {
+    "id": "d9f830e3-cc80-42a4-85c5-d99f915e8a6a",
+    "created_at": "2026-02-15T22:02:17.631654+00:00",
+    "category": "Oración",
+    "description": "es una prueba de las peticiones que se pueden mandar",
+    "is_anonymous": false,
+    "contact_name": "pipe mial",
+    "contact_phone": "3126430636",
+    "status": "pendiente"
+  }
+]

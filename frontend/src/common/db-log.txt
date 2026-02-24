@@ -1,0 +1,18 @@
+--- Starting DB Check ---
+🔍 Testing Supabase Connection (Hardcoded Creds)...
+
+--- Checking table: anuncios ---
+❌ Error fetching anuncios: {
+  "code": "PGRST205",
+  "details": null,
+  "hint": "Perhaps you meant the table 'public.announcements'",
+  "message": "Could not find the table 'public.anuncios' in the schema cache"
+}
+
+--- Checking table: eventos ---
+❌ Error fetching eventos: {
+  "code": "PGRST205",
+  "details": null,
+  "hint": "Perhaps you meant the table 'public.requests'",
+  "message": "Could not find the table 'public.eventos' in the schema cache"
+}

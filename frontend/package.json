@@ -1,0 +1,42 @@
+{
+  "name": "oasis-project",
+  "private": true,
+  "version": "1.3.0",
+  "type": "module",
+  "description": "Sistema de gestión integral para la comunidad religiosa OASIS",
+  "author": "Tu Nombre",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build --minify terser",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .js --fix",
+    "format": "prettier --write \"src/**/*.{js,css,html}\"",
+    "test": "vitest --environment jsdom"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "eslint": "^8.54.0",
+    "jsdom": "^28.1.0",
+    "prettier": "^3.1.0",
+    "sass-embedded": "^1.97.3",
+    "terser": "^5.26.0",
+    "vite": "^6.0.0",
+    "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^5.1.4",
+    "axios": "^1.13.5",
+    "bootstrap": "^5.3.8",
+    "dotenv": "^17.3.1",
+    "html2canvas": "^1.4.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-draggable": "^4.5.0",
+    "react-router-dom": "^7.13.0"
+  },
+  "overrides": {
+    "vite": "^6.0.0"
+  }
+}

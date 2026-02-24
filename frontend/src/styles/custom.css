@@ -1,0 +1,207 @@
+/* ==========================================================
+   NÚCLEO OASIS: VARIABLES Y ADN DE MARCA (VIVID NIGHTFALL)
+   ========================================================== */
+@font-face {
+    font-family: 'ModernAge';
+    src: url('../fonts/Modern Age.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'MoonRising';
+    src: url('../fonts/Moonrising.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'AdventSans';
+    src: url('../fonts/AdventSans-Logo.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'above-the-beyond-script';
+    src: url('../fonts/above-the-beyond-script.ttf') format('truetype');
+}
+
+:root {
+    /* --- PALETA VIVID NIGHTFALL --- */
+    --nightfall-deep: #10002B;
+    --nightfall-dark: #240046;
+    --nightfall-purple: #3C096C;
+    --nightfall-vivid: #5b2ea6;
+    --nightfall-accent: #7B2CBF;
+    --nightfall-light: #9D4EDD;
+    --nightfall-soft: #C77DFF;
+    --nightfall-glow: #E0AAFF;
+    --pure-white: #ffffff;
+    --bg-light: #f8f9fa;
+
+    /* --- TIPOGRAFÍAS --- */
+    --font-logo: 'ModernAge', sans-serif;
+    --font-titles: 'MoonRising', serif;
+    --font-main: 'AdventSans', sans-serif;
+    --transition-cinema: 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+
+    /* --- SOBRESCRIBIR BOOTSTRAP (EL SECRETO DEL CONTROL) --- */
+    --bs-primary: var(--nightfall-vivid) !important;
+    --bs-primary-rgb: 90, 24, 154 !important;
+    /* RGB de Vivid */
+    --bs-link-color: var(--nightfall-light) !important;
+    --bs-link-hover-color: var(--nightfall-glow) !important;
+    --bs-body-font-family: var(--font-main) !important;
+}
+
+/* ==========================================================
+   REGLAS DE DOMINANCIA (SOBRE BOOTSTRAP)
+   ========================================================== */
+
+/* Forzar que el cuerpo use la paleta y fuente correcta */
+body {
+    font-family: var(--font-main) !important;
+    background-color: var(--bg-light);
+    color: var(--nightfall-deep);
+}
+
+/* Control absoluto de Botones Primarios */
+.btn-primary {
+    /* White button, purple text, subtle neutral shadow */
+    background: #ffffff !important;
+    border: none !important;
+    color: var(--nightfall-vivid) !important;
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06) !important;
+    transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(16, 24, 40, 0.08) !important;
+}
+
+/* Control absoluto de la Navbar */
+.navbar {
+    /* Purple translucent rounded bar to match React navbar style */
+    background: rgba(91, 46, 166, 0.12) !important;
+    /* semi-transparent purple */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(91, 46, 166, 0.14) !important;
+    border-radius: 16px !important;
+    padding: 0.8rem 1rem !important;
+    margin: 8px !important;
+}
+
+/* Estilos de Marca Compartidos */
+.brand-text {
+    font-family: var(--font-logo) !important;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: var(--pure-white) !important;
+}
+
+.title-proy {
+    font-family: var(--font-titles) !important;
+}
+
+.btn-oasis {
+    border-radius: 50px !important;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+/* Quitar los bordes azules de enfoque en los inputs */
+.form-control:focus {
+    border-color: var(--nightfall-light) !important;
+    box-shadow: 0 0 0 0.25rem rgba(157, 78, 221, 0.25) !important;
+}
+
+:root {
+    /* ... tus otras variables ... */
+    --nightfall-muted: #6c757d;
+    /* Gris para textos secundarios */
+    --border-light: rgba(0, 0, 0, 0.1);
+    /* Línea divisoria sutil */
+}
+
+/* ==========================================================
+   ADN OASIS: ANIMACIONES Y TRANSICIONES GLOBALES
+   ========================================================== */
+
+/* Definición de la coreografía de entrada */
+@keyframes oasisFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(15px);
+        filter: blur(5px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+/* Aplicación universal al Body */
+body {
+    /* Evita destellos blancos antes de la animación */
+    background-color: var(--nightfall-deep);
+    overflow-x: hidden;
+}
+
+/* Transición suave para todos los enlaces y botones del sitio */
+a,
+button,
+.btn {
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1) !important;
+}
+
+/* Efecto de suavizado para imágenes y posters al cargar */
+img,
+.proyectable-poster {
+    animation: oasisFadeIn 1.2s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+:root {
+    /* ... variables anteriores ... */
+    --parallax-speed: fixed;
+    /* Opcional: scroll para navegadores modernos */
+    --glow-animation: glowPulse 3s infinite alternate;
+}
+
+@keyframes glowPulse {
+    from {
+        text-shadow: 0 0 10px rgba(157, 78, 221, 0.5);
+    }
+
+    to {
+        text-shadow: 0 0 25px rgba(157, 78, 221, 0.9), 0 0 40px rgba(123, 44, 191, 0.6);
+    }
+}
+
+/* Template Gallery Enhancements */
+.hover-scale {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.hover-scale:hover {
+    transform: translateY(-5px) scale(1.03);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+.col-lg-2-4 {
+    width: 20%;
+}
+
+/* Special 5-col grid for desktop */
+
+@media (max-width: 992px) {
+    .col-lg-2-4 {
+        width: 50%;
+    }
+}

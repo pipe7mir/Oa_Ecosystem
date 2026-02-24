@@ -1,0 +1,142 @@
+/* ==========================================================
+   HIJO: AUTH-STYLE.CSS (LOGIN & REGISTRO) - HERENCIA ACTIVA
+   ========================================================== */
+@import url('./custom.css'); /* Hereda ADN del Padre y transiciones globales */
+
+/* --- VARIABLES LOCALES DE APOYO --- */
+:root {
+    --nightfall-muted: #6c757d;
+    --border-light: rgba(0, 0, 0, 0.1);
+}
+
+/* ==========================================================
+   1. ESTRUCTURA (HEREDA TRANSICIÓN DE CUSTOM.CSS)
+   ========================================================== */
+body {
+    background: radial-gradient(circle, var(--nightfall-purple) 0%, var(--nightfall-deep) 100%) !important;
+    display: flex !important; 
+    align-items: center !important; 
+    justify-content: center !important; 
+    min-height: 100vh !important;
+    margin: 0;
+    /* La animación oasisFadeIn ya se aplica desde el padre */
+}
+
+/* ==========================================================
+   2. BOTÓN VOLVER AL INICIO (GLASSMORPHISM)
+   ========================================================== */
+.back-to-home {
+    position: absolute !important;
+    top: 30px !important;
+    left: 30px !important;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: var(--pure-white) !important;
+    padding: 10px 22px !important;
+    border-radius: 50px !important;
+    font-family: var(--font-main) !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+}
+
+.back-to-home:hover {
+    background: var(--nightfall-vivid) !important;
+    border-color: var(--nightfall-glow) !important;
+    transform: translateX(-5px);
+    box-shadow: 0 0 15px var(--nightfall-glow);
+    color: var(--pure-white) !important;
+}
+
+/* ==========================================================
+   3. TARJETA DE AUTENTICACIÓN (SIMETRÍA)
+   ========================================================== */
+.card-auth {
+    background: var(--pure-white) !important;
+    border: none !important;
+    border-top: 6px solid var(--nightfall-vivid) !important;
+    border-radius: 1.5rem !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6) !important;
+    width: min(720px, 92%) !important; /* larger, but responsive */
+    min-height: 760px !important; /* taller to fit login + register comfortably */
+    padding: 4rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+}
+
+.card-auth:hover { transform: translateY(-5px); }
+
+/* ==========================================================
+   4. TIPOGRAFÍAS Y MARCA
+   ========================================================== */
+.brand-text, .card-auth h1 {
+    font-family: var(--font-logo) !important;
+    color: var(--nightfall-deep) !important;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 0.5rem !important;
+}
+
+.title-proy, .card-auth p {
+    font-family: var(--font-titles) !important;
+    color: var(--nightfall-purple) !important;
+    text-align: center;
+}
+
+/* ==========================================================
+   5. BOTONES PRINCIPALES
+   ========================================================== */
+.btn-primary, .btn-oasis {
+    background: linear-gradient(45deg, var(--nightfall-vivid), var(--nightfall-accent)) !important;
+    border: none !important;
+    color: var(--pure-white) !important;
+    border-radius: 50px !important;
+    padding: 14px 25px !important;
+    font-family: var(--font-main) !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    display: flex !important;
+    margin: 1.5rem auto 0 auto !important;
+    width: 100% !important;
+    max-width: 280px !important; 
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(90, 24, 154, 0.3) !important;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px) scale(1.03) !important;
+    box-shadow: 0 6px 20px rgba(157, 78, 221, 0.4) !important;
+}
+
+/* ==========================================================
+   6. ENLACES (DOMINANCIA ANTI-AZUL)
+   ========================================================== */
+.auth-footer-links {
+    margin-top: auto; 
+    padding-top: 1.5rem;
+    text-align: center;
+}
+
+.auth-footer-links a.link-oasis {
+    color: var(--nightfall-vivid) !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+}
+
+.auth-footer-links a.link-cancel {
+    display: block !important;
+    margin-top: 15px !important;
+    padding-top: 15px !important;
+    border-top: 1px solid var(--border-light) !important;
+    color: var(--nightfall-muted) !important;
+    font-size: 0.9rem !important;
+    text-decoration: none !important;
+}
+
+.auth-footer-links a.link-cancel:hover { color: var(--nightfall-deep) !important; }

@@ -1,0 +1,13 @@
+--- Starting DB Check Round 2 ---
+🔍 Testing Supabase Connection (English Names)...
+
+--- Checking table: announcements ---
+✅ Connection to "announcements" successful.
+
+--- Checking table: events ---
+❌ Error: {
+  "code": "PGRST205",
+  "details": null,
+  "hint": "Perhaps you meant the table 'public.requests'",
+  "message": "Could not find the table 'public.events' in the schema cache"
+}

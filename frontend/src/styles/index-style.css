@@ -1,0 +1,479 @@
+/* ==========================================================
+   OASIS ECOSYSTEM - ESTRUCTURA FINAL INTEGRADA
+   ========================================================== */
+@import url('./custom.css');
+
+/* ----------------------------------------------------------
+   MÓDULO 1: LAYOUT Y SECCIONES PRINCIPALES
+   ---------------------------------------------------------- */
+.hero-section {
+    min-height: 85vh !important;
+    display: flex;
+    align-items: center;
+    /* Simplified background - remove radial overlay so navbar area remains clean */
+    background: linear-gradient(to bottom, #0a0a0f, #1a1a2e) !important;
+    background-size: cover !important;
+    position: relative;
+    color: white;
+    margin: 0;
+    padding-top: 0; /* let the hero start from the very top so navbar overlays it */
+    z-index: 1;
+}
+
+#anuncios-display {
+    background: transparent !important;
+    padding: 40px 0 !important;
+    margin-top: -50px;
+    position: relative;
+    z-index: 10;
+}
+
+/* ----------------------------------------------------------
+   MÓDULO 2: NAVEGACIÓN Y CONTROLES
+   ---------------------------------------------------------- */
+.navbar {
+    background: rgba(91,46,166,0.14) !important; /* semi-transparent purple */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(91,46,166,0.16) !important;
+    border-radius: 16px !important; /* rounded pill */
+    padding: 12px 24px !important; /* aligned to 8px grid */
+    box-shadow: none !important;
+    max-width: 1200px !important; /* centered pill */
+    width: calc(100% - 48px) !important; /* responsive with side gutters */
+    position: fixed !important; /* overlay on top */
+    top: 16px !important; /* small offset from top (2x grid) */
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 99999 !important; /* ensure it's above everything */
+}
+
+.navbar::after { display: none; }
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    filter: invert(24%) sepia(91%) saturate(2154%) hue-rotate(264deg) brightness(92%) contrast(101%);
+}
+
+/* ----------------------------------------------------------
+   MÓDULO 3: BOTONES OASIS PILL
+   ---------------------------------------------------------- */
+.btn-primary,
+.btn-oasis,
+#btn-manual-pause,
+#btn-fullscreen,
+.nav-item .btn {
+    background: #ffffff !important; /* White buttons */
+    border: none !important;
+    color: var(--nightfall-vivid, #5b2ea6) !important; /* dark purple text/icon */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+    font-weight: 700 !important;
+    text-transform: none;
+    letter-spacing: 0.2px;
+    padding: 8px 24px !important; /* align to 8px grid */
+    border-radius: 8px !important;
+    box-shadow: 0 6px 18px rgba(16,24,40,0.06) !important; /* subtle neutral shadow */
+    transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary:hover,
+.btn-oasis:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 30px rgba(16,24,40,0.08) !important;
+}
+
+/* ----------------------------------------------------------
+   MÓDULO 4: CONSOLA DE SERVICIOS (TARJETAS FLOTANTES)
+   ---------------------------------------------------------- */
+
+.oasis-square-card {
+    background: #ffffff !important; /* white canvas */
+    border: 1px solid rgba(16,24,40,0.04) !important;
+    width: 220px !important; /* consistent visual weight */
+    height: 220px !important; /* square */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-radius: 16px !important; /* 2x grid */
+    position: relative;
+    padding: 24px !important;
+    margin: 8px !important;
+    box-shadow: 0 6px 18px rgba(16,24,40,0.04) !important; /* subtle neutral shadow */
+    transition: transform 180ms ease, box-shadow 180ms ease;
+    cursor: pointer;
+    color: var(--nightfall-vivid, #5b2ea6); /* purple text by default */
+}
+
+.oasis-square-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 12px 36px rgba(16,24,40,0.08) !important;
+}
+
+/* REDIMENSIÓN DE ICONOS */
+.oasis-square-card i {
+    font-size: 3.2rem !important;
+    color: var(--nightfall-vivid, #5b2ea6);
+    margin-bottom: 16px;
+    transition: transform 0.18s ease;
+    filter: none; /* no glow */
+}
+
+.oasis-square-card:hover i {
+    transform: scale(1.1);
+}
+
+/* Información de texto */
+.card-info span {
+    font-size: 1rem;
+    color: #ffffff;
+    display: block;
+    font-weight: 600;
+}
+
+.card-info small {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* ----------------------------------------------------------
+   MÓDULO 5: CARTELERA CINEMATOGRÁFICA (ESTABILIZADA PRO)
+   ---------------------------------------------------------- */
+
+#anuncios-display {
+    background: transparent !important;
+    padding: 20px 0 !important;
+    overflow: visible;
+    /* Permite que las sombras de los bordes respiren */
+}
+
+.proyectable-poster {
+    width: 100% !important;
+    max-width: 1150px;
+    height: 460px !important; /* reduced for better balance */
+    margin: 0 auto;
+    border-radius: 24px !important; /* consistent with 8px grid (3x8) */
+    position: relative;
+    overflow: hidden !important;
+    background-color: transparent; /* remove black background */
+    box-shadow: 0 12px 36px rgba(16,24,40,0.06);
+    z-index: 1;
+}
+
+/* CAPA 1: Fondo desenfocado (Solo relleno) */
+.proyectable-poster::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: inherit;
+    background-size: cover;
+    background-position: center;
+    filter: blur(35px) brightness(0.4);
+    z-index: 1;
+    transform: scale(1.15);
+}
+
+/* CAPA 2: Imagen Nítida (Contenida) */
+/* CAPA 2: Imagen Nítida (Contenida) */
+.poster-content-img {
+    position: absolute;
+    inset: 0;
+    background-image: inherit;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 2;
+    transform: scale(0.95);
+    /* Margen de seguridad estético */
+    transition: transform 0.5s ease;
+}
+
+/* AJUSTES PARA MODO PROYECTOR (FULLSCREEN) */
+#oasisCarousel:fullscreen .proyectable-poster {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    background: #000;
+}
+
+#oasisCarousel:fullscreen .poster-content-img {
+    background-size: contain !important;
+    /* Muestra imagen completa sin cortes */
+    transform: scale(1);
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#oasisCarousel:fullscreen .content-wrapper {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 50%);
+    /* Degradado más sutil */
+    padding-bottom: 6rem;
+    /* Elevar texto */
+}
+
+/* CAPA 3: Textos con Transiciones de Entrada/Salida */
+.content-wrapper {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+    padding: 3rem 6%; /* smaller padding to balance with poster height */
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 80%);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    /* Alineación a la derecha */
+    text-align: right;
+    /* Texto a la derecha */
+}
+
+/* Animaciones vinculadas al estado activo del carrusel */
+.carousel-item.active .content-wrapper h3 {
+    font-family: 'MoonRising', sans-serif !important;
+    /* Fuente MoonRising corregida */
+    font-size: clamp(2.5rem, 5vw, 4rem) !important;
+    color: #fff !important;
+    animation: entranceRight 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.carousel-item.active .content-wrapper p {
+    font-family: 'AdventSans', sans-serif !important;
+    /* Fuente AdventSans corregida */
+    font-size: 1.4rem !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    opacity: 0;
+    animation: entranceRight 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s forwards;
+}
+
+@keyframes entranceRight {
+    from {
+        opacity: 0;
+        transform: translateX(60px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes entranceLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ----------------------------------------------------------
+   MÓDULO 8: ACOMPÁÑANOS (MAPA & BOTÓN POSICIONADO)
+   ---------------------------------------------------------- */
+.map-container {
+    position: relative;
+    height: 450px !important;
+    border-radius: 20px;
+    overflow: hidden;
+    border-left: 6px solid var(--nightfall-vivid) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: transform 0.4s ease;
+}
+
+/* Botón "¿Cómo llegar?" Centro-Abajo */
+.map-overlay-btn {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.map-overlay-btn a {
+    background: var(--nightfall-vivid) !important;
+    color: white !important;
+    padding: 14px 35px !important;
+    border-radius: 50px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-decoration: none;
+    /* Efecto Flotante Pro */
+    box-shadow: 0 10px 25px rgba(123, 44, 191, 0.4), 0 15px 35px rgba(16, 0, 43, 0.3) !important;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+.map-overlay-btn a:hover {
+    transform: translateY(-8px) scale(1.05);
+    background: var(--nightfall-glow) !important;
+}
+
+/* ----------------------------------------------------------
+   MÓDULO 9: AGENDA COMPACTA Y TRANSICIONES
+   ---------------------------------------------------------- */
+#events-feed {
+    background: #fff;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.events-grid-container {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    padding: 15px;
+}
+
+.day-box {
+    aspect-ratio: 1 / 0.4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #adb5bd;
+    transition: all 0.3s ease;
+}
+
+.day-box.has-event-purple {
+    background: var(--nightfall-vivid) !important;
+    color: white !important;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(123, 44, 191, 0.3);
+}
+
+.day-box.selected-day {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 3px rgba(123, 44, 191, 0.4);
+}
+
+/* Detalle de Evento con Transicion Oasis */
+.event-detail-bottom-area {
+    padding: 10px 25px 30px 25px;
+    margin-top: auto;
+    overflow: visible;
+}
+
+.detail-card-body {
+    background: #ffffff;
+    padding: 20px 24px; /* align to 8px grid */
+    border-radius: 20px;
+    border-left: 6px solid var(--nightfall-vivid);
+    transform: translateY(-6px);
+    box-shadow: 0 8px 24px rgba(16,24,40,0.06);
+    animation: oasisEntrance 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* ==========================================================
+   SISTEMA DE TRANSICIONES OASIS
+   ========================================================== */
+
+/* Contenedor base */
+#main-content {
+    min-height: 80vh;
+    will-change: opacity, transform;
+    /* Transición suave para la salida manual */
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Clase de entrada que dispara la animación */
+.module-entry {
+    animation: oasisSlideIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+/* Definición de la animación profesional */
+@keyframes oasisSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(30px);
+        filter: blur(8px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+/* Suavizado global de interacciones */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Optimizaciones para Animate.css si se usa adicionalmente */
+.animate__faster {
+    animation-duration: 400ms !important;
+}
+
+/* Estilo para los avisos de carga */
+.spinner-grow {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* PALETA DE COLORES CORPORATIVOS OASIS */
+
+:root {
+    --oasis-purple: #6a1b9a;
+    /* Púrpura de la cabecera */
+    --oasis-gradient: linear-gradient(90deg, #6a1b9a 0%, #ce93d8 100%);
+    /* Degradado del botón */
+    --oasis-blue: #007bff;
+    /* Azul para el estado seleccionado */
+}
+
+.bg-oasis-purple {
+    background-color: var(--oasis-purple) !important;
+}
+
+/* Botón con degradado como en la imagen */
+.btn-oasis-gradient {
+    background: var(--oasis-gradient);
+    border: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-oasis-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(106, 27, 154, 0.3);
+    color: white;
+}
+
+/* Estilo para los inputs similares a la imagen */
+.form-control.bg-light {
+    background-color: #f8f9fa !important;
+    border: 1px solid #e9ecef !important;
+}
+
+.form-control.bg-light:focus {
+    background-color: #fff !important;
+    border-color: var(--oasis-blue) !important;
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.1);
+}
+
+/* Estilo para el selector de "Con mis datos / Anónimo" */
+.btn-oasis-outline {
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    background: white;
+}
+
+.btn-check:checked+.btn-oasis-outline {
+    background-color: var(--oasis-blue);
+    border-color: var(--oasis-blue);
+    color: white;
+}

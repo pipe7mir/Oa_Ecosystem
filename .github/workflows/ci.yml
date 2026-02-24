@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  backend:
+    name: Backend (PHP)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Setup Composer cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+      - name: Install PHP dependencies
+        run: composer install --no-progress --no-suggest --prefer-dist
+      - name: Prepare SQLite DB
+        run: |
+          mkdir -p database
+          touch database/database.sqlite
+          php artisan key:generate
+          php artisan migrate --force
+      - name: Run PHP unit tests
+        run: vendor/bin/phpunit --testdox || php artisan test --no-interaction
+
+  frontend:
+    name: Frontend (Node)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Run lint
+        run: npm run lint
+        working-directory: frontend
+      - name: Run tests
+        run: npm test
+        working-directory: frontend
+      - name: Build
+        run: npm run build
+        working-directory: frontend
