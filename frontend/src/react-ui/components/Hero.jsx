@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+// CORRECCIÓN: Esta ruta ahora apunta correctamente al archivo dentro de la carpeta frontend
 import apiClient from '../../api/client';
 import { theme } from '../styles/theme';
 import Button from './Button';
