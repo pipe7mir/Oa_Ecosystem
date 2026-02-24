@@ -27,5 +27,5 @@ RUN chmod +x start.sh
 # Expose port
 EXPOSE 8080
 
-# Run start script
-CMD ["./start.sh"]
+# Run start script with bash (avoids shebang/CRLF issues)
+CMD ["bash", "start.sh"]
