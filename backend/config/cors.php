@@ -8,22 +8,17 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'api/login', 'api/register', 'api/logout'],
 
     'allowed_methods' => ['*'],
 
-    // Usamos '*' temporalmente para asegurar conexión total, 
-    // o agregamos el patrón de Vercel para seguridad.
-    'allowed_origins' => [
-        'http://localhost:5173', 
-        'http://127.0.0.1:5173',
-        'https://ig-ecosystem-git-main-pipe7mirs-projects.vercel.app',
-        '*', // <--- ESTO PERMITIRÁ QUE CUALQUIER URL DE VERCEL ENTRE
-    ],
+    // Use environment variable to configure allowed origins for security.
+    // Example in backend/.env: CORS_ALLOWED_ORIGINS="https://myfrontend.app,https://admin.myfrontend.app"
+    'allowed_origins' => array_filter(array_map('trim', explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,https://ig-ecosystem-git-main-pipe7mirs-projects.vercel.app')))),
 
+    // Accept common Vercel preview subdomains if needed. Keep patterns minimal.
     'allowed_origins_patterns' => [
-        // Esta es la forma más profesional: acepta cualquier subdominio de tu proyecto
-        '/^https:\/\/ig-ecosystem-.*\.vercel\.app$/',
+        env('CORS_ALLOWED_ORIGINS_PATTERNS', '/^https:\/\/ig-ecosystem(-.*)?\\.vercel\\.app$/'),
     ],
 
     'allowed_headers' => ['*'],
@@ -32,6 +27,8 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
+    // If your frontend sends cookies/credentials, set to true and ensure
+    // CORS_ALLOWED_ORIGINS does NOT contain '*'.
+    'supports_credentials' => env('CORS_SUPPORTS_CREDENTIALS', true),
 
 ];
