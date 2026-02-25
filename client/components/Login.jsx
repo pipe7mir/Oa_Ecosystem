@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import GlassCard from '../react-ui/components/GlassCard';
+import { theme } from '../react-ui/styles/theme';
 
 const Login = () => {
     const { signIn } = useAuth();
