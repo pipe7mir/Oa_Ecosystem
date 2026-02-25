@@ -9,7 +9,7 @@
     "dev:backend": "nest start --watch -p tsconfig.server.json",
     "dev": "npm run dev:backend & npm run dev:frontend",
     "build:frontend": "vite build --minify terser",
-    "build:backend": "rimraf dist && npx nest build -p tsconfig.server.json",
+    "build:backend": "rimraf dist/server && npx nest build -p tsconfig.server.json",
     "build": "npm run build:frontend && npm run build:backend",
     "start": "node dist/main.js"
   },
