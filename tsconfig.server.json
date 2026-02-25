@@ -8,7 +8,7 @@
     "allowSyntheticDefaultImports": true,
     "target": "es2019",
     "sourceMap": true,
-    "outDir": "./dist",
+    "outDir": "./dist/server",
     "baseUrl": "./",
     "incremental": true,
     "strict": true,
@@ -17,6 +17,11 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "server/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

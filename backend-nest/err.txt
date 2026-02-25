@@ -1,9 +1,0 @@
-DataTypeNotSupportedError: Data type "timestamp" in "User.emailVerifiedAt" is not supported by "sqlite" database.
-    at C:\Users\VICTUS\Documents\oasis_v1\oasis-project\backend-nest\node_modules\typeorm\metadata-builder\EntityMetadataValidator.js:89:27
-    at Array.forEach (<anonymous>)
-    at EntityMetadataValidator.validate (C:\Users\VICTUS\Documents\oasis_v1\oasis-project\backend-nest\node_modules\typeorm\metadata-builder\EntityMetadataValidator.js:86:18)
-    at C:\Users\VICTUS\Documents\oasis_v1\oasis-project\backend-nest\node_modules\typeorm\metadata-builder\EntityMetadataValidator.js:38:58
-    at Array.forEach (<anonymous>)
-    at EntityMetadataValidator.validateMany (C:\Users\VICTUS\Documents\oasis_v1\oasis-project\backend-nest\node_modules\typeorm\metadata-builder\EntityMetadataValidator.js:38:25)
-    at DataSource.buildMetadatas (C:\Users\VICTUS\Documents\oasis_v1\oasis-project\backend-nest\node_modules\typeorm\data-source\DataSource.js:493:33)
-    at async DataSource.initialize (C:\Users\VICTUS\Documents\oasis_v1\oasis-project\backend-nest\node_modules\typeorm\data-source\DataSource.js:145:13)
