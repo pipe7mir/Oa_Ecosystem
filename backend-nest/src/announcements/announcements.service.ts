@@ -24,15 +24,16 @@ export class AnnouncementsService {
         return announcement;
     }
 
-    async create(data: any): Promise<Announcement> {
+    async create(data: Partial<Announcement>): Promise<Announcement> {
         const announcement = this.announcementsRepo.create(data);
-        return this.announcementsRepo.save(announcement);
+        // save debe recibir un solo objeto Announcement
+        return await this.announcementsRepo.save(announcement);
     }
 
     async update(id: number, data: any): Promise<Announcement> {
         const announcement = await this.findOne(id);
         Object.assign(announcement, data);
-        return this.announcementsRepo.save(announcement);
+        return await this.announcementsRepo.save(announcement);
     }
 
     async remove(id: number): Promise<void> {

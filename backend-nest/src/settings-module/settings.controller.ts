@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Multer } from 'multer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -50,7 +51,7 @@ export class SettingsController {
   @Post('upload')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
-  async upload(@UploadedFile() file: Express.Multer.File) {
+  async upload(@UploadedFile() file: Multer.File) {
     // TODO: integrate with actual file storage (local or cloud)
     return { filename: file.originalname };
   }
