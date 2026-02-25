@@ -1,6 +1,24 @@
 .env
+.env.*
+!.env.example
+
+# node_modules
 node_modules/
+backend-nest/node_modules/
+frontend/node_modules/
+
+# build / dist
 dist/
+build/
+backend-nest/dist/
+frontend/dist/
 /.vite
 
-backend/.env
+# sqlite
+*.sqlite
+*.sqlite3
+backend-nest/database.sqlite
+
+# OS generated files
+.DS_Store
+Thumbs.db

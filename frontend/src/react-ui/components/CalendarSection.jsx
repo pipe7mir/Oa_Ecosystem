@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { theme } from '../styles/theme';
 import GlassCard from './GlassCard';
-import { supabase } from '../../lib/supabaseClient';
+import apiClient from '../../api/client';
 
 const CalendarSection = () => {
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -10,9 +10,8 @@ const CalendarSection = () => {
 
     useEffect(() => {
         // Fetch all announcements to act as events
-        supabase.from('announcements').select('*')
-            .then(({ data, error }) => {
-                if (error) throw error;
+        apiClient.get('/announcements')
+            .then(({ data }) => {
                 if (Array.isArray(data)) {
                     const validEvents = data.filter(ev => ev.date);
                     setEvents(validEvents);

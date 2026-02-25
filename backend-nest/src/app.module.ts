@@ -29,30 +29,11 @@ import { TestCorsController } from './common/test-cors.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRootAsync({
-      useFactory: () => ({
-        type: 'postgres',
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432,
-        username: process.env.DB_USERNAME,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_DATABASE,
-        entities: [
-          User,
-          Announcement,
-          RequestEntity,
-          Setting,
-          BoardMember,
-          GalleryItem,
-          ResourceEntity,
-          Billboard,
-          EventForm,
-          FormSubmission,
-          LiveSetting,
-        ],
-        synchronize: false, // Maintain sync manually with Laravel schema
-        ssl: true,
-      }),
+    TypeOrmModule.forRoot({
+      type: 'sqlite',
+      database: 'database.sqlite',
+      autoLoadEntities: true,
+      synchronize: true, // ¡Solo para desarrollo!
     }),
     AuthModule,
     UsersModule,

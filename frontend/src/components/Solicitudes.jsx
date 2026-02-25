@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
+import apiClient from '../api/client';
 import { theme } from '../react-ui/styles/theme';
 
 /* ── Status config ─────────────────────────────────── */
@@ -82,9 +82,8 @@ const Solicitudes = () => {
     const fetchRequests = async () => {
         try {
             setLoading(true);
-            const { data, error } = await supabase.from('requests').select('*').order('created_at', { ascending: false });
-            if (error) throw error;
-            setRequests(data);
+            const { data } = await apiClient.get('/requests');
+            setRequests(data || []);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
     };
@@ -93,9 +92,8 @@ const Solicitudes = () => {
     const handleStatusChange = async (id, newStatus) => {
         setActionLoading('status');
         try {
-            const { error } = await supabase.from('requests').update({ status: newStatus, response: notes }).eq('id', id);
-            if (error) throw error;
-            setSelected(prev => prev ? { ...prev, status: newStatus } : prev);
+            await apiClient.patch(`/requests/${id}/status`, { status: newStatus, notes });
+            setSelected(prev => prev ? { ...prev, status: newStatus, notes } : prev);
             setActionStatus(`✅ Estado actualizado a "${STATUS_CONFIG[newStatus]?.label}"`);
             await fetchRequests();
         } catch (e) {
@@ -126,8 +124,7 @@ const Solicitudes = () => {
             const link = `https://wa.me/${selected.phone}?text=${encodeURIComponent(message)}`;
             setWaModal({ link, message, has_number: !!selected.phone });
 
-            // Actualizamos fecha en Supabase
-            await supabase.from('requests').update({ wa_link_opened_at: new Date().toISOString() }).eq('id', selected.id);
+            await apiClient.patch(`/requests/${selected.id}/status`, { status: selected.status, notes });
             await fetchRequests();
         } catch (e) {
             setActionStatus(`❌ Error al generar enlace`);
@@ -137,7 +134,7 @@ const Solicitudes = () => {
     /* ── Open detail modal ─────────────────────────── */
     const openDetail = (req) => {
         setSelected(req);
-        setNotes(req.response || '');
+        setNotes(req.notes || req.response || '');
         setActionStatus('');
     };
 

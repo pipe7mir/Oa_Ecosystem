@@ -14,7 +14,7 @@ export class User {
   @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
-  @Column({ type: 'timestamp', name: 'email_verified_at', nullable: true })
+  @Column({ type: 'datetime', name: 'email_verified_at', nullable: true })
   emailVerifiedAt: Date | null;
 
   @Column({ type: 'varchar', length: 255 })

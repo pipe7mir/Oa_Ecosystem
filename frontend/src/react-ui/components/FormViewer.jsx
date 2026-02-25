@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import apiClient from '../../api/client';
 import { theme } from '../styles/theme';
 import Button from './Button';
 
@@ -24,22 +24,20 @@ const FormViewer = ({ form, onComplete }) => {
             for (const field of form.fields) {
                 if (field.type === 'file' && formData[field.label] instanceof File) {
                     const file = formData[field.label];
-                    const fileName = `submissions/${form.id}/${Date.now()}-${file.name}`;
-                    const { error: uploadError } = await supabase.storage
-                        .from('media')
-                        .upload(fileName, file);
+                    const fileName = `submissions_${form.id}_${Date.now()}-${file.name}`;
 
-                    if (uploadError) throw uploadError;
+                    const uploadData = new FormData();
+                    uploadData.append('file', file, fileName);
 
-                    submissionData[field.label] = supabase.storage.from('media').getPublicUrl(fileName).data.publicUrl;
+                    const { data } = await apiClient.post('/upload', uploadData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+
+                    submissionData[field.label] = data.url || data.filename;
                 }
             }
 
-            const { error: insertError } = await supabase.from('event_submissions').insert([
-                { event_form_id: form.id, data: submissionData }
-            ]);
-
-            if (insertError) throw insertError;
+            await apiClient.post('/event-submissions', { event_form_id: form.id, data: submissionData });
 
             onComplete && onComplete();
         } catch (e) {

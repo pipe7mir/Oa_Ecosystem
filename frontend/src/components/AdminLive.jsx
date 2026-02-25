@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import apiClient from '../api/client';
 import { theme } from '../react-ui/styles/theme';
 
 const AdminLive = () => {
@@ -36,13 +36,14 @@ const AdminLive = () => {
         setUploading(true);
         try {
             const fileName = `${Date.now()}-${file.name}`;
-            const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('media')
-                .upload(fileName, file);
+            const formData = new FormData();
+            formData.append('file', file, fileName);
 
-            if (uploadError) throw uploadError;
+            const { data } = await apiClient.post('/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
 
-            const imageUrl = supabase.storage.from('media').getPublicUrl(fileName).data.publicUrl;
+            const imageUrl = data.url || data.filename;
             handleChange('bg_image', imageUrl);
         } catch (error) {
             console.error(error);
@@ -59,10 +60,10 @@ const AdminLive = () => {
     const fetchSettings = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase.from('settings').select('*');
-            if (error) throw error;
-            const settingsObj = {};
-            data.forEach(s => settingsObj[s.key] = s.value);
+            const { data } = await apiClient.get('/settings');
+            const settingsObj = Array.isArray(data) ?
+                data.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {}) :
+                data;
 
             // Only update relevant keys for this module
             const liveKeys = Object.keys(settings);
@@ -85,9 +86,7 @@ const AdminLive = () => {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const updates = Object.entries(settings).map(([key, value]) => ({ key, value }));
-            const { error } = await supabase.from('settings').upsert(updates, { onConflict: 'key' });
-            if (error) throw error;
+            await apiClient.post('/settings', settings);
             alert('Configuración guardada correctamente');
         } catch (error) {
             alert('Error al guardar: ' + error.message);

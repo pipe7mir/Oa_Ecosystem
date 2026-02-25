@@ -11,11 +11,11 @@ export class AdminFormSubmissionsController {
   constructor(
     @InjectRepository(FormSubmission)
     private readonly repo: Repository<FormSubmission>,
-  ) {}
+  ) { }
 
   @Get()
   findAll() {
-    return this.repo.find({ order: { createdAt: 'DESC' } });
+    return this.repo.find({ relations: ['eventForm'], order: { createdAt: 'DESC' } });
   }
 
   @Delete(':id')

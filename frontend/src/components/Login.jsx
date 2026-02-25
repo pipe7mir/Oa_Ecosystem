@@ -15,19 +15,15 @@ const Login = () => {
         setError('');
 
         try {
-            const { data, error: authError } = await signIn({
-                email: formData.username,
+            await signIn({
+                username: formData.username,
                 password: formData.password
             });
 
-            if (authError) throw authError;
-
-            if (data?.session) {
-                // Redirect to Admin Dashboard
-                navigate('/admin/solicitudes');
-            }
+            // Redirect to Admin Dashboard natively
+            navigate('/admin/solicitudes');
         } catch (err) {
-            setError(err.message || 'Error al iniciar sesión');
+            setError(err.response?.data?.message || err.message || 'Error al iniciar sesión');
         } finally {
             setLoading(false);
         }

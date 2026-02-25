@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { theme } from '../styles/theme';
 import GlassCard from '../components/GlassCard';
 import Button from '../components/Button';
-import { supabase } from '../../lib/supabaseClient';
+import apiClient from '../../api/client';
 
 const Live = () => {
     const [settings, setSettings] = useState({
@@ -15,10 +15,10 @@ const Live = () => {
     });
 
     useEffect(() => {
-        supabase.from('settings').select('*').then(({ data, error }) => {
-            if (error) throw error;
-            const settingsObj = {};
-            data.forEach(s => settingsObj[s.key] = s.value);
+        apiClient.get('/settings').then(({ data }) => {
+            const settingsObj = Array.isArray(data) ?
+                data.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {}) :
+                data;
             setSettings(prev => ({ ...prev, ...settingsObj }));
         }).catch(err => console.error(err));
     }, []);

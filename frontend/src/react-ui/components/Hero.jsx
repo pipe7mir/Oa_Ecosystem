@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 // CORRECCIÓN: Esta ruta ahora apunta correctamente al archivo dentro de la carpeta frontend
-import { supabase } from '../../lib/supabaseClient';
+import apiClient from '../../api/client';
 import { theme } from '../styles/theme';
 import Button from './Button';
 import T1 from '../../img/logos/T1.png';
@@ -37,9 +37,8 @@ const Hero = () => {
 
     const fetchBillboards = async () => {
         try {
-            const { data, error } = await supabase.from('billboards').select('*');
-            if (error) throw error;
-            const activeItems = (data || []).filter(b => b.is_active);
+            const { data } = await apiClient.get('/billboards');
+            const activeItems = data || [];
             setBillboards(activeItems);
         } catch (e) {
             console.error('Error al cargar la cartelera:', e);

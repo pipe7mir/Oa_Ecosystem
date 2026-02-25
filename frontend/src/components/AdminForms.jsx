@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import apiClient from '../api/client';
 import { theme } from '../react-ui/styles/theme';
 /**
  * Componente AdminForms
@@ -30,8 +30,7 @@ const AdminForms = () => {
     const fetchForms = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase.from('event_forms').select('*').order('created_at', { ascending: false });
-            if (error) throw error;
+            const { data } = await apiClient.get('/admin/event-forms');
             setForms(data || []);
         } catch (e) { console.error('Error al cargar formularios:', e); }
         finally { setLoading(false); }
@@ -57,8 +56,11 @@ const AdminForms = () => {
      */
     const handleSaveForm = async () => {
         try {
-            const { error } = await supabase.from('event_forms').upsert([editingForm]);
-            if (error) throw error;
+            if (editingForm.id) {
+                await apiClient.put(`/admin/event-forms/${editingForm.id}`, editingForm);
+            } else {
+                await apiClient.post('/admin/event-forms', editingForm);
+            }
             setEditingForm(null);
             fetchForms();
         } catch (e) {
@@ -72,8 +74,7 @@ const AdminForms = () => {
     const handleDeleteForm = async (id) => {
         if (!window.confirm('¿Estás seguro de eliminar este formulario? Se borrarán también todas las respuestas.')) return;
         try {
-            const { error } = await supabase.from('event_forms').delete().eq('id', id);
-            if (error) throw error;
+            await apiClient.delete(`/admin/event-forms/${id}`);
             fetchForms();
         } catch (e) { console.error('Error al eliminar formulario:', e); }
     };
@@ -83,9 +84,9 @@ const AdminForms = () => {
      */
     const fetchSubmissions = async (formId) => {
         try {
-            const { data, error } = await supabase.from('event_submissions').select('*').eq('event_form_id', formId);
-            if (error) throw error;
-            setSubmissions(data || []);
+            const { data } = await apiClient.get('/admin/event-submissions');
+            const filtered = (data || []).filter(s => s.eventForm && s.eventForm.id === formId);
+            setSubmissions(filtered);
             setViewingSubmissionsFor(forms.find(f => f.id === formId));
         } catch (e) { console.error('Error al cargar inscripciones:', e); }
     };

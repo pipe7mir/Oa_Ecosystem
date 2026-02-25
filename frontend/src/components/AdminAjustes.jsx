@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
+import apiClient from '../api/client';
 import { theme } from '../react-ui/styles/theme';
 
 /* ─────────────────────────────────────────────────────────────
@@ -106,12 +106,12 @@ const AdminAjustes = () => {
     useEffect(() => {
         (async () => {
             try {
-                const { data, error } = await supabase.from('settings').select('*');
-                if (error) throw error;
-                // Assuming settings are stored as key-value pairs or a single row
-                // For this migration, we'll assume a single row or equivalent
-                if (data && data.length > 0) {
-                    setSettings(prev => ({ ...prev, ...data[0] }));
+                const { data } = await apiClient.get('/settings');
+                if (data) {
+                    const settingsObj = Array.isArray(data) ?
+                        data.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {}) :
+                        data;
+                    setSettings(prev => ({ ...prev, ...settingsObj }));
                 }
             } catch (e) { console.error(e); }
             finally { setLoading(false); }
@@ -141,8 +141,7 @@ const AdminAjustes = () => {
         setSaving(true);
         setFeedback(null);
         try {
-            const { error } = await supabase.from('settings').upsert([settings]);
-            if (error) throw error;
+            await apiClient.post('/settings', settings);
             setFeedback({ type: 'success', msg: '✅ Configuración guardada correctamente' });
         } catch (err) {
             setFeedback({ type: 'error', msg: '❌ ' + (err.response?.data?.message || 'Error al guardar') });

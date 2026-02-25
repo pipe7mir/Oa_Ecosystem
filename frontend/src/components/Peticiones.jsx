@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import apiClient from '../api/client';
 import { theme } from '../react-ui/styles/theme';
 
 const Peticiones = () => {
@@ -46,7 +46,7 @@ const Peticiones = () => {
                 contact_phone: isAnonymous ? 'N/A' : formData.celular
             };
 
-            await supabase.from('requests').insert([payload]);
+            await apiClient.post('/requests', payload);
             setSuccess(true);
         } catch (error) {
             alert('Error al enviar la solicitud: ' + (error.response?.data?.message || error.message));

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import apiClient from '../../api/client';
 import { theme } from '../styles/theme';
 import GlassCard from '../components/GlassCard';
 import FormViewer from '../components/FormViewer';
@@ -19,9 +19,8 @@ const Inscripciones = () => {
     const [finished, setFinished] = useState(false);
 
     useEffect(() => {
-        supabase.from('event_forms').select('*').eq('is_active', true)
-            .then(({ data, error }) => {
-                if (error) throw error;
+        apiClient.get('/event-forms')
+            .then(({ data }) => {
                 setForms(data);
             })
             .catch(e => console.error('Error al cargar eventos:', e))

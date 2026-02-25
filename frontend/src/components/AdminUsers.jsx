@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
+import apiClient from '../api/client';
 import { theme } from '../react-ui/styles/theme';
 
 const AdminUsers = () => {
@@ -28,8 +28,7 @@ const AdminUsers = () => {
 
     const fetchUsers = async () => {
         try {
-            const { data, error } = await supabase.from('profiles').select('*');
-            if (error) throw error;
+            const { data } = await apiClient.get('/users');
             setUsers(data || []);
         } catch (error) {
             console.error("Error fetching users, showing mock for UI demo");
@@ -44,8 +43,11 @@ const AdminUsers = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const { error } = await supabase.from('profiles').upsert([formData]);
-            if (error) throw error;
+            if (formData.id) {
+                await apiClient.put(`/users/${formData.id}`, formData);
+            } else {
+                await apiClient.post('/auth/register', formData);
+            }
             fetchUsers();
             setShowForm(false);
             resetForm();
@@ -57,8 +59,7 @@ const AdminUsers = () => {
     const handleDelete = async (id) => {
         if (!window.confirm('¿Eliminar este usuario?')) return;
         try {
-            const { error } = await supabase.from('profiles').delete().eq('id', id);
-            if (error) throw error;
+            await apiClient.delete(`/users/${id}`);
             fetchUsers();
         } catch (error) {
             alert('Error al eliminar');
@@ -73,7 +74,8 @@ const AdminUsers = () => {
     const resetForm = () => setFormData({ id: '', name: '', email: '', password: '', role: 'admin' });
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
         navigate('/login');
     };
 

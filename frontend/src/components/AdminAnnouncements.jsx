@@ -687,14 +687,15 @@ const AdminAnnouncements = () => {
             const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.93));
             const fileName = `ann-${Date.now()}.jpg`;
 
-            // Upload image to Supabase Storage
-            const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('announcements')
-                .upload(fileName, blob, { contentType: 'image/jpeg' });
+            const uploadData = new FormData();
+            uploadData.append('file', blob, fileName);
 
-            if (uploadError) throw uploadError;
+            // Upload image to NestJS Backend
+            const uploadRes = await apiClient.post('/upload', uploadData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
 
-            const imageUrl = supabase.storage.from('announcements').getPublicUrl(fileName).data.publicUrl;
+            const imageUrl = uploadRes.data.url || uploadRes.data.filename;
 
             const announcementData = {
                 title: formData.title,
@@ -705,11 +706,9 @@ const AdminAnnouncements = () => {
             };
 
             if (formData.id) {
-                const { error } = await supabase.from('announcements').update(announcementData).eq('id', formData.id);
-                if (error) throw error;
+                await apiClient.put(`/announcements/${formData.id}`, announcementData);
             } else {
-                const { error } = await supabase.from('announcements').insert([announcementData]);
-                if (error) throw error;
+                await apiClient.post('/announcements', announcementData);
             }
 
             fetchAnnouncements(); setShowForm(false); resetForm();
@@ -727,8 +726,7 @@ const AdminAnnouncements = () => {
     const handleDelete = async (id) => {
         if (!window.confirm('¿Eliminar?')) return;
         try {
-            const { error } = await supabase.from('announcements').delete().eq('id', id);
-            if (error) throw error;
+            await apiClient.delete(`/announcements/${id}`);
             fetchAnnouncements();
         } catch { alert('Error'); }
     };

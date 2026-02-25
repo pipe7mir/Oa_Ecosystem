@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { theme } from '../styles/theme';
 import GlassCard from '../components/GlassCard';
-import { supabase } from '../../lib/supabaseClient';
+import apiClient from '../../api/client';
 
 const About = () => {
     const [data, setData] = useState({
@@ -30,18 +30,15 @@ const About = () => {
         (async () => {
             try {
                 const [settingsRes, boardRes, galleryRes] = await Promise.all([
-                    supabase.from('settings').select('*'),
-                    supabase.from('board_members').select('*').order('order', { ascending: true }),
-                    supabase.from('gallery_items').select('*').order('order', { ascending: true })
+                    apiClient.get('/settings'),
+                    apiClient.get('/board-members'),
+                    apiClient.get('/gallery-items')
                 ]);
 
-                if (settingsRes.error) throw settingsRes.error;
-                if (boardRes.error) throw boardRes.error;
-                if (galleryRes.error) throw galleryRes.error;
-
                 // Flatten settings array to object
-                const settingsObj = {};
-                settingsRes.data.forEach(s => settingsObj[s.key] = s.value);
+                const settingsObj = Array.isArray(settingsRes.data) ?
+                    settingsRes.data.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {}) :
+                    settingsRes.data;
 
                 const aboutKeys = Object.keys(data);
                 const filtered = {};

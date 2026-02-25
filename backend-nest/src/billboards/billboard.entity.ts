@@ -14,7 +14,7 @@ export class Billboard {
   @Column({ type: 'varchar', length: 255, name: 'media_url', nullable: true })
   mediaUrl: string | null;
 
-  @Column({ type: 'enum', enum: ['image', 'video'], name: 'media_type', default: 'image' })
+  @Column({ type: 'varchar', length: 50, name: 'media_type', default: 'image' })
   mediaType: 'image' | 'video';
 
   @Column({ type: 'varchar', length: 255, name: 'button_text', nullable: true })

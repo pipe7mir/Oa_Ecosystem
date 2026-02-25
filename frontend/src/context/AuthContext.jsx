@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import apiClient from '../api/client';
 
 const AuthContext = createContext({});
 
@@ -9,31 +9,65 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
+        const initAuth = async () => {
+            const token = localStorage.getItem('authToken');
+            const storedUser = localStorage.getItem('user');
 
-        // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
+            if (token && storedUser) {
+                setSession({ access_token: token });
+                try {
+                    // Try to parse stored user, or fetch fresh from API
+                    const parsedUser = JSON.parse(storedUser);
+                    setUser(parsedUser);
 
-        return () => subscription.unsubscribe();
+                    // Verify token is still valid
+                    const res = await apiClient.get('/user');
+                    setUser(res.data);
+                    localStorage.setItem('user', JSON.stringify(res.data));
+                } catch (err) {
+                    console.error('Session expired or invalid', err);
+                    signOut();
+                }
+            }
+            setLoading(false);
+        };
+
+        initAuth();
     }, []);
 
+    const signIn = async (data) => {
+        const response = await apiClient.post('/login', data);
+        const { token, user: userData } = response.data;
+
+        if (token && userData) {
+            localStorage.setItem('authToken', token);
+            localStorage.setItem('user', JSON.stringify(userData));
+            setSession({ access_token: token });
+            setUser(userData);
+        }
+        return response;
+    };
+
+    const signOut = async () => {
+        try {
+            await apiClient.post('/logout');
+        } catch (e) {
+            // Ignorar errores al desloguear
+        } finally {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            setSession(null);
+            setUser(null);
+        }
+    };
+
     const value = {
-        signUp: (data) => supabase.auth.signUp(data),
-        signIn: (data) => supabase.auth.signInWithPassword(data),
-        signOut: () => supabase.auth.signOut(),
+        signIn,
+        signOut,
         user,
         session,
         loading,
-        isAdmin: user?.user_metadata?.role === 'admin' || user?.email?.includes('admin'), // Basic check, ideally use a profile table
+        isAdmin: user?.role === 'admin' || user?.email?.includes('admin'),
     };
 
     return (
@@ -50,3 +84,4 @@ export const useAuth = () => {
     }
     return context;
 };
+

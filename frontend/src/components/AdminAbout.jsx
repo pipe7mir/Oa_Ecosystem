@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import apiClient from '../api/client';
 import { theme } from '../react-ui/styles/theme';
 
 const SectionCard = ({ icon, title, children }) => (
@@ -48,17 +48,14 @@ const AdminAbout = () => {
     const fetchData = async () => {
         try {
             const [settingsRes, boardRes, galleryRes] = await Promise.all([
-                supabase.from('settings').select('*'),
-                supabase.from('board_members').select('*').order('order', { ascending: true }),
-                supabase.from('gallery_items').select('*').order('order', { ascending: true })
+                apiClient.get('/settings'),
+                apiClient.get('/board-members'),
+                apiClient.get('/gallery-items')
             ]);
 
-            if (settingsRes.error) throw settingsRes.error;
-            if (boardRes.error) throw boardRes.error;
-            if (galleryRes.error) throw galleryRes.error;
-
-            const settingsObj = {};
-            settingsRes.data.forEach(s => settingsObj[s.key] = s.value);
+            const settingsObj = Array.isArray(settingsRes.data) ?
+                settingsRes.data.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {}) :
+                settingsRes.data;
 
             const aboutData = {};
             Object.keys(DEFAULTS).forEach(key => {
@@ -89,9 +86,7 @@ const AdminAbout = () => {
         setSaving(true);
         setFeedback(null);
         try {
-            const updates = Object.entries(settings).map(([key, value]) => ({ key, value }));
-            const { error } = await supabase.from('settings').upsert(updates, { onConflict: 'key' });
-            if (error) throw error;
+            await apiClient.post('/settings', settings);
             setFeedback({ type: 'success', msg: '✅ Contenido "Quienes Somos" guardado correctamente' });
         } catch (err) {
             setFeedback({ type: 'error', msg: '❌ Error al guardar: ' + err.message });
@@ -102,11 +97,14 @@ const AdminAbout = () => {
 
     const uploadFile = async (file) => {
         const fileName = `${Date.now()}-${file.name}`;
-        const { data, error } = await supabase.storage
-            .from('media')
-            .upload(fileName, file);
-        if (error) throw error;
-        return supabase.storage.from('media').getPublicUrl(fileName).data.publicUrl;
+        const formData = new FormData();
+        formData.append('file', file, fileName);
+
+        const res = await apiClient.post('/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+
+        return res.data.url || res.data.filename;
     };
 
     const handleFormSubmit = async (e) => {
@@ -117,8 +115,7 @@ const AdminAbout = () => {
             if (submissionData.type === 'group' && !submissionData.name) {
                 submissionData.name = submissionData.role || 'Departamento';
             }
-            const { error } = await supabase.from('board_members').insert([{ ...submissionData, order: boardMembers.length }]);
-            if (error) throw error;
+            await apiClient.post('/board-members', { ...submissionData, order: boardMembers.length });
             setMemberForm({ name: '', role: '', type: 'individual', description: '', image_url: '', fullscreen_image_url: '' });
             setShowMemberForm(false);
             fetchData();
@@ -132,16 +129,14 @@ const AdminAbout = () => {
     const handleBoardDelete = async (id) => {
         if (!window.confirm('¿Eliminar este miembro?')) return;
         try {
-            const { error } = await supabase.from('board_members').delete().eq('id', id);
-            if (error) throw error;
+            await apiClient.delete(`/board-members/${id}`);
             fetchData();
         } catch (err) { alert('Error al eliminar'); }
     };
 
     const handleGallerySave = async (item) => {
         try {
-            const { error } = await supabase.from('gallery_items').upsert([item]);
-            if (error) throw error;
+            await apiClient.post('/gallery-items', item);
             fetchData();
         } catch (err) { alert('Error al guardar item de galería'); }
     };
@@ -149,8 +144,7 @@ const AdminAbout = () => {
     const handleGalleryDelete = async (id) => {
         if (!window.confirm('¿Eliminar esta imagen de la galería?')) return;
         try {
-            const { error } = await supabase.from('gallery_items').delete().eq('id', id);
-            if (error) throw error;
+            await apiClient.delete(`/gallery-items/${id}`);
             fetchData();
         } catch (err) { alert('Error al eliminar'); }
     };

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { supabase } from '../../lib/supabaseClient';
+import apiClient from '../../api/client';
 import { theme } from '../styles/theme';
 import GlassCard from './GlassCard';
 
@@ -245,8 +245,8 @@ const Announcements = () => {
     useEffect(() => {
         const fetchAnnouncements = async () => {
             try {
-                const { data, error } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
-                if (error) throw error;
+                const res = await apiClient.get('/announcements');
+                const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
                 if (Array.isArray(data) && data.length > 0) {
                     setAnnouncements(data);
                 } else {
