@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// La URL base en desarrollo será el localhost de NestJS (mediante proxy Vite), 
-// y en producción (/api) será manejada por Vercel.
-const baseURL = import.meta.env.VITE_API_URL || '/api';
+// En desarrollo usamos el puerto 3000 (o el proxy de Vite). 
+// En producción, es OBLIGATORIO que VITE_API_URL sea la URL completa de Railway/Render.
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const apiClient = axios.create({
     baseURL,
