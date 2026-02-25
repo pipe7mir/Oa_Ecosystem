@@ -15,6 +15,16 @@ import { EventForm } from './event-forms-module/event-form.entity';
 import { FormSubmission } from './event-forms-module/form-submission.entity';
 import { LiveSetting } from './live/live-setting.entity';
 import { EmailModule } from './email/email.module';
+import { AnnouncementsModule } from './announcements/announcements.module';
+import { WhatsappModule } from './whatsapp/whatsapp.module';
+import { RequestsModule } from './requests/requests.module';
+import { ManagementModule } from './management/management.module';
+import { ResourcesModule } from './resources-module/resources.module';
+import { BillboardsModule } from './billboards/billboards.module';
+import { EventFormsModule } from './event-forms-module/event-forms.module';
+import { LiveModule } from './live/live.module';
+import { SettingsModule } from './settings-module/settings.module';
+import { TestCorsController } from './common/test-cors.controller';
 
 @Module({
   imports: [
