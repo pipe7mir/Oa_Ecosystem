@@ -103,7 +103,7 @@ export class WhatsappController {
   @Post('create-instance')
   @UseGuards(JwtAuthGuard)
   async createInstance() {
-    // Note: Replicating Laravel behavior where it uses the default webhook URL defined in env or settings
+    // Note: Uses the default webhook URL defined in env or settings
     const webhookUrl = await this.getSetting('app_url', '') + '/api/whatsapp/webhook';
     const result = await this.waService.createInstance(webhookUrl);
     await this.setSetting('wa_status', 'created');

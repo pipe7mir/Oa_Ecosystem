@@ -265,9 +265,10 @@ const Solicitudes = () => {
                                                                     // REEMPLAZO: Generación local del link de WhatsApp
                                                                     const message = `Hola, soy de OASIS. Respecto a tu solicitud #${req.id}...`;
                                                                     const link = `https://wa.me/${req.phone}?text=${encodeURIComponent(message)}`;
-                                                                    window.open(link, '_blank');
-                                                                    // Actualizamos fecha en Supabase
-                                                                    await supabase.from('requests').update({ wa_link_opened_at: new Date().toISOString() }).eq('id', req.id);
+                                                                    await window.open(link, '_blank');
+                                                                    try {
+                                                                        await apiClient.patch(`/requests/${req.id}/status`, { wa_link_opened_at: new Date().toISOString() });
+                                                                    } catch (e) { console.error('Error updating WA log', e) }
                                                                     await fetchRequests();
                                                                 } catch (err) {
                                                                     alert(err.response?.data?.message || 'Error WA');

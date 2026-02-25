@@ -5,11 +5,11 @@ import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from '../common/jwt-auth.guard';
 import { Request } from 'express';
 
-// Controller sin prefijo para que las rutas coincidan con Laravel:
+// Authentication Endpoints API
 // POST /api/login, /api/register, /api/logout, GET /api/user
 @Controller()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -31,7 +31,7 @@ export class AuthController {
     return { message: 'Logged out successfully' };
   }
 
-  // Equivalente a Route::get('/user', ...) protegido por auth:sanctum
+  // Get authenticated user data via JWT Token
   @Get('user')
   @UseGuards(JwtAuthGuard)
   getUser(@Req() req: Request) {

@@ -1,52 +1,54 @@
-# OASIS Project - Serverless Structure
+# OASIS Ecosystem - Unified Architecture
 
-Este proyecto ha sido migrado a una arquitectura serverless utilizando **Supabase** para el backend y **React + Vite** para el frontend.
+Este proyecto representa el ecosistema digital para la comunidad Oasis, construido bajo una arquitectura unificada que integra el **Frontend (React + Vite)** y el **Backend (NestJS + SQLite/PostgreSQL)** en un solo repositorio listo para despliegues Serverless (ej. Vercel).
 
-## Prerrequisitos
+## Tecnología Principal
+
+- **Cliente (`/client`)**: React 19, Vite, y Bootstrap 5 enfocado en Glassmorphism y UI modernas.
+- **Servidor (`/server`)**: NestJS gestionando la lógica de negocio, autenticación JWT, Controladores REST, y conexión TypeORM (configurado nativamente para SQLite local con compatibilidad PostgreSQL).
+- **API Entrypoint (`/api`)**: Adaptador Serverless-Express que permite que NestJS rule como Serverless Functions en Vercel.
+
+## Requisitos Previos
+
 - Node.js 18+
-- Un proyecto en [Supabase](https://supabase.com/)
+- npm gestionando dependencias
 
-## Instalación y Configuración
+## Entorno Local (Desarrollo)
 
-### 1. Frontend (React + Vite)
-Navega al directorio `frontend`:
-```bash
-cd frontend
-```
+### 1. Instalación de dependencias
 
-Instala las dependencias:
+Al estar unificado, solo necesitas instalar en la raíz del proyecto:
+
 ```bash
 npm install
 ```
 
-Configura las variables de entorno:
-Crea o edita el archivo `.env` en la carpeta `frontend/` con tus credenciales de Supabase:
-```env
-VITE_SUPABASE_URL=tu_url_de_supabase
-VITE_SUPABASE_ANON_KEY=tu_clave_anon_publica
-```
+### 2. Variables de Entorno
 
-Inicia el servidor de desarrollo:
+Configura las variables (el `.env` base puede omitirse para pruebas locales gracias a SQLite preconfigurado):
+
+- Copia `.env.example` en la raíz (si existe) y ajusta las claves de JWT u otros servicios externos (como SMTP para correos o Webhooks de WhatsApp).
+
+### 3. Ejecutar Ambos Entornos Simultáneamente
+
+Levanta Vite (Frontend) y NestJS (Backend API) con un solo comando:
+
 ```bash
 npm run dev
 ```
 
-### 2. Backend (Futuro - NestJS)
-El proyecto incluye una carpeta `backend-nest` que se mantiene para futuras expansiones de lógica personalizada o servicios adicionales. Actualmente, todas las funciones principales (Auth, DB, Storage) son manejadas por Supabase.
+- **Frontend**: http://localhost:5173
+- **Backend**: http://localhost:8000/api
 
-## Despliegue (Deployment)
+## Despliegue en Vercel (Producción)
 
-### Frontend (Vercel / Netlify / Railway)
-- Conecta tu repositorio.
-- **Root Directory**: `frontend`
-- **Build Command**: `npm run build`
-- **Output Directory**: `dist`
-- **Variables de Entorno**: Asegúrate de añadir `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` en el panel de control de tu proveedor.
+El proyecto incluye el archivo de configuración en la raíz (`vercel.json`) que orquesta el build para ambos ambientes:
 
-## Estructura del Proyecto
-- `/frontend`: Aplicación principal en React con Tailwind CSS y Supabase SDK.
-- `/backend-nest`: Estructura base para futuros microservicios.
-- `/.github/workflows`: Automatización de CI/CD.
+1. Importa este repositorio raíz a Vercel.
+2. Vercel automatically runs `npm run build`. 
+3. El frontend de React se genera en la carpeta `dist/client`. 
+4. El backend se asigna al endpoint dinámico `/api/*` y usa `@vercel/node`.
 
----
-*Transformado a Serverless con Supabase.*
+## Notas Importantes sobre la Migración
+- El proyecto fue liberado de cualquier dependencia previa del proveedor BaaS "Supabase" u otras infraestructuras monolíticas ("Laravel"). Toda la validación lógica reside exclusivamente en NestJS. 
+- Las tablas iniciales se generan automáticamente a través del flag `synchronize: true` de TypeORM durante la fase de desarrollo local.

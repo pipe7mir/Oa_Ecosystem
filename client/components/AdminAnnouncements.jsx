@@ -1,6 +1,5 @@
 ﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
 import { theme } from '../react-ui/styles/theme';
 import Draggable from 'react-draggable';
 
@@ -337,8 +336,7 @@ const AdminAnnouncements = () => {
 
     const fetchAnnouncements = async () => {
         try {
-            const { data, error } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
-            if (error) throw error;
+            const { data } = await apiClient.get('/announcements');
             setAnnouncements(Array.isArray(data) ? data : []);
         }
         catch (e) { console.error(e); }

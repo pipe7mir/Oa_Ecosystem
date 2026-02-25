@@ -237,7 +237,7 @@ const AdminForms = () => {
                                     <tr key={sub.id}>
                                         {viewingSubmissionsFor.fields.map(f => {
                                             const val = sub.data[f.label];
-                                            const isFile = typeof val === 'string' && val.includes('.supabase.co/storage/v1/object/public/');
+                                            const isFile = typeof val === 'string' && (val.includes('http') && val.includes('/uploads/'));
 
                                             return (
                                                 <td key={f.id}>
@@ -253,8 +253,7 @@ const AdminForms = () => {
                                         <td className="text-end">
                                             <button className="btn btn-sm text-danger" onClick={async () => {
                                                 if (window.confirm('¿Eliminar respuesta?')) {
-                                                    const { error } = await supabase.from('event_submissions').delete().eq('id', sub.id);
-                                                    if (error) throw error;
+                                                    await apiClient.delete(`/admin/event-submissions/${sub.id}`);
                                                     fetchSubmissions(viewingSubmissionsFor.id);
                                                 }
                                             }}>Borrar</button>
