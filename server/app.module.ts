@@ -29,11 +29,29 @@ import { TestCorsController } from './common/test-cors.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRoot({
-      type: 'sqlite',
-      database: 'database.sqlite',
-      autoLoadEntities: true,
-      synchronize: true, // ¡Solo para desarrollo!
+    TypeOrmModule.forRootAsync({
+      useFactory: () => {
+        const isVercel = process.env.VERCEL === '1';
+        const dbUrl = process.env.DATABASE_URL;
+
+        if (dbUrl) {
+          return {
+            type: 'postgres',
+            url: dbUrl,
+            autoLoadEntities: true,
+            synchronize: true, // Only for development/initial setup
+            ssl: { rejectUnauthorized: false },
+          };
+        }
+
+        return {
+          type: 'sqlite',
+          // En Vercel, el único directorio con permisos de escritura es /tmp
+          database: isVercel ? '/tmp/database.sqlite' : 'database.sqlite',
+          autoLoadEntities: true,
+          synchronize: true,
+        };
+      },
     }),
     AuthModule,
     UsersModule,

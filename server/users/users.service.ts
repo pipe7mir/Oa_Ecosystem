@@ -1,14 +1,32 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnApplicationBootstrap {
     constructor(
         @InjectRepository(User)
         private readonly usersRepo: Repository<User>,
     ) { }
+
+    async onApplicationBootstrap() {
+        const adminEmail = 'admin@oasis.com';
+        const existing = await this.usersRepo.findOne({ where: { email: adminEmail } });
+        if (!existing) {
+            const admin = this.usersRepo.create({
+                name: 'Admin Principal',
+                username: 'admin',
+                email: adminEmail,
+                password: await bcrypt.hash('oasis123', 10),
+                role: 'admin',
+                isApproved: true,
+            });
+            await this.usersRepo.save(admin);
+            console.log('✅ Auto-seeded admin user: admin@oasis.com / oasis123');
+        }
+    }
 
     async findAll(): Promise<User[]> {
         return this.usersRepo.find();
