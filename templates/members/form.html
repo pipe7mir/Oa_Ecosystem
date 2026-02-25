@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Miembro{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="{{ url_for('members_list') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h2 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>{{ action }} Miembro</h2>
+</div>
+
+<div class="card shadow-sm" style="max-width:700px">
+  <div class="card-body">
+    <form method="post">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Nombre <span class="text-danger">*</span></label>
+          <input type="text" name="name" class="form-control"
+                 value="{{ member.name if member else '' }}" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Correo Electrónico</label>
+          <input type="email" name="email" class="form-control"
+                 value="{{ member.email if member and member.email else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Teléfono</label>
+          <input type="text" name="phone" class="form-control"
+                 value="{{ member.phone if member and member.phone else '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Ministerio / Grupo</label>
+          <input type="text" name="ministry" class="form-control"
+                 value="{{ member.ministry if member and member.ministry else '' }}">
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">Dirección</label>
+          <input type="text" name="address" class="form-control"
+                 value="{{ member.address if member and member.address else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Fecha de Nacimiento</label>
+          <input type="date" name="birth_date" class="form-control"
+                 value="{{ member.birth_date.strftime('%Y-%m-%d') if member and member.birth_date else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Fecha de Membresía</label>
+          <input type="date" name="membership_date" class="form-control"
+                 value="{{ member.membership_date.strftime('%Y-%m-%d') if member and member.membership_date else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold">Estado</label>
+          <select name="status" class="form-select">
+            <option value="active" {% if not member or member.status == 'active' %}selected{% endif %}>Activo</option>
+            <option value="inactive" {% if member and member.status == 'inactive' %}selected{% endif %}>Inactivo</option>
+          </select>
+        </div>
+      </div>
+      <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-save me-1"></i>Guardar
+        </button>
+        <a href="{{ url_for('members_list') }}" class="btn btn-outline-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

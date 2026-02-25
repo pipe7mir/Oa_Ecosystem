@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Registrar Ofrenda{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="{{ url_for('offerings_list') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h2 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Registrar Ofrenda</h2>
+</div>
+
+<div class="card shadow-sm" style="max-width:550px">
+  <div class="card-body">
+    <form method="post">
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Miembro (opcional)</label>
+        <select name="member_id" class="form-select">
+          <option value="">— Anónimo —</option>
+          {% for m in members %}
+          <option value="{{ m.id }}">{{ m.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Tipo <span class="text-danger">*</span></label>
+        <select name="offering_type" class="form-select" required>
+          <option value="ofrenda">Ofrenda</option>
+          <option value="diezmo">Diezmo</option>
+          <option value="especial">Ofrenda Especial</option>
+          <option value="mision">Misiones</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Monto <span class="text-danger">*</span></label>
+        <div class="input-group">
+          <span class="input-group-text">$</span>
+          <input type="number" name="amount" class="form-control" step="0.01" min="0.01" required>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Fecha <span class="text-danger">*</span></label>
+        <input type="date" name="offering_date" class="form-control"
+               value="{{ today }}" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Notas</label>
+        <input type="text" name="notes" class="form-control" placeholder="Observaciones…">
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-save me-1"></i>Guardar
+        </button>
+        <a href="{{ url_for('offerings_list') }}" class="btn btn-outline-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

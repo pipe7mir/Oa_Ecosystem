@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}{{ member.name }}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="{{ url_for('members_list') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <h2 class="mb-0">{{ member.name }}</h2>
+  <a href="{{ url_for('member_edit', member_id=member.id) }}" class="btn btn-outline-primary btn-sm ms-auto">
+    <i class="bi bi-pencil me-1"></i>Editar
+  </a>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-semibold">Información Personal</div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-5">Estado</dt>
+          <dd class="col-7">
+            {% if member.status == 'active' %}
+              <span class="badge bg-success">Activo</span>
+            {% else %}
+              <span class="badge bg-secondary">Inactivo</span>
+            {% endif %}
+          </dd>
+          <dt class="col-5">Email</dt>
+          <dd class="col-7">{{ member.email or '—' }}</dd>
+          <dt class="col-5">Teléfono</dt>
+          <dd class="col-7">{{ member.phone or '—' }}</dd>
+          <dt class="col-5">Dirección</dt>
+          <dd class="col-7">{{ member.address or '—' }}</dd>
+          <dt class="col-5">Ministerio</dt>
+          <dd class="col-7">{{ member.ministry or '—' }}</dd>
+          <dt class="col-5">Nacimiento</dt>
+          <dd class="col-7">{{ member.birth_date.strftime('%d/%m/%Y') if member.birth_date else '—' }}</dd>
+          <dt class="col-5">Membresía</dt>
+          <dd class="col-7">{{ member.membership_date.strftime('%d/%m/%Y') if member.membership_date else '—' }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-cash-coin me-1"></i>Ofrendas
+        <span class="badge bg-secondary ms-1">{{ offerings|length }}</span>
+      </div>
+      <div class="card-body p-0">
+        {% if offerings %}
+        <table class="table table-sm mb-0">
+          <thead class="table-light">
+            <tr><th>Fecha</th><th>Tipo</th><th>Monto</th><th>Notas</th></tr>
+          </thead>
+          <tbody>
+            {% for o in offerings %}
+            <tr>
+              <td>{{ o.offering_date.strftime('%d/%m/%Y') }}</td>
+              <td>{{ o.offering_type|capitalize }}</td>
+              <td>${{ "%.2f"|format(o.amount) }}</td>
+              <td>{{ o.notes or '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted p-3 mb-0">Sin ofrendas registradas.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-calendar-check me-1"></i>Asistencia
+        <span class="badge bg-secondary ms-1">{{ attendances|length }}</span>
+      </div>
+      <div class="card-body p-0">
+        {% if attendances %}
+        <table class="table table-sm mb-0">
+          <thead class="table-light">
+            <tr><th>Evento</th><th>Fecha</th><th>Presente</th></tr>
+          </thead>
+          <tbody>
+            {% for a in attendances %}
+            <tr>
+              <td>{{ a.event.name }}</td>
+              <td>{{ a.event.event_date.strftime('%d/%m/%Y') }}</td>
+              <td>
+                {% if a.present %}
+                  <span class="badge bg-success">Sí</span>
+                {% else %}
+                  <span class="badge bg-danger">No</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted p-3 mb-0">Sin asistencias registradas.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
