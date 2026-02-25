@@ -47,7 +47,7 @@ import { TestCorsController } from './common/test-cors.controller';
         return {
           type: 'sqlite',
           // En Vercel, el único directorio con permisos de escritura es /tmp
-          database: isVercel ? '/tmp/database.sqlite' : 'database.sqlite',
+          database: isVercel ? '/tmp/database.sqlite' : 'data/database.sqlite',
           autoLoadEntities: true,
           synchronize: true,
         };
