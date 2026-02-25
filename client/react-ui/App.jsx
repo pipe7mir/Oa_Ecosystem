@@ -18,6 +18,7 @@ import AdminLayout from '../components/AdminLayout';
 import AdminLive from '../components/AdminLive';
 import AdminAbout from '../components/AdminAbout';
 import Login from '../components/Login';
+import ProtectedRoute from '../components/ProtectedRoute';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
 
