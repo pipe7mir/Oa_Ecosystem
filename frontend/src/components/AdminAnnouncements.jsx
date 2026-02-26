@@ -2,6 +2,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { theme } from '../react-ui/styles/theme';
 import Draggable from 'react-draggable';
+import apiClient from '../api/client';
 
 // Logo assets
 import logoOasis from '../img/logos/LOGO1.png';
