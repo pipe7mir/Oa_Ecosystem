@@ -112,7 +112,6 @@ const AdminLayout = () => {
         top: 0,
         left: isMobileMenuOpen ? 0 : '-280px',
         width: '280px',
-        height: '100vh',
         height: '100dvh',
         background: 'white',
         zIndex: 1051,

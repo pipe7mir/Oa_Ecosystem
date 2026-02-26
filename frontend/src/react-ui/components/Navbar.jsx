@@ -181,7 +181,6 @@ const Navbar = () => {
             right: mobileMenuOpen ? 0 : '-100%',
             width: '280px',
             maxWidth: '85vw',
-            height: '100vh',
             height: '100dvh',
             background: 'white',
             zIndex: 999,
