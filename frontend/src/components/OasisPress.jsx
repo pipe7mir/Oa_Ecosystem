@@ -28,15 +28,15 @@ const COLORS = ['#5b2ea6', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'
 // ===============================
 const IMAGE_LIBRARY = {
     logos: [
-        { id: 'logo-oasis-main', name: 'Oasis Principal', url: 'https://i.imgur.com/YvKQZCr.png', category: 'logos' },
-        { id: 'logo-oasis-church', name: 'Iglesia Oasis', url: 'https://i.imgur.com/wEJPqLM.png', category: 'logos' },
-        { id: 'logo-oasis-icon', name: 'Oasis Icono', url: 'https://i.imgur.com/VdCbQYD.png', category: 'logos' },
+        { id: 'logo-oasis-main', name: 'Oasis Principal', url: 'https://i.ibb.co/LdvS4mF/logo-oasis.png', category: 'logos' },
+        { id: 'logo-oasis-church', name: 'Iglesia Oasis', url: 'https://i.ibb.co/w0XvYJQ/Oasis-Church-Logo.png', category: 'logos' },
+        { id: 'logo-oasis-icon', name: 'Oasis Icono', url: 'https://i.ibb.co/VvKB2zB/Oasis-Icon.png', category: 'logos' },
     ],
     social: [
-        { id: 'social-ig', name: 'Instagram', url: 'https://cdn-icons-png.flaticon.com/512/174/174855.png', category: 'social' },
-        { id: 'social-fb', name: 'Facebook', url: 'https://cdn-icons-png.flaticon.com/512/733/733547.png', category: 'social' },
-        { id: 'social-yt', name: 'YouTube', url: 'https://cdn-icons-png.flaticon.com/512/1384/1384060.png', category: 'social' },
-        { id: 'social-wa', name: 'WhatsApp', url: 'https://cdn-icons-png.flaticon.com/512/733/733585.png', category: 'social' },
+        { id: 'social-ig', name: 'Instagram', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/2048px-Instagram_logo_2016.svg.png', category: 'social' },
+        { id: 'social-fb', name: 'Facebook', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/1200px-Facebook_Logo_%282019%29.png', category: 'social' },
+        { id: 'social-yt', name: 'YouTube', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/1024px-YouTube_full-color_icon_%282017%29.svg.png', category: 'social' },
+        { id: 'social-wa', name: 'WhatsApp', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/1200px-WhatsApp.svg.png', category: 'social' },
     ],
     backgrounds: [
         { id: 'bg-1', name: 'Worship Lights', url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1920&q=80', category: 'backgrounds' },
@@ -112,6 +112,110 @@ const getElements = (slide) => {
     if (!slide) return [];
     if (Array.isArray(slide.elements)) return slide.elements;
     return [];
+};
+
+// Virtual Coordinate System Constants
+const VIRTUAL_WIDTH = 1200;
+const VIRTUAL_HEIGHT = 675; // 16:9
+
+const SlideContent = ({ slide, scale = 1, isPresenting = false, selectedElement = null, setSelectedElement = () => { }, editingTextId = null, setEditingTextId = () => { }, updateElement = () => { } }) => {
+    const elements = getElements(slide);
+
+    return (
+        <div style={{
+            position: 'absolute',
+            inset: 0,
+            width: VIRTUAL_WIDTH,
+            height: VIRTUAL_HEIGHT,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            overflow: 'hidden',
+            pointerEvents: isPresenting ? 'none' : 'auto'
+        }}>
+            {/* Background Image */}
+            {slide.backgroundImage && (
+                <>
+                    <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        backgroundImage: `url(${slide.backgroundImage})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                    }} />
+                    {slide.backgroundGradient && (
+                        <div style={{
+                            position: 'absolute',
+                            inset: 0,
+                            background: GRADIENT_PRESETS.find(g => g.value === slide.backgroundGradient)?.overlay || slide.backgroundGradient
+                        }} />
+                    )}
+                </>
+            )}
+
+            {elements.map(element => (
+                <motion.div
+                    key={element.id}
+                    layoutId={slide.transitionType === 'morph' ? element.id : undefined}
+                    drag={!isPresenting}
+                    dragMomentum={false}
+                    onDragEnd={(_, info) => {
+                        updateElement(element.id, {
+                            x: Math.max(0, element.x + info.offset.x / scale),
+                            y: Math.max(0, element.y + info.offset.y / scale)
+                        });
+                    }}
+                    onClick={(e) => { e.stopPropagation(); setSelectedElement(element.id); }}
+                    style={{
+                        position: 'absolute',
+                        left: element.x,
+                        top: element.y,
+                        width: element.width,
+                        minHeight: element.type === 'text' || element.type === 'heading' ? 40 : element.height,
+                        height: element.type === 'text' || element.type === 'heading' ? 'auto' : element.height,
+                        cursor: isPresenting ? 'default' : 'move',
+                        transform: `rotate(${element.rotation || 0}deg)`,
+                        opacity: element.opacity || 1,
+                        ...element.style,
+                        outline: (!isPresenting && selectedElement === element.id) ? `2px solid ${theme.colors.primary}` : 'none',
+                        outlineOffset: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: element.style?.textAlign || 'center'
+                    }}
+                >
+                    {(element.type === 'text' || element.type === 'heading') && (
+                        <div
+                            contentEditable={!isPresenting}
+                            suppressContentEditableWarning
+                            onFocus={() => setEditingTextId(element.id)}
+                            onBlur={(e) => {
+                                updateElement(element.id, { content: e.target.textContent });
+                                setEditingTextId(null);
+                            }}
+                            style={{
+                                outline: 'none',
+                                width: '100%',
+                                minHeight: '1em',
+                                cursor: editingTextId === element.id ? 'text' : isPresenting ? 'default' : 'move'
+                            }}
+                        >
+                            {element.content}
+                        </div>
+                    )}
+                    {element.type === 'shape' && (
+                        <div style={{ width: '100%', height: '100%', borderRadius: element.style?.borderRadius }} />
+                    )}
+                    {element.type === 'image' && (
+                        <img
+                            src={element.src || 'https://via.placeholder.com/200x200?text=Imagen'}
+                            alt=""
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: element.style?.borderRadius }}
+                        />
+                    )}
+                </motion.div>
+            ))}
+        </div>
+    );
 };
 
 const OasisPress = () => {
@@ -851,7 +955,7 @@ const OasisPress = () => {
                 </div>
 
                 {/* Slide content */}
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="popLayout" initial={false}>
                     <motion.div
                         key={currentSlideData.id || selectedSlide}
                         initial={
@@ -868,10 +972,9 @@ const OasisPress = () => {
                                         { opacity: 0 }
                         }
                         transition={{
-                            duration: currentSlideData.transitionType === 'infinite' ? 1.2 : 0.6,
-                            ease: [0.4, 0, 0.2, 1]
+                            duration: currentSlideData.transitionType === 'infinite' ? 0.8 : 0.4,
+                            ease: "easeInOut"
                         }}
-                        layout={currentSlideData.transitionType === 'morph'}
                         style={{
                             width: '90vw',
                             maxWidth: '1200px',
@@ -883,52 +986,11 @@ const OasisPress = () => {
                             boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
                         }}
                     >
-                        {/* Background Image */}
-                        {currentSlideData.backgroundImage && (
-                            <>
-                                <div style={{
-                                    position: 'absolute',
-                                    inset: 0,
-                                    backgroundImage: `url(${currentSlideData.backgroundImage})`,
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: 'center'
-                                }} />
-                                {currentSlideData.backgroundGradient && (
-                                    <div style={{
-                                        position: 'absolute',
-                                        inset: 0,
-                                        background: GRADIENT_PRESETS.find(g => g.value === currentSlideData.backgroundGradient)?.overlay || currentSlideData.backgroundGradient
-                                    }} />
-                                )}
-                            </>
-                        )}
-
-                        {elements.map(element => (
-                            <motion.div
-                                key={element.id}
-                                layoutId={currentSlideData.transitionType === 'morph' ? element.id : undefined}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: element.opacity || 1, y: 0 }}
-                                transition={{ duration: 0.4 }}
-                                style={{
-                                    position: 'absolute',
-                                    left: element.x,
-                                    top: element.y,
-                                    width: element.width,
-                                    height: element.type === 'text' || element.type === 'heading' ? 'auto' : element.height,
-                                    transform: `rotate(${element.rotation || 0}deg)`,
-                                    ...element.style,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: element.style?.textAlign || 'center'
-                                }}
-                            >
-                                {(element.type === 'text' || element.type === 'heading') && element.content}
-                                {element.type === 'image' && element.src && (
-                                    <img src={element.src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: element.style?.borderRadius }} />
-                                )}
-                            </motion.div>
-                        ))}
+                        <SlideContent
+                            slide={currentSlideData}
+                            scale={Math.min(window.innerWidth * 0.9, 1200) / VIRTUAL_WIDTH}
+                            isPresenting={true}
+                        />
                     </motion.div>
                 </AnimatePresence>
 
@@ -1152,36 +1214,12 @@ const OasisPress = () => {
                                         {index + 1}
                                     </span>
                                     {/* Mini preview */}
-                                    <div style={{ transform: 'scale(0.12)', transformOrigin: 'top left', width: '833%', height: '833%', position: 'absolute', inset: 0, padding: 0 }}>
-                                        {getElements(slide).map(el => (
-                                            <div key={el.id} style={{
-                                                position: 'absolute',
-                                                left: el.x,
-                                                top: el.y,
-                                                width: el.width,
-                                                height: el.type === 'image' || el.type === 'shape' ? el.height : 'auto',
-                                                fontSize: el.style?.fontSize,
-                                                fontFamily: el.style?.fontFamily,
-                                                fontWeight: el.style?.fontWeight,
-                                                fontStyle: el.style?.fontStyle,
-                                                textDecoration: el.style?.textDecoration,
-                                                textAlign: el.style?.textAlign,
-                                                color: el.style?.color,
-                                                backgroundColor: el.style?.backgroundColor,
-                                                borderRadius: el.style?.borderRadius,
-                                                opacity: el.opacity || 1,
-                                                transform: `rotate(${el.rotation || 0}deg)`,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: el.style?.textAlign || 'center',
-                                                overflow: 'hidden'
-                                            }}>
-                                                {(el.type === 'text' || el.type === 'heading') && el.content}
-                                                {el.type === 'image' && el.src && (
-                                                    <img src={el.src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                )}
-                                            </div>
-                                        ))}
+                                    <div style={{ position: 'absolute', inset: 0 }}>
+                                        <SlideContent
+                                            slide={slide}
+                                            scale={150 / VIRTUAL_WIDTH}
+                                            isPresenting={true}
+                                        />
                                     </div>
                                     {/* Actions */}
                                     <div className="position-absolute d-flex gap-1" style={{ bottom: 3, right: 3 }}>
@@ -1268,123 +1306,17 @@ const OasisPress = () => {
                             }}
                             onClick={() => setSelectedElement(null)}
                         >
-                            {/* Background Image */}
-                            {currentSlideData.backgroundImage && (
-                                <>
-                                    <div style={{
-                                        position: 'absolute',
-                                        inset: 0,
-                                        backgroundImage: `url(${currentSlideData.backgroundImage})`,
-                                        backgroundSize: 'cover',
-                                        backgroundPosition: 'center'
-                                    }} />
-                                    {currentSlideData.backgroundGradient && (
-                                        <div style={{
-                                            position: 'absolute',
-                                            inset: 0,
-                                            background: GRADIENT_PRESETS.find(g => g.value === currentSlideData.backgroundGradient)?.overlay || currentSlideData.backgroundGradient
-                                        }} />
-                                    )}
-                                </>
+                            {canvasRef.current && (
+                                <SlideContent
+                                    slide={currentSlideData}
+                                    scale={canvasRef.current.offsetWidth / VIRTUAL_WIDTH}
+                                    selectedElement={selectedElement}
+                                    setSelectedElement={setSelectedElement}
+                                    editingTextId={editingTextId}
+                                    setEditingTextId={setEditingTextId}
+                                    updateElement={updateElement}
+                                />
                             )}
-
-                            <AnimatePresence>
-                                {elements.map(element => (
-                                    <motion.div
-                                        key={element.id}
-                                        drag
-                                        dragMomentum={false}
-                                        onDragEnd={(_, info) => {
-                                            updateElement(element.id, {
-                                                x: Math.max(0, element.x + info.offset.x),
-                                                y: Math.max(0, element.y + info.offset.y)
-                                            });
-                                        }}
-                                        onClick={(e) => { e.stopPropagation(); setSelectedElement(element.id); }}
-                                        whileHover={{ boxShadow: `0 0 0 2px ${theme.colors.primary}40` }}
-                                        style={{
-                                            position: 'absolute',
-                                            left: element.x,
-                                            top: element.y,
-                                            width: element.width,
-                                            minHeight: element.type === 'text' || element.type === 'heading' ? 40 : element.height,
-                                            height: element.type === 'text' || element.type === 'heading' ? 'auto' : element.height,
-                                            cursor: 'move',
-                                            transform: `rotate(${element.rotation || 0}deg)`,
-                                            opacity: element.opacity || 1,
-                                            ...element.style,
-                                            outline: selectedElement === element.id ? `2px solid ${theme.colors.primary}` : 'none',
-                                            outlineOffset: 2
-                                        }}
-                                    >
-                                        {(element.type === 'text' || element.type === 'heading') && (
-                                            <div
-                                                contentEditable
-                                                suppressContentEditableWarning
-                                                onFocus={() => setEditingTextId(element.id)}
-                                                onBlur={(e) => {
-                                                    updateElement(element.id, { content: e.target.textContent });
-                                                    setEditingTextId(null);
-                                                }}
-                                                style={{
-                                                    outline: 'none',
-                                                    width: '100%',
-                                                    minHeight: '1em',
-                                                    cursor: editingTextId === element.id ? 'text' : 'move'
-                                                }}
-                                            >
-                                                {element.content}
-                                            </div>
-                                        )}
-                                        {element.type === 'shape' && (
-                                            <div style={{ width: '100%', height: '100%', borderRadius: element.style?.borderRadius }} />
-                                        )}
-                                        {element.type === 'image' && (
-                                            <img
-                                                src={element.src || 'https://via.placeholder.com/200x200?text=Imagen'}
-                                                alt=""
-                                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: element.style?.borderRadius }}
-                                            />
-                                        )}
-                                        {/* Resize handle */}
-                                        {selectedElement === element.id && (
-                                            <div
-                                                style={{
-                                                    position: 'absolute',
-                                                    right: -6,
-                                                    bottom: -6,
-                                                    width: 12,
-                                                    height: 12,
-                                                    background: theme.colors.primary,
-                                                    borderRadius: 2,
-                                                    cursor: 'se-resize'
-                                                }}
-                                                onMouseDown={(e) => {
-                                                    e.stopPropagation();
-                                                    const startX = e.clientX;
-                                                    const startY = e.clientY;
-                                                    const startWidth = element.width;
-                                                    const startHeight = element.height || 100;
-
-                                                    const onMouseMove = (moveEvent) => {
-                                                        const newWidth = Math.max(50, startWidth + (moveEvent.clientX - startX));
-                                                        const newHeight = Math.max(30, startHeight + (moveEvent.clientY - startY));
-                                                        updateElement(element.id, { width: newWidth, height: newHeight });
-                                                    };
-
-                                                    const onMouseUp = () => {
-                                                        document.removeEventListener('mousemove', onMouseMove);
-                                                        document.removeEventListener('mouseup', onMouseUp);
-                                                    };
-
-                                                    document.addEventListener('mousemove', onMouseMove);
-                                                    document.addEventListener('mouseup', onMouseUp);
-                                                }}
-                                            />
-                                        )}
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
                         </div>
                     </div>
                 </div>
