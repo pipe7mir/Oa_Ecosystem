@@ -46,4 +46,3 @@ bootstrap().catch((error) => {
   console.error('Stack:', error.stack);
   process.exit(1);
 });
-});
