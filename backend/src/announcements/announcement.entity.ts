@@ -17,7 +17,7 @@ export class Announcement {
     @Column({ type: 'text', nullable: true })
     content: string;
 
-    @Column({ type: 'timestamp', name: 'event_date', nullable: true })
+    @Column({ name: 'event_date', nullable: true })
     eventDate: Date;
 
     @Column({ type: 'date', nullable: true })

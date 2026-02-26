@@ -29,10 +29,10 @@ export class RequestEntity {
   @Column({ type: 'text', nullable: true })
   response: string | null;
 
-  @Column({ type: 'timestamp', name: 'email_sent_at', nullable: true })
+  @Column({ name: 'email_sent_at', nullable: true })
   emailSentAt: Date | null;
 
-  @Column({ type: 'timestamp', name: 'wa_link_opened_at', nullable: true })
+  @Column({ name: 'wa_link_opened_at', nullable: true })
   waLinkOpenedAt: Date | null;
 
   @Column({ type: 'varchar', length: 500, name: 'email_error', nullable: true })
