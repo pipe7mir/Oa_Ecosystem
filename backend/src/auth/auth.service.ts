@@ -93,4 +93,15 @@ export class AuthService {
       user: saved,
     };
   }
+
+  async getUserById(id: number) {
+    const user = await this.usersRepo.findOne({ where: { id } });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Retornar datos del usuario sin la contraseña
+    const { password, ...userData } = user;
+    return userData;
+  }
 }

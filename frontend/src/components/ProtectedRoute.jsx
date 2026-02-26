@@ -3,7 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const ProtectedRoute = ({ redirectPath = '/login', adminOnly = true }) => {
-    const { user, loading, isAdmin } = useAuth();
+    const { user, loading, canAccessAdmin } = useAuth();
 
     if (loading) {
         return <div className="text-center p-5"><div className="spinner-border text-primary"></div></div>;
@@ -13,7 +13,8 @@ const ProtectedRoute = ({ redirectPath = '/login', adminOnly = true }) => {
         return <Navigate to={redirectPath} replace />;
     }
 
-    if (adminOnly && !isAdmin) {
+    // Verificar si el usuario puede acceder al admin (admin o editor)
+    if (adminOnly && !canAccessAdmin) {
         return <Navigate to="/" replace />;
     }
 

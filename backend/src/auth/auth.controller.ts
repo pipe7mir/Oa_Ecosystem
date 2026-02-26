@@ -34,8 +34,9 @@ export class AuthController {
   // Get authenticated user data via JWT Token
   @Get('user')
   @UseGuards(JwtAuthGuard)
-  getUser(@Req() req: Request) {
-    // En JwtStrategy.validate devolvemos { userId, role }
-    return req.user;
+  async getUser(@Req() req: Request) {
+    const jwtPayload = req.user as { userId: number; role: string };
+    // Obtener datos completos del usuario desde la base de datos
+    return this.authService.getUserById(jwtPayload.userId);
   }
 }
