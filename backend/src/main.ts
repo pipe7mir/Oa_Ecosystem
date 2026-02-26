@@ -2,11 +2,20 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log'],
+  });
 
-  // Health check endpoint at root (before global prefix)
-  app.getHttpAdapter().get('/', (req, res) => {
+  // Health check endpoints (before global prefix)
+  const httpAdapter = app.getHttpAdapter();
+  httpAdapter.get('/', (req, res) => {
     res.json({ status: 'ok', message: 'OASIS API is running' });
+  });
+  httpAdapter.get('/api', (req, res) => {
+    res.json({ status: 'ok', message: 'OASIS API is running' });
+  });
+  httpAdapter.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
   app.setGlobalPrefix('api');
@@ -47,7 +56,7 @@ async function bootstrap() {
   });
 
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   // eslint-disable-next-line no-console
   console.log(`Nest server running on port ${port}`);
 }
