@@ -118,26 +118,28 @@ const OasisPress = () => {
     // ===============================
     const addSlide = () => {
         if (!currentPresentation) return;
+        const slides = currentPresentation.slides || [];
         const newSlide = {
             id: `slide-${Date.now()}`,
-            order: currentPresentation.slides.length,
+            order: slides.length,
             background: '#ffffff',
             elements: [],
             transition: 'morph'
         };
         const updated = {
             ...currentPresentation,
-            slides: [...currentPresentation.slides, newSlide]
+            slides: [...slides, newSlide]
         };
         setCurrentPresentation(updated);
-        setSelectedSlide(updated.slides.length - 1);
+        setSelectedSlide((updated.slides || []).length - 1);
     };
 
     const deleteSlide = (index) => {
-        if (!currentPresentation || currentPresentation.slides.length <= 1) return;
+        const slides = currentPresentation?.slides || [];
+        if (!currentPresentation || slides.length <= 1) return;
         const updated = {
             ...currentPresentation,
-            slides: currentPresentation.slides.filter((_, i) => i !== index)
+            slides: slides.filter((_, i) => i !== index)
         };
         setCurrentPresentation(updated);
         setSelectedSlide(Math.max(0, index - 1));
@@ -145,12 +147,14 @@ const OasisPress = () => {
 
     const duplicateSlide = (index) => {
         if (!currentPresentation) return;
-        const slideToCopy = currentPresentation.slides[index];
+        const slides = currentPresentation.slides || [];
+        const slideToCopy = slides[index];
+        if (!slideToCopy) return;
         const newSlide = {
             ...JSON.parse(JSON.stringify(slideToCopy)),
             id: `slide-${Date.now()}`
         };
-        const newSlides = [...currentPresentation.slides];
+        const newSlides = [...slides];
         newSlides.splice(index + 1, 0, newSlide);
         setCurrentPresentation({ ...currentPresentation, slides: newSlides });
         setSelectedSlide(index + 1);
@@ -227,7 +231,7 @@ const OasisPress = () => {
         const threshold = 50;
 
         if (Math.abs(deltaX) > threshold) {
-            if (deltaX < 0 && selectedSlide < currentPresentation.slides.length - 1) {
+            if (deltaX < 0 && selectedSlide < (currentPresentation?.slides || []).length - 1) {
                 setSelectedSlide(prev => prev + 1);
             } else if (deltaX > 0 && selectedSlide > 0) {
                 setSelectedSlide(prev => prev - 1);
@@ -240,7 +244,7 @@ const OasisPress = () => {
         if (!isPresentMode) return;
         const handleKeyDown = (e) => {
             if (e.key === 'ArrowRight' || e.key === ' ') {
-                setSelectedSlide(prev => Math.min(prev + 1, (currentPresentation?.slides.length || 1) - 1));
+                setSelectedSlide(prev => Math.min(prev + 1, (currentPresentation?.slides?.length || 1) - 1));
             } else if (e.key === 'ArrowLeft') {
                 setSelectedSlide(prev => Math.max(prev - 1, 0));
             } else if (e.key === 'Escape') {
@@ -255,7 +259,7 @@ const OasisPress = () => {
     // Presentation Mode
     // ===============================
     const PresentationMode = () => {
-        const currentSlideData = currentPresentation?.slides[selectedSlide];
+        const currentSlideData = currentPresentation?.slides?.[selectedSlide];
         
         return (
             <motion.div
@@ -305,7 +309,7 @@ const OasisPress = () => {
                     fontSize: '1rem',
                     opacity: 0.7
                 }}>
-                    {selectedSlide + 1} / {currentPresentation?.slides.length}
+                    {selectedSlide + 1} / {(currentPresentation?.slides || []).length}
                 </div>
 
                 {/* Slide content with morph animation */}
@@ -375,7 +379,7 @@ const OasisPress = () => {
                         <i className="bi bi-chevron-left"></i>
                     </button>
                 )}
-                {selectedSlide < (currentPresentation?.slides.length || 1) - 1 && (
+                {selectedSlide < (currentPresentation?.slides?.length || 1) - 1 && (
                     <button
                         onClick={() => setSelectedSlide(prev => prev + 1)}
                         style={{
@@ -456,7 +460,7 @@ const OasisPress = () => {
                                         <button onClick={(e) => { e.stopPropagation(); duplicateSlide(index); }} className="btn btn-sm p-0" style={{ width: 20, height: 20, fontSize: '0.6rem', background: 'rgba(255,255,255,0.8)' }}>
                                             <i className="bi bi-copy"></i>
                                         </button>
-                                        {currentPresentation.slides.length > 1 && (
+                                        {(currentPresentation?.slides || []).length > 1 && (
                                             <button onClick={(e) => { e.stopPropagation(); deleteSlide(index); }} className="btn btn-sm p-0" style={{ width: 20, height: 20, fontSize: '0.6rem', background: 'rgba(255,255,255,0.8)', color: '#dc3545' }}>
                                                 <i className="bi bi-trash"></i>
                                             </button>
@@ -660,9 +664,11 @@ const OasisPress = () => {
                                         className="form-control form-control-color w-100"
                                         value={currentSlideData?.background || '#ffffff'}
                                         onChange={(e) => {
-                                            const updatedSlides = [...currentPresentation.slides];
-                                            updatedSlides[selectedSlide] = { ...updatedSlides[selectedSlide], background: e.target.value };
-                                            setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+                                            const updatedSlides = [...(currentPresentation?.slides || [])];
+                                            if (updatedSlides[selectedSlide]) {
+                                                updatedSlides[selectedSlide] = { ...updatedSlides[selectedSlide], background: e.target.value };
+                                                setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+                                            }
                                         }}
                                     />
                                 </div>
@@ -672,9 +678,11 @@ const OasisPress = () => {
                                         className="form-select form-select-sm"
                                         value={currentSlideData?.transition || 'morph'}
                                         onChange={(e) => {
-                                            const updatedSlides = [...currentPresentation.slides];
-                                            updatedSlides[selectedSlide] = { ...updatedSlides[selectedSlide], transition: e.target.value };
-                                            setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+                                            const updatedSlides = [...(currentPresentation?.slides || [])];
+                                            if (updatedSlides[selectedSlide]) {
+                                                updatedSlides[selectedSlide] = { ...updatedSlides[selectedSlide], transition: e.target.value };
+                                                setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+                                            }
                                         }}
                                     >
                                         <option value="morph">Morph / Zoom</option>
