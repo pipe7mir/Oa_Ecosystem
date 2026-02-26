@@ -46,9 +46,10 @@ const OasisPress = () => {
     const fetchPresentations = async () => {
         try {
             const data = await apiClient.get('/presentations');
-            setPresentations(data);
+            setPresentations(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error fetching presentations:', error);
+            setPresentations([]);
         } finally {
             setLoading(false);
         }
@@ -326,12 +327,12 @@ const OasisPress = () => {
                             boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
                         }}
                     >
-                        {currentSlideData?.elements.map(element => (
+                        {(currentSlideData?.elements || []).map(element => (
                             <motion.div
                                 key={element.id}
                                 layoutId={element.layoutId}
                                 transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-                                style={{
+                                style={{{
                                     position: 'absolute',
                                     left: `${element.x}px`,
                                     top: `${element.y}px`,
@@ -418,7 +419,7 @@ const OasisPress = () => {
                             </button>
                         </div>
                         <div className="d-flex flex-column gap-2" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-                            {currentPresentation?.slides.map((slide, index) => (
+                            {(currentPresentation?.slides || []).map((slide, index) => (
                                 <motion.div
                                     key={slide.id}
                                     whileHover={{ scale: 1.02 }}
@@ -439,7 +440,7 @@ const OasisPress = () => {
                                     </span>
                                     {/* Slide thumbnail preview */}
                                     <div style={{ transform: 'scale(0.15)', transformOrigin: 'top left', width: '666%', height: '666%' }}>
-                                        {slide.elements.map(el => (
+                                        {(slide.elements || []).map(el => (
                                             <div key={el.id} style={{
                                                 position: 'absolute',
                                                 left: el.x, top: el.y,
@@ -506,7 +507,7 @@ const OasisPress = () => {
                             onClick={() => setSelectedElement(null)}
                         >
                             <AnimatePresence>
-                                {currentSlideData?.elements.map(element => (
+                                {(currentSlideData?.elements || []).map(element => (
                                     <motion.div
                                         key={element.id}
                                         layoutId={element.layoutId}
