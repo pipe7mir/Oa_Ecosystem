@@ -332,7 +332,7 @@ const OasisPress = () => {
                                 key={element.id}
                                 layoutId={element.layoutId}
                                 transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-                                style={{{
+                                style={{
                                     position: 'absolute',
                                     left: `${element.x}px`,
                                     top: `${element.y}px`,
