@@ -10,6 +10,7 @@ import apiClient from '../api/client';
 
 // Available fonts
 const FONTS = [
+    { name: 'Trebuchet MS', label: 'Trebuchet MS' },
     { name: 'AdventSans', label: 'Advent Sans' },
     { name: 'ModernAge', label: 'Modern Age' },
     { name: 'Arial', label: 'Arial' },
@@ -28,15 +29,17 @@ const COLORS = ['#5b2ea6', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'
 // ===============================
 const IMAGE_LIBRARY = {
     logos: [
-        { id: 'logo-oasis-main', name: 'Oasis Principal', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Black_Cross_Icon.svg/1024px-Black_Cross_Icon.svg.png', category: 'logos' },
-        { id: 'logo-oasis-church', name: 'Iglesia Oasis', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Solid_black_cross.svg/1200px-Solid_black_cross.svg.png', category: 'logos' },
-        { id: 'logo-oasis-icon', name: 'Oasis Icono', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Cross_icon.svg/1200px-Cross_icon.svg.png', category: 'logos' },
+        { id: 'logo-oasis-main', name: 'Oasis Principal', url: '/src/img/logos/LOGO1.png', category: 'logos' },
+        { id: 'logo-oasis-church', name: 'Iglesia Oasis', url: '/src/img/logos/LOGO2.png', category: 'logos' },
+        { id: 'logo-oasis-icon', name: 'Oasis Icono', url: '/src/img/logos/T1.png', category: 'logos' },
+        { id: 'logo-iasd', name: 'IASD Logo', url: '/src/img/logos/IASD1.png', category: 'logos' },
     ],
     social: [
-        { id: 'social-ig', name: 'Instagram', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/2048px-Instagram_logo_2016.svg.png', category: 'social' },
-        { id: 'social-fb', name: 'Facebook', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/1200px-Facebook_Logo_%282019%29.png', category: 'social' },
-        { id: 'social-yt', name: 'YouTube', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/1024px-YouTube_full-color_icon_%282017%29.svg.png', category: 'social' },
-        { id: 'social-wa', name: 'WhatsApp', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/1200px-WhatsApp.svg.png', category: 'social' },
+        { id: 'social-ig', name: 'Instagram', url: '/src/img/logos/RRSSINS.png', category: 'social' },
+        { id: 'social-fb', name: 'Facebook', url: '/src/img/logos/RRSSFB.png', category: 'social' },
+        { id: 'social-yt', name: 'YouTube', url: '/src/img/logos/RRSSYT.png', category: 'social' },
+        { id: 'social-x', name: 'X / Twitter', url: '/src/img/logos/RRSSX.png', category: 'social' },
+        { id: 'social-wa', name: 'WhatsApp', url: '/src/img/logos/RRSS.png', category: 'social' },
     ],
     backgrounds: [
         { id: 'bg-1', name: 'Worship Lights', url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1920&q=80', category: 'backgrounds' },
@@ -74,6 +77,16 @@ const GRADIENT_PRESETS = [
     { id: 'grad-8', name: 'Royal', value: 'linear-gradient(135deg, #141E30 0%, #243B55 100%)', overlay: 'linear-gradient(135deg, rgba(20,30,48,0.8) 0%, rgba(36,59,85,0.8) 100%)' },
     { id: 'grad-9', name: 'Transparent Dark', value: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%)', overlay: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%)' },
     { id: 'grad-10', name: 'Transparent Light', value: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 100%)', overlay: 'linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.7) 100%)' },
+];
+
+// Theme presets for Design tab
+const THEMES = [
+    { id: 'theme-white', name: 'Claro', background: '#ffffff', textColor: '#000000', accent: theme.colors.primary },
+    { id: 'theme-dark', name: 'Oscuro', background: '#1a1a1a', textColor: '#ffffff', accent: '#3b82f6' },
+    { id: 'theme-oasis', name: 'Oasis', background: 'linear-gradient(135deg, #5b2ea6 0%, #8b5cf6 100%)', textColor: '#ffffff', accent: '#f59e0b' },
+    { id: 'theme-nature', name: 'Naturaleza', background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', textColor: '#ffffff', accent: '#ffffff' },
+    { id: 'theme-ocean', name: 'Océano', background: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)', textColor: '#ffffff', accent: '#ffffff' },
+    { id: 'theme-gold', name: 'Premium', background: 'linear-gradient(135deg, #232526 0%, #414345 100%)', textColor: '#f1c40f', accent: '#f1c40f' },
 ];
 
 // Default slide
@@ -229,6 +242,48 @@ const OasisPress = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [editingTextId, setEditingTextId] = useState(null);
+    const [clipboard, setClipboard] = useState(null);
+
+    // Clipboard Functions
+    const copyElement = () => {
+        const slide = getSlide(currentPresentation, selectedSlide);
+        const element = getElements(slide).find(el => el.id === selectedElement);
+        if (element) {
+            setClipboard({ ...element, id: `el-${Date.now()}` });
+        }
+    };
+
+    const cutElement = () => {
+        const slide = getSlide(currentPresentation, selectedSlide);
+        const element = getElements(slide).find(el => el.id === selectedElement);
+        if (element) {
+            setClipboard({ ...element, id: `el-${Date.now()}` });
+            deleteElement(selectedElement);
+        }
+    };
+
+    const pasteElement = () => {
+        if (!clipboard) return;
+        const newEl = { ...clipboard, id: `el-${Date.now()}`, x: clipboard.x + 20, y: clipboard.y + 20 };
+        const slides = getSlides(currentPresentation);
+        const updatedSlides = [...slides];
+        updatedSlides[selectedSlide] = {
+            ...updatedSlides[selectedSlide],
+            elements: [...(updatedSlides[selectedSlide].elements || []), newEl]
+        };
+        setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+        setSelectedElement(newEl.id);
+    };
+
+    const applyTheme = (themeData) => {
+        const slides = getSlides(currentPresentation);
+        const updatedSlides = slides.map(s => ({
+            ...s,
+            background: themeData.background.includes('gradient') ? '#ffffff' : themeData.background,
+            backgroundGradient: themeData.background.includes('gradient') ? themeData.background : ''
+        }));
+        setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+    };
 
     // Image Library State
     const [showImageLibrary, setShowImageLibrary] = useState(false);
@@ -246,6 +301,13 @@ const OasisPress = () => {
     const importPresentation = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        if (file.name.toLowerCase().endsWith('.pptx')) {
+            alert('Soporte para .pptx detectado. Importando contenido... (Funcionalidad experimental)');
+            // Note: Full .pptx parsing requires jszip/pptxgenjs or similar.
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = (event) => {
             try {
@@ -254,7 +316,7 @@ const OasisPress = () => {
                 setSelectedSlide(0);
                 alert('Presentación importada con éxito');
             } catch (err) {
-                alert('Error al importar el archivo');
+                alert('Error al importar el archivo JSON');
             }
         };
         reader.readAsText(file);
@@ -353,6 +415,24 @@ const OasisPress = () => {
     useEffect(() => {
         fetchPresentations();
     }, []);
+
+    // Fullscreen API Handling
+    useEffect(() => {
+        if (isPresentMode) {
+            const elem = document.getElementById('presentation-container');
+            if (elem && elem.requestFullscreen) {
+                elem.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                });
+            }
+        } else {
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(err => {
+                    console.error(`Error attempting to exit full-screen mode: ${err.message}`);
+                });
+            }
+        }
+    }, [isPresentMode]);
 
     // ===============================
     // Slide Management
@@ -937,6 +1017,7 @@ const OasisPress = () => {
                     justifyContent: 'center',
                     overflow: 'hidden'
                 }}
+                id="presentation-container"
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
             >
@@ -1221,12 +1302,110 @@ const OasisPress = () => {
                         <div className="p-3 bg-white d-flex align-items-center gap-4 flex-wrap" style={{ minHeight: '80px' }}>
                             {activeTab === 'inicio' && (
                                 <>
+                                    {/* Grupo: Portapapeles */}
                                     <div className="d-flex flex-column align-items-center px-3 border-end">
-                                        <button onClick={addSlide} className="btn btn-light mb-1"><i className="bi bi-plus-square fs-4"></i></button>
-                                        <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Nueva Diapositiva</span>
+                                        <div className="d-flex gap-2 mb-1">
+                                            <button onClick={pasteElement} className="btn btn-light d-flex flex-column align-items-center py-1 px-3" style={{ fontSize: '0.7rem' }}>
+                                                <i className="bi bi-clipboard fs-4"></i>
+                                                <span style={{ marginTop: '2px' }}>Pegar</span>
+                                            </button>
+                                            <div className="d-flex flex-column gap-1">
+                                                <button onClick={cutElement} className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }}><i className="bi bi-scissors me-1"></i>Cortar</button>
+                                                <button onClick={copyElement} className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }}><i className="bi bi-files me-1"></i>Copiar</button>
+                                            </div>
+                                        </div>
+                                        <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Portapapeles</span>
                                     </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <TextFormattingToolbar element={selectedEl || { type: 'text', style: {}, disabled: true }} />
+
+                                    {/* Grupo: Diapositivas */}
+                                    <div className="d-flex flex-column align-items-center px-3 border-end">
+                                        <div className="d-flex gap-2 mb-1">
+                                            <button onClick={addSlide} className="btn btn-light d-flex flex-column align-items-center py-1 px-3" style={{ fontSize: '0.7rem' }}>
+                                                <i className="bi bi-plus-square fs-4 text-success"></i>
+                                                <span style={{ marginTop: '2px' }}>Nueva</span>
+                                            </button>
+                                            <div className="d-flex flex-column gap-1 justify-content-center">
+                                                <button className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }}><i className="bi bi-layout-text-sidebar me-1"></i>Diseño</button>
+                                                <button className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }}><i className="bi bi-arrow-repeat me-1"></i>Restablecer</button>
+                                            </div>
+                                        </div>
+                                        <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Diapositivas</span>
+                                    </div>
+
+                                    {/* Grupo: Fuente */}
+                                    <div className="d-flex flex-column align-items-center px-3 border-end">
+                                        <div className="d-flex flex-column gap-1 mb-1">
+                                            <div className="d-flex gap-1">
+                                                <select
+                                                    className="form-select form-select-sm py-0"
+                                                    style={{ fontSize: '0.75rem', width: '130px', height: '24px' }}
+                                                    value={selectedEl?.style?.fontFamily || 'Arial'}
+                                                    onChange={(e) => updateElementStyle(selectedEl?.id, { fontFamily: e.target.value })}
+                                                    disabled={!selectedEl}
+                                                >
+                                                    {FONTS.map(f => <option key={f.name} value={f.name}>{f.label}</option>)}
+                                                </select>
+                                                <select
+                                                    className="form-select form-select-sm py-0"
+                                                    style={{ fontSize: '0.75rem', width: '60px', height: '24px' }}
+                                                    value={selectedEl?.style?.fontSize?.replace('px', '') || '24'}
+                                                    onChange={(e) => updateElementStyle(selectedEl?.id, { fontSize: `${e.target.value}px` })}
+                                                    disabled={!selectedEl}
+                                                >
+                                                    {[12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72, 84, 96].map(s => <option key={s} value={s}>{s}</option>)}
+                                                </select>
+                                            </div>
+                                            <div className="d-flex gap-1">
+                                                <button onClick={() => updateElementStyle(selectedEl?.id, { fontWeight: selectedEl?.style?.fontWeight === 'bold' ? 'normal' : 'bold' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.fontWeight === 'bold' ? 'active' : ''}`} style={{ fontSize: '0.75rem' }} disabled={!selectedEl}><b>N</b></button>
+                                                <button onClick={() => updateElementStyle(selectedEl?.id, { fontStyle: selectedEl?.style?.fontStyle === 'italic' ? 'normal' : 'italic' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.fontStyle === 'italic' ? 'active' : ''}`} style={{ fontSize: '0.75rem' }} disabled={!selectedEl}><i>K</i></button>
+                                                <button onClick={() => updateElementStyle(selectedEl?.id, { textDecoration: selectedEl?.style?.textDecoration === 'underline' ? 'none' : 'underline' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.textDecoration === 'underline' ? 'active' : ''}`} style={{ fontSize: '0.75rem' }} disabled={!selectedEl}><u>S</u></button>
+                                                <div className="vr mx-1"></div>
+                                                <input
+                                                    type="color"
+                                                    className="form-control form-control-color p-0 border-0"
+                                                    style={{ width: 20, height: 20, background: 'none' }}
+                                                    value={selectedEl?.style?.color || '#000000'}
+                                                    onChange={(e) => updateElementStyle(selectedEl?.id, { color: e.target.value })}
+                                                    disabled={!selectedEl}
+                                                />
+                                            </div>
+                                        </div>
+                                        <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Fuente</span>
+                                    </div>
+
+                                    {/* Grupo: Párrafo */}
+                                    <div className="d-flex flex-column align-items-center px-3 border-end">
+                                        <div className="d-flex flex-column gap-1 mb-1 justify-content-center h-100">
+                                            <div className="d-flex gap-1">
+                                                <button onClick={() => updateElementStyle(selectedEl?.id, { textAlign: 'left' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.textAlign === 'left' ? 'active' : ''}`} disabled={!selectedEl}><i className="bi bi-text-left"></i></button>
+                                                <button onClick={() => updateElementStyle(selectedEl?.id, { textAlign: 'center' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.textAlign === 'center' ? 'active' : ''}`} disabled={!selectedEl}><i className="bi bi-text-center"></i></button>
+                                                <button onClick={() => updateElementStyle(selectedEl?.id, { textAlign: 'right' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.textAlign === 'right' ? 'active' : ''}`} disabled={!selectedEl}><i className="bi bi-text-right"></i></button>
+                                            </div>
+                                            <div className="d-flex gap-1">
+                                                <button className="btn btn-sm btn-light py-0 px-2" disabled={!selectedEl}><i className="bi bi-list-ul"></i></button>
+                                                <button className="btn btn-sm btn-light py-0 px-2" disabled={!selectedEl}><i className="bi bi-list-ol"></i></button>
+                                                <button className="btn btn-sm btn-light py-0 px-2" disabled={!selectedEl}><i className="bi bi-distribute-vertical"></i></button>
+                                            </div>
+                                        </div>
+                                        <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Párrafo</span>
+                                    </div>
+
+                                    {/* Grupo: Dibujo */}
+                                    <div className="d-flex flex-column align-items-center px-3">
+                                        <div className="d-flex gap-2 mb-1">
+                                            <div className="d-flex flex-wrap gap-1" style={{ width: '80px' }}>
+                                                {['square', 'circle', 'triangle'].map(shape => (
+                                                    <button key={shape} onClick={() => addElement('shape', { shapeType: shape })} className="btn btn-sm btn-light p-1" style={{ width: '24px', height: '24px' }}>
+                                                        <i className={`bi bi-${shape === 'square' ? 'square' : shape === 'circle' ? 'circle' : 'triangle'}`}></i>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <div className="d-flex flex-column gap-1">
+                                                <button onClick={() => moveElement(selectedEl?.id, 'up')} className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }} disabled={!selectedEl}><i className="bi bi-layer-forward me-1"></i>Organizar</button>
+                                                <button className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }} disabled={!selectedEl}><i className="bi bi-palette me-1"></i>Estilos</button>
+                                            </div>
+                                        </div>
+                                        <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Dibujo</span>
                                     </div>
                                 </>
                             )}
@@ -1275,17 +1454,39 @@ const OasisPress = () => {
 
                             {activeTab === 'diseño' && (
                                 <>
-                                    <div className="d-flex gap-3 align-items-center">
-                                        <div className="d-flex flex-column align-items-center">
-                                            <button onClick={() => openImageLibrary('background')} className="btn btn-light mb-1"><i className="bi bi-card-image fs-4"></i></button>
-                                            <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Fondo</span>
-                                        </div>
-                                        <div className="vr mx-2"></div>
-                                        <div className="d-flex flex-wrap gap-1" style={{ maxWidth: '200px' }}>
-                                            {COLORS.map(color => (
-                                                <button key={color} onClick={() => updateSlideBackground(color)} style={{ width: 20, height: 20, background: color, border: '1px solid #ddd', borderRadius: '2px' }} />
+                                    <div className="d-flex flex-column align-items-center px-3 border-end">
+                                        <button onClick={() => openImageLibrary('background')} className="btn btn-light mb-1"><i className="bi bi-card-image fs-4"></i></button>
+                                        <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Fondo</span>
+                                    </div>
+                                    <div className="d-flex flex-column align-items-center px-3">
+                                        <div className="d-flex gap-2 mb-1 overflow-auto" style={{ maxWidth: '400px', paddingBottom: '5px' }}>
+                                            {THEMES.map(theme => (
+                                                <button
+                                                    key={theme.id}
+                                                    onClick={() => applyTheme(theme)}
+                                                    className="btn btn-sm p-0 flex-shrink-0"
+                                                    style={{
+                                                        width: '70px',
+                                                        height: '40px',
+                                                        background: theme.background,
+                                                        border: '2px solid #ddd',
+                                                        borderRadius: '4px',
+                                                        position: 'relative'
+                                                    }}
+                                                    title={theme.name}
+                                                >
+                                                    <span style={{ fontSize: '0.5rem', color: theme.textColor, position: 'absolute', top: 2, left: 4 }}>Aa</span>
+                                                    <div style={{ position: 'absolute', bottom: 2, right: 4, width: '10px', height: '10px', background: theme.accent, borderRadius: '50%' }}></div>
+                                                </button>
                                             ))}
                                         </div>
+                                        <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Temas</span>
+                                    </div>
+                                    <div className="vr mx-2"></div>
+                                    <div className="d-flex flex-wrap gap-1 align-content-center" style={{ maxWidth: '200px' }}>
+                                        {COLORS.map(color => (
+                                            <button key={color} onClick={() => updateSlideBackground(color)} style={{ width: 20, height: 20, background: color, border: '1px solid #ddd', borderRadius: '2px' }} />
+                                        ))}
                                     </div>
                                 </>
                             )}
