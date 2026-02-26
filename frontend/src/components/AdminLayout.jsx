@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { theme } from '../react-ui/styles/theme';
 import Footer from '../react-ui/components/Footer';
+import { useAuth } from '../context/AuthContext';
 
 const AdminLayout = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { signOut } = useAuth();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
 
@@ -205,10 +207,10 @@ const AdminLayout = () => {
                         </nav>
                         <div className="p-4 border-top mt-auto">
                             <div className="d-flex gap-2">
-                                <Link to="/" className="btn btn-sm btn-outline-primary rounded-pill fw-bold flex-grow-1">
+                                <a href="/" target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary rounded-pill fw-bold flex-grow-1">
                                     <i className="bi bi-globe me-2"></i>Ver sitio
-                                </Link>
-                                <button onClick={() => { localStorage.removeItem('authToken'); navigate('/login'); }}
+                                </a>
+                                <button onClick={async () => { await signOut(); navigate('/login'); }}
                                     className="btn btn-sm btn-outline-danger rounded-pill fw-bold flex-grow-1">
                                     <i className="bi bi-box-arrow-right me-2"></i>Salir
                                 </button>
@@ -246,10 +248,10 @@ const AdminLayout = () => {
                         {/* Desktop action buttons */}
                         {!isMobile && (
                             <div className="d-flex align-items-center gap-2 flex-shrink-0">
-                                <Link to="/" className="btn btn-sm btn-outline-primary rounded-pill fw-bold" title="Ver sitio público">
+                                <a href="/" target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary rounded-pill fw-bold" title="Ver sitio público">
                                     <i className="bi bi-globe"></i>
-                                </Link>
-                                <button onClick={() => { localStorage.removeItem('authToken'); navigate('/login'); }}
+                                </a>
+                                <button onClick={async () => { await signOut(); navigate('/login'); }}
                                     className="btn btn-sm btn-outline-danger rounded-pill fw-bold" title="Cerrar sesión">
                                     <i className="bi bi-box-arrow-right"></i>
                                 </button>

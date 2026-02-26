@@ -42,6 +42,15 @@ export class UsersService implements OnApplicationBootstrap {
 
     async update(id: number, data: any): Promise<User> {
         const user = await this.findOne(id);
+        
+        // No sobrescribir la contraseña si viene vacía
+        if (data.password && data.password.trim() !== '') {
+            const bcrypt = require('bcrypt');
+            data.password = await bcrypt.hash(data.password, 10);
+        } else {
+            delete data.password; // Remover para no sobrescribir
+        }
+        
         Object.assign(user, data);
         return this.usersRepo.save(user);
     }
