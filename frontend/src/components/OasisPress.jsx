@@ -28,9 +28,9 @@ const COLORS = ['#5b2ea6', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'
 // ===============================
 const IMAGE_LIBRARY = {
     logos: [
-        { id: 'logo-oasis-main', name: 'Oasis Principal', url: 'https://i.ibb.co/LdvS4mF/logo-oasis.png', category: 'logos' },
-        { id: 'logo-oasis-church', name: 'Iglesia Oasis', url: 'https://i.ibb.co/w0XvYJQ/Oasis-Church-Logo.png', category: 'logos' },
-        { id: 'logo-oasis-icon', name: 'Oasis Icono', url: 'https://i.ibb.co/VvKB2zB/Oasis-Icon.png', category: 'logos' },
+        { id: 'logo-oasis-main', name: 'Oasis Principal', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Black_Cross_Icon.svg/1024px-Black_Cross_Icon.svg.png', category: 'logos' },
+        { id: 'logo-oasis-church', name: 'Iglesia Oasis', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Solid_black_cross.svg/1200px-Solid_black_cross.svg.png', category: 'logos' },
+        { id: 'logo-oasis-icon', name: 'Oasis Icono', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Cross_icon.svg/1200px-Cross_icon.svg.png', category: 'logos' },
     ],
     social: [
         { id: 'social-ig', name: 'Instagram', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/2048px-Instagram_logo_2016.svg.png', category: 'social' },
@@ -235,11 +235,30 @@ const OasisPress = () => {
     const [imageLibraryMode, setImageLibraryMode] = useState('element'); // 'element' | 'background'
     const [imageLibraryCategory, setImageLibraryCategory] = useState('all');
     const [customImageUrl, setCustomImageUrl] = useState('');
+    const [activeTab, setActiveTab] = useState('inicio'); // 'inicio' | 'insertar' | 'diseño' | 'transiciones'
 
     // Refs
     const canvasRef = useRef(null);
     const touchStartRef = useRef({ x: 0, y: 0 });
     const fileInputRef = useRef(null);
+    const importInputRef = useRef(null);
+
+    const importPresentation = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const imported = JSON.parse(event.target.result);
+                setCurrentPresentation(imported);
+                setSelectedSlide(0);
+                alert('Presentación importada con éxito');
+            } catch (err) {
+                alert('Error al importar el archivo');
+            }
+        };
+        reader.readAsText(file);
+    };
 
     // Liquid Glass styles
     const glassCard = {
@@ -911,11 +930,12 @@ const OasisPress = () => {
                 style={{
                     position: 'fixed',
                     top: 0, left: 0, right: 0, bottom: 0,
-                    background: '#000',
+                    background: '#0a0a0a',
                     zIndex: 9999,
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    overflow: 'hidden'
                 }}
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
@@ -1160,10 +1180,142 @@ const OasisPress = () => {
         const selectedEl = getSelectedElementData();
 
         return (
-            <div className="row g-3">
-                {/* Text Formatting Toolbar - Full Width */}
-                <div className="col-12">
-                    <TextFormattingToolbar element={selectedEl || { type: 'text', style: {}, disabled: true }} />
+            <div className="row g-2">
+                {/* Ribbon Interface - PowerPoint Style */}
+                <div className="col-12 mb-2">
+                    <div style={{ ...glassCard, borderRadius: '12px 12px 4px 4px' }} className="overflow-hidden">
+                        {/* Tabs Navigation */}
+                        <div className="d-flex border-bottom bg-light px-2" style={{ gap: '2px' }}>
+                            {['Inicio', 'Insertar', 'Diseño', 'Transiciones'].map(tab => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab.toLowerCase())}
+                                    style={{
+                                        border: 'none',
+                                        background: activeTab === tab.toLowerCase() ? '#fff' : 'transparent',
+                                        borderBottom: activeTab === tab.toLowerCase() ? `3px solid ${theme.colors.primary}` : 'none',
+                                        padding: '6px 20px',
+                                        fontSize: '0.85rem',
+                                        fontWeight: activeTab === tab.toLowerCase() ? 'bold' : 'normal',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    {tab}
+                                </button>
+                            ))}
+                            <div className="ms-auto d-flex align-items-center gap-2 px-3">
+                                <input type="file" ref={importInputRef} onChange={importPresentation} style={{ display: 'none' }} accept=".json" />
+                                <button onClick={() => importInputRef.current.click()} className="btn btn-sm btn-outline-secondary" style={{ fontSize: '0.75rem' }}>
+                                    <i className="bi bi-file-earmark-arrow-up me-1"></i> Importar
+                                </button>
+                                <button onClick={savePresentation} disabled={saving} className="btn btn-sm btn-success px-4" style={{ borderRadius: '6px' }}>
+                                    <i className={`bi ${saving ? 'bi-hourglass-split' : 'bi-save'} me-1`}></i> Guardar
+                                </button>
+                                <button onClick={() => setIsPresentMode(true)} className="btn btn-sm btn-primary px-4" style={{ borderRadius: '6px' }}>
+                                    <i className="bi bi-play-fill me-1"></i> Proyectar
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* ribbon Content */}
+                        <div className="p-3 bg-white d-flex align-items-center gap-4 flex-wrap" style={{ minHeight: '80px' }}>
+                            {activeTab === 'inicio' && (
+                                <>
+                                    <div className="d-flex flex-column align-items-center px-3 border-end">
+                                        <button onClick={addSlide} className="btn btn-light mb-1"><i className="bi bi-plus-square fs-4"></i></button>
+                                        <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Nueva Diapositiva</span>
+                                    </div>
+                                    <div className="d-flex align-items-center gap-2">
+                                        <TextFormattingToolbar element={selectedEl || { type: 'text', style: {}, disabled: true }} />
+                                    </div>
+                                </>
+                            )}
+
+                            {activeTab === 'insertar' && (
+                                <>
+                                    <div className="d-flex gap-3">
+                                        <div className="d-flex flex-column align-items-center">
+                                            <button onClick={() => addElement('heading')} className="btn btn-light mb-1"><i className="bi bi-type-h1 fs-4"></i></button>
+                                            <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Título</span>
+                                        </div>
+                                        <div className="d-flex flex-column align-items-center">
+                                            <button onClick={() => addElement('text')} className="btn btn-light mb-1"><i className="bi bi-fonts fs-4"></i></button>
+                                            <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Texto</span>
+                                        </div>
+                                        <div className="d-flex flex-column align-items-center">
+                                            <button onClick={() => addElement('shape')} className="btn btn-light mb-1"><i className="bi bi-square fs-4"></i></button>
+                                            <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Forma</span>
+                                        </div>
+                                        <div className="vr mx-2"></div>
+                                        <div className="d-flex flex-column align-items-center">
+                                            <button onClick={() => openImageLibrary('element')} className="btn btn-light mb-1"><i className="bi bi-image fs-4"></i></button>
+                                            <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Imagen</span>
+                                        </div>
+                                        <div className="d-flex flex-column align-items-center">
+                                            <button
+                                                onClick={() => addImageElement(IMAGE_LIBRARY.logos[0].url)}
+                                                className="btn btn-light mb-1"
+                                            >
+                                                <img src={IMAGE_LIBRARY.logos[0].url} alt="" style={{ width: 24, height: 24 }} />
+                                            </button>
+                                            <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Logo Oasis</span>
+                                        </div>
+                                        <div className="d-flex flex-column align-items-center">
+                                            <button
+                                                onClick={() => { setImageLibraryCategory('social'); openImageLibrary('element'); }}
+                                                className="btn btn-light mb-1"
+                                            >
+                                                <i className="bi bi-share fs-4"></i>
+                                            </button>
+                                            <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Redes</span>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {activeTab === 'diseño' && (
+                                <>
+                                    <div className="d-flex gap-3 align-items-center">
+                                        <div className="d-flex flex-column align-items-center">
+                                            <button onClick={() => openImageLibrary('background')} className="btn btn-light mb-1"><i className="bi bi-card-image fs-4"></i></button>
+                                            <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Fondo</span>
+                                        </div>
+                                        <div className="vr mx-2"></div>
+                                        <div className="d-flex flex-wrap gap-1" style={{ maxWidth: '200px' }}>
+                                            {COLORS.map(color => (
+                                                <button key={color} onClick={() => updateSlideBackground(color)} style={{ width: 20, height: 20, background: color, border: '1px solid #ddd', borderRadius: '2px' }} />
+                                            ))}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {activeTab === 'transiciones' && (
+                                <>
+                                    <div className="d-flex gap-3 align-items-center">
+                                        <select
+                                            className="form-select form-select-sm"
+                                            style={{ width: '220px' }}
+                                            value={currentSlideData.transitionType || 'fade'}
+                                            onChange={(e) => {
+                                                const slides = getSlides(currentPresentation);
+                                                const updatedSlides = [...slides];
+                                                updatedSlides[selectedSlide] = { ...updatedSlides[selectedSlide], transitionType: e.target.value };
+                                                setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+                                            }}
+                                        >
+                                            <option value="fade">Desvanecer (Estándar)</option>
+                                            <option value="morph">Transformar (PowerPoint Morph)</option>
+                                            <option value="infinite">Movimiento Infinito (Prezi)</option>
+                                            <option value="slide">Deslizar</option>
+                                            <option value="zoom">Zoom</option>
+                                        </select>
+                                        <span className="small text-muted">Aplica a esta diapositiva</span>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Slide Panel (Left) */}
@@ -1283,13 +1435,7 @@ const OasisPress = () => {
                                 </button>
                             </div>
                             <div className="ms-auto d-flex gap-2">
-                                <button onClick={() => setIsPresentMode(true)} className="btn btn-primary btn-sm rounded-pill px-3">
-                                    <i className="bi bi-play-fill me-1"></i> Proyectar
-                                </button>
-                                <button onClick={savePresentation} disabled={saving} className="btn btn-success btn-sm rounded-pill px-3">
-                                    <i className={`bi ${saving ? 'bi-hourglass-split' : 'bi-save'} me-1`}></i>
-                                    {saving ? '...' : 'Guardar'}
-                                </button>
+                                {/* Moved to Ribbon UI */}
                             </div>
                         </div>
 
