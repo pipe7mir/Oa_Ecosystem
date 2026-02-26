@@ -6,8 +6,8 @@ import { JwtAuthGuard } from '../common/jwt-auth.guard';
 import { Request } from 'express';
 
 // Authentication Endpoints API
-// POST /api/login, /api/register, /api/logout, GET /api/user
-@Controller()
+// POST /api/auth/login, /api/auth/register, /api/auth/logout, GET /api/auth/user
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 

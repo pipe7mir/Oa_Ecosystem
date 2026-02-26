@@ -76,13 +76,16 @@ export class AuthService {
 
     const hashed = await bcrypt.hash(dto.password, 10);
 
+    // Generate username from email if not provided
+    const username = dto.username || dto.email.split('@')[0];
+
     const user = this.usersRepo.create({
-      name: dto.username,
-      username: dto.username,
+      name: dto.name,
+      username: username,
       email: dto.email,
       password: hashed,
-      role: 'user',
-      isApproved: false,
+      role: dto.role || 'user',
+      isApproved: dto.role === 'admin', // Auto-approve admins
     });
 
     const saved = await this.usersRepo.save(user);
