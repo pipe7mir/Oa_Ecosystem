@@ -125,7 +125,7 @@ const CalendarSection = () => {
     const selectedDayEvents = events.filter(ev => ev.date === selectedDate);
 
     return (
-        <GlassCard style={{ padding: theme.spacing(4), display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <GlassCard className="glass-card calendar-container" style={{ padding: theme.spacing(3), display: 'flex', flexDirection: 'column', height: '100%' }}>
 
             <style>{`
                 .calendar-day-active:hover {
@@ -133,10 +133,27 @@ const CalendarSection = () => {
                     color: white !important;
                     transform: scale(1.05);
                 }
+                @media (max-width: 576px) {
+                    .calendar-header {
+                        flex-direction: column !important;
+                        gap: 12px !important;
+                    }
+                    .calendar-header h3 {
+                        font-size: 1.4rem !important;
+                    }
+                    .calendar-grid {
+                        gap: 4px !important;
+                        padding: 12px !important;
+                    }
+                    .calendar-day {
+                        padding: 6px !important;
+                        font-size: 0.8rem !important;
+                    }
+                }
             `}</style>
 
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <h3 style={{ fontFamily: 'ModernAge, sans-serif', color: theme.colors.primary, margin: 0, fontSize: '1.8rem' }}>
+            <div className="d-flex justify-content-between align-items-center mb-3 calendar-header">
+                <h3 style={{ fontFamily: 'ModernAge, sans-serif', color: theme.colors.primary, margin: 0, fontSize: 'clamp(1.4rem, 4vw, 1.8rem)' }}>
                     <i className="bi bi-calendar3"></i> Eventos
                 </h3>
                 <div className="d-flex align-items-center gap-2">
@@ -153,15 +170,15 @@ const CalendarSection = () => {
             </div>
 
             {/* Calendar Grid */}
-            <div style={{ background: '#f8f9fa', borderRadius: '16px', padding: '16px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', marginBottom: '8px' }}>
+            <div className="calendar-grid" style={{ background: '#f8f9fa', borderRadius: '16px', padding: '16px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
                     {dayNames.map((d, i) => (
-                        <div key={i} style={{ textAlign: 'center', fontWeight: 'bold', color: theme.colors.text.secondary, fontSize: '0.8rem' }}>
+                        <div key={i} style={{ textAlign: 'center', fontWeight: 'bold', color: theme.colors.text.secondary, fontSize: '0.75rem' }}>
                             {d}
                         </div>
                     ))}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
                     {renderDays()}
                 </div>
             </div>

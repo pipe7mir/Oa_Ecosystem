@@ -106,14 +106,14 @@ const Peticiones = () => {
 
     if (!category) {
         return (
-            <section className="container py-5">
-                <div className="text-center mb-5 animate__animated animate__fadeInDown">
-                    <h2 style={{ fontFamily: theme.fonts.logo, color: theme.colors.primary }} className="fw-bold">
+            <section className="container py-4 px-3">
+                <div className="text-center mb-4 animate__animated animate__fadeInDown">
+                    <h2 style={{ fontFamily: theme.fonts.logo, color: theme.colors.primary, fontSize: 'clamp(1.5rem, 5vw, 2rem)' }} className="fw-bold">
                         ¿En qué podemos apoyarte hoy?
                     </h2>
-                    <p className="text-muted">Selecciona una categoría para iniciar tu solicitud</p>
+                    <p className="text-muted" style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>Selecciona una categoría para iniciar tu solicitud</p>
                 </div>
-                <div className="row g-4 justify-content-center animate__animated animate__fadeInUp">
+                <div className="row g-3 justify-content-center animate__animated animate__fadeInUp">
                     {categories.map((cat) => (
                         <div key={cat.title} className="col-6 col-md-4 col-lg-2">
                             <div
@@ -139,8 +139,8 @@ const Peticiones = () => {
     }
 
     return (
-        <section className="container py-5 animate__animated animate__zoomIn">
-            <div className="col-lg-7 mx-auto">
+        <section className="container py-4 px-3 animate__animated animate__zoomIn">
+            <div className="col-12 col-lg-7 mx-auto">
                 <div style={{ ...glassStyle, overflow: 'hidden' }}>
                     <div className="p-4 text-white" style={{ background: theme.colors.primary }}>
                         <div className="d-flex justify-content-between align-items-center">

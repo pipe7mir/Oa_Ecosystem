@@ -319,7 +319,7 @@ const Announcements = () => {
             <div style={{ maxWidth: '1200px', margin: '0 auto', paddingLeft: theme.spacing(2) }}>
                 <h2 style={{
                     fontFamily: '"San Francisco", sans-serif', fontWeight: '600',
-                    fontSize: '2rem', color: theme.colors.text.primary, marginBottom: theme.spacing(3)
+                    fontSize: 'clamp(1.5rem, 4vw, 2rem)', color: theme.colors.text.primary, marginBottom: theme.spacing(3)
                 }}>
                     Novedades
                 </h2>
@@ -330,15 +330,15 @@ const Announcements = () => {
                 ref={scrollContainerRef}
                 className="hide-scrollbar"
                 style={{
-                    display: 'flex', gap: theme.spacing(3), overflowX: 'auto',
-                    padding: `0 ${theme.spacing(4)} 40px`, scrollSnapType: 'x mandatory',
+                    display: 'flex', gap: theme.spacing(2), overflowX: 'auto',
+                    padding: `0 ${theme.spacing(2)} 40px`, scrollSnapType: 'x mandatory',
                     scrollbarWidth: 'none', msOverflowStyle: 'none',
                 }}
             >
                 {announcements.map((announcement) => {
                     const thumbUrl = buildUrl(announcement.image_url);
                     return (
-                        <div key={announcement.id} style={{ minWidth: '320px', maxWidth: '320px', scrollSnapAlign: 'start', flexShrink: 0 }}>
+                        <div key={announcement.id} className="announcement-card-wrapper" style={{ minWidth: '280px', maxWidth: '320px', scrollSnapAlign: 'start', flexShrink: 0 }}>
                             <div
                                 className="announcement-card h-100"
                                 onClick={() => { setTransitionDir('next'); setSelectedAnnouncement(announcement); }}
@@ -432,6 +432,16 @@ const Announcements = () => {
                     height: auto !important;
                     object-fit: contain !important;
                     box-shadow: none !important;
+                }
+                
+                @media (max-width: 576px) {
+                    .announcement-card-wrapper {
+                        min-width: 260px !important;
+                        max-width: 280px !important;
+                    }
+                    .announcement-card:hover {
+                        transform: translateY(-4px) !important;
+                    }
                 }
             `}</style>
         </section>

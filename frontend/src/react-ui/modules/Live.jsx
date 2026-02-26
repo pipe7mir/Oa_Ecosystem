@@ -77,26 +77,27 @@ const Live = () => {
             <div style={{ position: 'relative', zIndex: 1 }}>
                 <header style={{
                     textAlign: 'center',
-                    marginBottom: theme.spacing(6)
+                    marginBottom: theme.spacing(4),
+                    padding: `0 ${theme.spacing(2)}`
                 }}>
                     <h2 style={{
                         fontFamily: theme.fonts.logo,
-                        fontSize: '3rem',
+                        fontSize: 'clamp(2rem, 6vw, 3rem)',
                         color: theme.colors.secondary, // Cyan for dark mode contrast
                         marginBottom: theme.spacing(2),
                         textShadow: `0 0 20px ${theme.colors.secondary}80`
                     }}>
                         Transmisión En Vivo
                     </h2>
-                    <p style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                    <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>
                         Conéctate con nuestra comunidad en tiempo real.
                     </p>
                 </header>
 
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                    gap: theme.spacing(4),
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gap: theme.spacing(3),
                     maxWidth: '1400px',
                     margin: '0 auto'
                 }}>

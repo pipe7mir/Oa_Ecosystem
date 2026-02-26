@@ -49,28 +49,28 @@ const Inscripciones = () => {
     }
 
     return (
-        <div className="container py-5">
+        <div className="container py-4 px-3">
             {selectedForm ? (
                 <div className="row justify-content-center">
-                    <div className="col-lg-8">
+                    <div className="col-12 col-lg-8">
                         <button className="btn btn-link text-decoration-none text-muted p-0 mb-4" onClick={() => setSelectedForm(null)}>
                             <i className="bi bi-arrow-left me-2"></i>Volver al listado
                         </button>
-                        <GlassCard style={{ padding: theme.spacing(4) }}>
+                        <GlassCard className="glass-card" style={{ padding: theme.spacing(3) }}>
                             <FormViewer form={selectedForm} onComplete={() => setFinished(true)} />
                         </GlassCard>
                     </div>
                 </div>
             ) : (
                 <>
-                    <div className="text-center mb-5">
-                        <h1 style={{ fontFamily: theme.fonts.titles, fontSize: '3.5rem', mb: 2, color: theme.colors.primary }}>
+                    <div className="text-center mb-4">
+                        <h1 style={{ fontFamily: theme.fonts.titles, fontSize: 'clamp(2rem, 6vw, 3.5rem)', marginBottom: theme.spacing(2), color: theme.colors.primary }}>
                             Próximos Eventos
                         </h1>
-                        <p className="text-muted lead">Participa en nuestras actividades y vive la experiencia Oasis.</p>
+                        <p className="text-muted lead" style={{ fontSize: 'clamp(0.95rem, 2vw, 1.1rem)' }}>Participa en nuestras actividades y vive la experiencia Oasis.</p>
                     </div>
 
-                    <div className="row g-4 justify-content-center">
+                    <div className="row g-3 justify-content-center">
                         {forms.map(form => (
                             <div key={form.id} className="col-md-6 col-lg-4">
                                 <GlassCard

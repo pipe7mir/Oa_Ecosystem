@@ -6,14 +6,14 @@ const Footer = () => {
     return (
         <footer style={{
             background: 'white',
-            padding: `${theme.spacing(8)} 0`,
+            padding: `${theme.spacing(6)} ${theme.spacing(2)}`,
             borderTop: '1px solid rgba(0,0,0,0.05)',
             marginTop: 'auto'
         }}>
             <div className="container">
                 <div className="row g-4">
                     {/* Brand Column */}
-                    <div className="col-lg-4 mb-4 mb-lg-0">
+                    <div className="col-lg-4 col-md-6 col-12 mb-4 mb-lg-0 text-center text-md-start">
                         <div className="d-flex align-items-center mb-3">
                             <div style={{ width: '36px', height: '36px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginRight: '10px' }}>
                                 <img src={logoImg} alt="OASIS Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
@@ -28,8 +28,8 @@ const Footer = () => {
                     </div>
 
                     {/* Links Column 1 */}
-                    <div className="col-6 col-lg-2 offset-lg-1">
-                        <h5 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: theme.spacing(3), color: theme.colors.text.primary }}>Explorar</h5>
+                    <div className="col-6 col-lg-2 offset-lg-1 text-center text-md-start">
+                        <h5 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: theme.spacing(2), color: theme.colors.text.primary }}>Explorar</h5>
                         <ul className="list-unstyled" style={{ fontSize: '0.9rem' }}>
                             <li className="mb-2"><a href="/" className="text-decoration-none text-secondary">Inicio</a></li>
                             <li className="mb-2"><a href="/about" className="text-decoration-none text-secondary">Nosotros</a></li>
@@ -38,8 +38,8 @@ const Footer = () => {
                     </div>
 
                     {/* Links Column 2 */}
-                    <div className="col-6 col-lg-2">
-                        <h5 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: theme.spacing(3), color: theme.colors.text.primary }}>Comunidad</h5>
+                    <div className="col-6 col-lg-2 text-center text-md-start">
+                        <h5 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: theme.spacing(2), color: theme.colors.text.primary }}>Comunidad</h5>
                         <ul className="list-unstyled" style={{ fontSize: '0.9rem' }}>
                             <li className="mb-2"><a href="/peticiones" className="text-decoration-none text-secondary">Peticiones</a></li>
                             <li className="mb-2"><a href="/recursos" className="text-decoration-none text-secondary">Recursos</a></li>
@@ -48,9 +48,9 @@ const Footer = () => {
                     </div>
 
                     {/* Social Column */}
-                    <div className="col-lg-3">
-                        <h5 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: theme.spacing(3), color: theme.colors.text.primary }}>Síguenos</h5>
-                        <div className="d-flex gap-3">
+                    <div className="col-12 col-lg-3 text-center text-lg-start">
+                        <h5 style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: theme.spacing(2), color: theme.colors.text.primary }}>Síguenos</h5>
+                        <div className="d-flex gap-3 justify-content-center justify-content-lg-start">
                             <a href="#" className="btn btn-light rounded-circle shadow-sm" style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.colors.primary }}>
                                 <i className="bi bi-instagram"></i>
                             </a>

@@ -91,17 +91,17 @@ const About = () => {
     if (loading) return <div className="text-center p-5"><div className="spinner-border text-primary"></div></div>;
 
     return (
-        <div style={{ animation: 'fadeIn 0.5s ease-in-out', fontFamily: theme.fonts.body }}>
-            <header style={{ textAlign: 'center', marginBottom: theme.spacing(8) }}>
-                <h2 style={{ fontFamily: theme.fonts.titles, fontSize: '3rem', color: theme.colors.secondary, marginBottom: theme.spacing(2) }}>
+        <div style={{ animation: 'fadeIn 0.5s ease-in-out', fontFamily: theme.fonts.body, padding: `0 ${theme.spacing(2)}` }}>
+            <header style={{ textAlign: 'center', marginBottom: theme.spacing(6) }}>
+                <h2 style={{ fontFamily: theme.fonts.titles, fontSize: 'clamp(2rem, 6vw, 3rem)', color: theme.colors.secondary, marginBottom: theme.spacing(2) }}>
                     {data.about_hero_title}
                 </h2>
-                <p style={{ color: theme.colors.text.secondary, maxWidth: '800px', margin: '0 auto', fontSize: '1.2rem', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                <p style={{ color: theme.colors.text.secondary, maxWidth: '800px', margin: '0 auto', fontSize: 'clamp(1rem, 2.5vw, 1.2rem)', lineHeight: '1.6', whiteSpace: 'pre-wrap', padding: '0 16px' }}>
                     {data.about_hero_content}
                 </p>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: theme.spacing(4) }}>
+            <div className="about-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: theme.spacing(3) }}>
                 {[
                     { icon: data.about_mission_icon, title: data.about_mission_title, content: data.about_mission_content, color: theme.colors.primary },
                     { icon: data.about_vision_icon, title: data.about_vision_title, content: data.about_vision_content, color: theme.colors.secondary },
@@ -117,14 +117,14 @@ const About = () => {
                 ))}
             </div>
 
-            <div style={{ marginTop: theme.spacing(8) }}>
-                <GlassCard>
-                    <div style={{ display: 'flex', gap: theme.spacing(4), alignItems: 'center', flexWrap: 'wrap' }}>
-                        <div style={{ flex: 1, minWidth: '300px' }}>
-                            <h3 style={{ color: theme.colors.primary, fontSize: '2rem', marginBottom: theme.spacing(2), fontFamily: theme.fonts.titles }}>{data.about_history_title}</h3>
-                            <p style={{ lineHeight: '1.8', color: theme.colors.text.secondary, whiteSpace: 'pre-wrap' }}>{data.about_history_content}</p>
+            <div style={{ marginTop: theme.spacing(6) }}>
+                <GlassCard className="glass-card">
+                    <div className="history-section" style={{ display: 'flex', gap: theme.spacing(3), alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1, minWidth: '280px' }}>
+                            <h3 style={{ color: theme.colors.primary, fontSize: 'clamp(1.5rem, 4vw, 2rem)', marginBottom: theme.spacing(2), fontFamily: theme.fonts.titles }}>{data.about_history_title}</h3>
+                            <p style={{ lineHeight: '1.8', color: theme.colors.text.secondary, whiteSpace: 'pre-wrap', fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>{data.about_history_content}</p>
                         </div>
-                        <div style={{ flex: 1, minWidth: '300px', height: '400px', background: 'rgba(0,0,0,0.05)', borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.05)' }}>
+                        <div style={{ flex: 1, minWidth: '280px', height: '350px', background: 'rgba(0,0,0,0.05)', borderRadius: '24px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.05)' }}>
                             {data.about_history_image ? <img src={getImageUrl(data.about_history_image)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div className="h-100 d-flex align-items-center justify-content-center"><i className="bi bi-image fs-1 opacity-25"></i></div>}
                         </div>
                     </div>
@@ -133,11 +133,11 @@ const About = () => {
 
             {/* LEADERSHIP SECTION */}
             {boardMembers.length > 0 && (
-                <div style={{ marginTop: theme.spacing(10) }}>
-                    <h2 style={{ textAlign: 'center', fontFamily: theme.fonts.titles, fontSize: '2.5rem', marginBottom: theme.spacing(5), color: theme.colors.primary }}>
+                <div style={{ marginTop: theme.spacing(8) }}>
+                    <h2 style={{ textAlign: 'center', fontFamily: theme.fonts.titles, fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', marginBottom: theme.spacing(4), color: theme.colors.primary }}>
                         Nuestra Directiva
                     </h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(65px, 300px))', gap: theme.spacing(3), maxWidth: '1100px', margin: '0 auto' }}>
+                    <div className="leadership-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: theme.spacing(2), maxWidth: '1100px', margin: '0 auto' }}>
                         {boardMembers.map(member => (
                             <GlassCard
                                 key={member.id}

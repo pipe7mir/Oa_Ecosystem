@@ -97,18 +97,19 @@ const Home = () => {
             <Announcements />
 
             {/* Feature Grid */}
-            <section style={{
+            <section className="feature-grid" style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                gap: theme.spacing(4),
-                marginTop: theme.spacing(4)
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: theme.spacing(3),
+                marginTop: theme.spacing(4),
+                padding: `0 ${theme.spacing(2)}`
             }}>
                 {/* Unified Card Style */}
-                <GlassCard style={{ minHeight: '260px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: theme.spacing(3) }}>
-                    <div style={{ width: '56px', height: '56px', background: '#ffffff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: theme.spacing(2), color: theme.colors.primary, fontSize: '1.5rem', boxShadow: '0 6px 18px rgba(16,24,40,0.04)' }}>
+                <GlassCard className="glass-card" style={{ minHeight: '240px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: theme.spacing(3) }}>
+                    <div className="icon-box" style={{ width: '56px', height: '56px', background: '#ffffff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: theme.spacing(2), color: theme.colors.primary, fontSize: '1.5rem', boxShadow: '0 6px 18px rgba(16,24,40,0.04)' }}>
                         <i className="bi bi-heart-pulse"></i>
                     </div>
-                    <h3 style={{ marginBottom: theme.spacing(2), color: theme.colors.primary, fontSize: '1.5rem' }}>Peticiones</h3>
+                    <h3 style={{ marginBottom: theme.spacing(2), color: theme.colors.primary, fontSize: 'clamp(1.25rem, 3vw, 1.5rem)' }}>Peticiones</h3>
                     <p style={{ color: theme.colors.text.secondary, lineHeight: '1.6', marginBottom: theme.spacing(3) }}>
                         Estamos aquí para apoyarte. Envía tus solicitudes de oración o ayuda de manera confidencial.
                     </p>
@@ -117,11 +118,11 @@ const Home = () => {
                     </Link>
                 </GlassCard>
 
-                <GlassCard style={{ minHeight: '260px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: theme.spacing(3) }}>
-                    <div style={{ width: '56px', height: '56px', background: '#ffffff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: theme.spacing(2), color: theme.colors.secondary, fontSize: '1.5rem', boxShadow: '0 6px 18px rgba(16,24,40,0.04)' }}>
+                <GlassCard className="glass-card" style={{ minHeight: '240px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: theme.spacing(3) }}>
+                    <div className="icon-box" style={{ width: '56px', height: '56px', background: '#ffffff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: theme.spacing(2), color: theme.colors.secondary, fontSize: '1.5rem', boxShadow: '0 6px 18px rgba(16,24,40,0.04)' }}>
                         <i className="bi bi-journal-check"></i>
                     </div>
-                    <h3 style={{ marginBottom: theme.spacing(2), color: theme.colors.secondary, fontSize: '1.5rem' }}>Inscríbete y participa</h3>
+                    <h3 style={{ marginBottom: theme.spacing(2), color: theme.colors.secondary, fontSize: 'clamp(1.25rem, 3vw, 1.5rem)' }}>Inscríbete y participa</h3>
                     <p style={{ color: theme.colors.text.secondary, lineHeight: '1.6', marginBottom: theme.spacing(3) }}>
                         No te quedes fuera. Inscríbete a nuestros próximos campamentos, eventos y actividades especiales aquí.
                     </p>
@@ -130,11 +131,11 @@ const Home = () => {
                     </Link>
                 </GlassCard>
 
-                <GlassCard style={{ minHeight: '260px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: theme.spacing(3) }}>
-                    <div style={{ width: '56px', height: '56px', background: '#ffffff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: theme.spacing(2), color: theme.colors.accent, fontSize: '1.5rem', boxShadow: '0 6px 18px rgba(16,24,40,0.04)' }}>
+                <GlassCard className="glass-card" style={{ minHeight: '240px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: theme.spacing(3) }}>
+                    <div className="icon-box" style={{ width: '56px', height: '56px', background: '#ffffff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: theme.spacing(2), color: theme.colors.accent, fontSize: '1.5rem', boxShadow: '0 6px 18px rgba(16,24,40,0.04)' }}>
                         <i className="bi bi-cash-coin"></i>
                     </div>
-                    <h3 style={{ marginBottom: theme.spacing(2), color: theme.colors.accent, fontSize: '1.5rem' }}>Diezmos y Ofrendas</h3>
+                    <h3 style={{ marginBottom: theme.spacing(2), color: theme.colors.accent, fontSize: 'clamp(1.25rem, 3vw, 1.5rem)' }}>Diezmos y Ofrendas</h3>
                     <p style={{ color: theme.colors.text.secondary, lineHeight: '1.6', marginBottom: theme.spacing(3) }}>
                         Honra al Señor con tus bienes y con las primicias de todos tus frutos. Tu fidelidad sostiene la misión de su iglesia.
                     </p>
@@ -145,12 +146,12 @@ const Home = () => {
             </section>
 
             {/* Interactive Sections (Map and Calendar) */}
-            <section style={{ marginTop: theme.spacing(4) }}>
-                <div className="row g-4 align-items-stretch">
-                    <div className="col-lg-6">
+            <section style={{ marginTop: theme.spacing(4), padding: `0 ${theme.spacing(2)}` }}>
+                <div className="row g-4 align-items-stretch map-calendar-row">
+                    <div className="col-lg-6 col-md-12">
                         <MapSection />
                     </div>
-                    <div className="col-lg-6">
+                    <div className="col-lg-6 col-md-12">
                         <CalendarSection />
                     </div>
                 </div>

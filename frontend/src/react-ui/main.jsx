@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import '../styles/custom.css';
+import './styles/responsive.css';
 import { AuthProvider } from '../context/AuthContext';
 
 const rootElement = document.getElementById('root');

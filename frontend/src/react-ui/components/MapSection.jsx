@@ -11,11 +11,11 @@ const MapSection = () => {
     const mapDirectUrl = "https://www.google.com/maps?q=Templo+Oasis";
 
     return (
-        <GlassCard style={{ padding: theme.spacing(4), display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <GlassCard className="glass-card map-section" style={{ padding: theme.spacing(3), display: 'flex', flexDirection: 'column', height: '100%' }}>
             <h3 style={{
                 fontFamily: 'ModernAge, sans-serif',
                 color: theme.colors.primary,
-                fontSize: '2rem',
+                fontSize: 'clamp(1.5rem, 4vw, 2rem)',
                 marginBottom: theme.spacing(1),
                 display: 'flex',
                 alignItems: 'center',
@@ -28,13 +28,13 @@ const MapSection = () => {
             </p>
 
             {/* Contenedor del Mapa */}
-            <div style={{
+            <div className="map-container" style={{
                 flexGrow: 1,
                 borderRadius: '16px',
                 overflow: 'hidden',
                 background: '#e9ecef',
                 marginBottom: theme.spacing(3),
-                minHeight: '400px', // Aumentado para mejor visibilidad
+                minHeight: '300px',
                 position: 'relative',
                 border: `1px solid ${theme.colors.border || 'rgba(0,0,0,0.1)'}`
             }}>

@@ -39,18 +39,18 @@ const Recursos = () => {
     if (error) return <div className="text-center py-5 text-danger">{error}</div>;
 
     return (
-        <div className="container py-5 animate__animated animate__fadeIn">
-            <header className="text-center py-5">
-                <h2 className="display-5 fw-bold mb-2" style={{ fontFamily: theme.fonts.logo, color: theme.colors.primary, letterSpacing: '4px' }}>
+        <div className="container py-4 px-3 animate__animated animate__fadeIn">
+            <header className="text-center py-4">
+                <h2 className="fw-bold mb-2" style={{ fontFamily: theme.fonts.logo, color: theme.colors.primary, letterSpacing: '4px', fontSize: 'clamp(1.5rem, 5vw, 2.5rem)' }}>
                     RECURSOS OASIS
                 </h2>
                 <div className="mx-auto rounded-pill mb-3" style={{ width: '60px', height: '4px', background: theme.colors.primary }}></div>
-                <p className="text-muted small text-uppercase fw-bold" style={{ letterSpacing: '1px' }}>
+                <p className="text-muted small text-uppercase fw-bold" style={{ letterSpacing: '1px', fontSize: 'clamp(0.7rem, 1.5vw, 0.85rem)' }}>
                     Material de alta gama para tu crecimiento espiritual
                 </p>
             </header>
 
-            <div className="row g-4 justify-content-center">
+            <div className="row g-3 justify-content-center">
                 {resources.length === 0 ? (
                     <div className="col-12 text-center py-5">
                         <i className="bi bi-cloud-slash display-1 text-muted opacity-25"></i>

@@ -169,29 +169,31 @@ const Hero = () => {
                             {currentSlide.title}
                         </h1>
                         <p style={{
-                            fontSize: 'clamp(1.1rem, 2.5vw, 1.35rem)',
-                            marginBottom: '3rem',
+                            fontSize: 'clamp(1rem, 2.5vw, 1.35rem)',
+                            marginBottom: '2rem',
                             opacity: 0.9,
                             maxWidth: '700px',
                             lineHeight: 1.6,
-                            textShadow: '0 2px 8px rgba(0,0,0,0.5)'
+                            textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                            padding: '0 8px'
                         }}>
                             {currentSlide.description}
                         </p>
 
-                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                        <div className="hero-buttons" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                             {currentSlide.button_text && (
-                                <Link to={currentSlide.button_link || '#'} style={{ textDecoration: 'none' }}>
-                                    <Button style={{ padding: '16px 45px', fontSize: '1.15rem' }}>
+                                <Link to={currentSlide.button_link || '#'} style={{ textDecoration: 'none', flex: '1 1 auto', minWidth: '200px', maxWidth: '300px' }}>
+                                    <Button style={{ padding: '14px 32px', fontSize: 'clamp(0.95rem, 2vw, 1.15rem)', width: '100%' }}>
                                         {currentSlide.button_text}
                                     </Button>
                                 </Link>
                             )}
-                            <Link to="/about" style={{ textDecoration: 'none' }}>
+                            <Link to="/about" style={{ textDecoration: 'none', flex: '1 1 auto', minWidth: '200px', maxWidth: '300px' }}>
                                 <button className="btn" style={{
-                                    padding: '16px 45px', borderRadius: '16px', border: '2px solid rgba(255,255,255,0.8)',
+                                    padding: '14px 32px', borderRadius: '16px', border: '2px solid rgba(255,255,255,0.8)',
                                     background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 'bold',
-                                    fontSize: '1.15rem', backdropFilter: 'blur(5px)', transition: 'all 0.3s'
+                                    fontSize: 'clamp(0.95rem, 2vw, 1.15rem)', backdropFilter: 'blur(5px)', transition: 'all 0.3s',
+                                    width: '100%'
                                 }}>
                                     <i className="bi bi-info-circle me-2"></i>Conócenos
                                 </button>
@@ -235,8 +237,24 @@ const Hero = () => {
                     from { transform: translateY(40px); opacity: 0; }
                     to { transform: translateY(0); opacity: 1; }
                 }
+                @media (max-width: 992px) {
+                    .hide-mobile { display: none !important; }
+                }
                 @media (max-width: 768px) {
-                    .hide-mobile { display: none; }
+                    .hero-buttons {
+                        flex-direction: column !important;
+                        width: 100% !important;
+                        padding: 0 16px !important;
+                    }
+                    .hero-buttons > a {
+                        min-width: 100% !important;
+                        max-width: 100% !important;
+                    }
+                }
+                @media (max-width: 576px) {
+                    .hero-buttons {
+                        padding: 0 8px !important;
+                    }
                 }
             `}</style>
         </section>
