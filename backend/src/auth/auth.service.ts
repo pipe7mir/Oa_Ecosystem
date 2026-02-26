@@ -76,12 +76,9 @@ export class AuthService {
 
     const hashed = await bcrypt.hash(dto.password, 10);
 
-    // Generate username from email if not provided
-    const username = dto.username || dto.email.split('@')[0];
-
     const user = this.usersRepo.create({
-      name: dto.name,
-      username: username,
+      name: dto.username,
+      username: dto.username,
       email: dto.email,
       password: hashed,
       role: dto.role || 'user',

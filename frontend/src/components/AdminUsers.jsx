@@ -46,7 +46,14 @@ const AdminUsers = () => {
             if (formData.id) {
                 await apiClient.put(`/users/${formData.id}`, formData);
             } else {
-                await apiClient.post('/register', formData);
+                // Map name to username for backend compatibility
+                const registerData = {
+                    username: formData.name,
+                    email: formData.email,
+                    password: formData.password,
+                    role: formData.role
+                };
+                await apiClient.post('/register', registerData);
             }
             fetchUsers();
             setShowForm(false);
