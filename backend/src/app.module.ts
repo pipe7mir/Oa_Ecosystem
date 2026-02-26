@@ -39,23 +39,18 @@ import { HealthController } from './health.controller';
         console.log('  DATABASE_URL exists:', !!dbUrl);
         console.log('  NODE_ENV:', process.env.NODE_ENV);
 
-        if (dbUrl) {
-          console.log('  Using PostgreSQL');
-          return {
-            type: 'postgres',
-            url: dbUrl,
-            autoLoadEntities: true,
-            synchronize: true, // Only for development/initial setup
-            ssl: { rejectUnauthorized: false },
-          };
+        if (!dbUrl) {
+          console.error('❌ DATABASE_URL not configured! Set it in environment variables.');
+          throw new Error('DATABASE_URL environment variable is required');
         }
 
-        console.log('  Using SQLite (fallback)');
+        console.log('  ✅ Using PostgreSQL');
         return {
-          type: 'sqlite',
-          database: '/tmp/database.sqlite',
+          type: 'postgres',
+          url: dbUrl,
           autoLoadEntities: true,
-          synchronize: true,
+          synchronize: true, // Only for development/initial setup
+          ssl: { rejectUnauthorized: false },
         };
       },
     }),
