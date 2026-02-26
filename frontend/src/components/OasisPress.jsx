@@ -86,7 +86,7 @@ const OasisPress = () => {
         setSaving(true);
         try {
             const updated = await apiClient.put(`/presentations/${currentPresentation.id}`, currentPresentation);
-            setPresentations(prev => prev.map(p => p.id === updated.id ? updated : p));
+            setPresentations(prev => (prev || []).map(p => p.id === updated.id ? updated : p));
             setCurrentPresentation(updated);
         } catch (error) {
             console.error('Error saving:', error);
@@ -181,10 +181,10 @@ const OasisPress = () => {
             }
         };
         
-        const updatedSlides = [...currentPresentation.slides];
+        const updatedSlides = [...(currentPresentation.slides || [])];
         updatedSlides[selectedSlide] = {
             ...updatedSlides[selectedSlide],
-            elements: [...updatedSlides[selectedSlide].elements, newElement]
+            elements: [...(updatedSlides[selectedSlide]?.elements || []), newElement]
         };
         setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
         setSelectedElement(newElement.id);
@@ -192,8 +192,8 @@ const OasisPress = () => {
 
     const updateElement = (elementId, updates) => {
         if (!currentPresentation) return;
-        const updatedSlides = [...currentPresentation.slides];
-        const slideElements = updatedSlides[selectedSlide].elements.map(el =>
+        const updatedSlides = [...(currentPresentation.slides || [])];
+        const slideElements = (updatedSlides[selectedSlide]?.elements || []).map(el =>
             el.id === elementId ? { ...el, ...updates } : el
         );
         updatedSlides[selectedSlide] = { ...updatedSlides[selectedSlide], elements: slideElements };
@@ -202,10 +202,10 @@ const OasisPress = () => {
 
     const deleteElement = (elementId) => {
         if (!currentPresentation) return;
-        const updatedSlides = [...currentPresentation.slides];
+        const updatedSlides = [...(currentPresentation.slides || [])];
         updatedSlides[selectedSlide] = {
             ...updatedSlides[selectedSlide],
-            elements: updatedSlides[selectedSlide].elements.filter(el => el.id !== elementId)
+            elements: (updatedSlides[selectedSlide]?.elements || []).filter(el => el.id !== elementId)
         };
         setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
         setSelectedElement(null);
@@ -404,8 +404,8 @@ const OasisPress = () => {
     // Editor View
     // ===============================
     const EditorView = () => {
-        const currentSlideData = currentPresentation?.slides[selectedSlide];
-        const selectedEl = currentSlideData?.elements.find(el => el.id === selectedElement);
+        const currentSlideData = currentPresentation?.slides?.[selectedSlide];
+        const selectedEl = (currentSlideData?.elements || []).find(el => el.id === selectedElement);
 
         return (
             <div className="row g-4">
@@ -766,7 +766,7 @@ const OasisPress = () => {
             ) : (
                 /* Presentations Grid */
                 <div className="row g-4">
-                    {presentations.length === 0 ? (
+                    {(presentations || []).length === 0 ? (
                         <div className="col-12 text-center py-5">
                             <div style={{ ...glassCard, padding: '3rem' }}>
                                 <i className="bi bi-easel2 display-1 text-muted mb-3"></i>
@@ -778,7 +778,7 @@ const OasisPress = () => {
                             </div>
                         </div>
                     ) : (
-                        presentations.map((presentation, index) => (
+                        (presentations || []).map((presentation, index) => (
                             <motion.div
                                 key={presentation.id}
                                 initial={{ opacity: 0, y: 20 }}
