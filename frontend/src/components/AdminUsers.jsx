@@ -31,12 +31,8 @@ const AdminUsers = () => {
             const { data } = await apiClient.get('/users');
             setUsers(data || []);
         } catch (error) {
-            console.error("Error fetching users, showing mock for UI demo");
-            // Fallback for demo
-            setUsers([
-                { id: 1, name: 'Admin Principal', email: 'admin@oasis.com', role: 'admin' },
-                { id: 2, name: 'Moderador', email: 'mod@oasis.com', role: 'editor' }
-            ]);
+            console.error("Error fetching users:", error);
+            setUsers([]);
         }
     };
 
@@ -70,6 +66,15 @@ const AdminUsers = () => {
             fetchUsers();
         } catch (error) {
             alert('Error al eliminar');
+        }
+    };
+
+    const handleApprove = async (id) => {
+        try {
+            await apiClient.patch(`/users/${id}/approve`);
+            fetchUsers();
+        } catch (error) {
+            alert('Error al aprobar usuario: ' + error.message);
         }
     };
 
@@ -155,6 +160,7 @@ const AdminUsers = () => {
                                 <th className="ps-4 py-3">Usuario</th>
                                 <th>Email</th>
                                 <th>Rol</th>
+                                <th>Estado</th>
                                 <th className="text-end pe-4">Gestión</th>
                             </tr>
                         </thead>
@@ -166,13 +172,29 @@ const AdminUsers = () => {
                                             <div className="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style={{ width: '40px', height: '40px' }}>
                                                 <i className="bi bi-person text-primary"></i>
                                             </div>
-                                            {u.name}
+                                            {u.name || u.username}
                                         </div>
                                     </td>
                                     <td>{u.email}</td>
                                     <td><span className="badge bg-light text-primary border">{u.role}</span></td>
+                                    <td>
+                                        {u.isApproved ? (
+                                            <span className="badge bg-success">Aprobado</span>
+                                        ) : (
+                                            <span className="badge bg-warning text-dark">Pendiente</span>
+                                        )}
+                                    </td>
                                     <td className="text-end pe-4">
                                         <div className="btn-group btn-group-sm">
+                                            {!u.isApproved && (
+                                                <button 
+                                                    className="btn btn-outline-success border-0" 
+                                                    onClick={() => handleApprove(u.id)}
+                                                    title="Aprobar usuario"
+                                                >
+                                                    <i className="bi bi-check-circle"></i>
+                                                </button>
+                                            )}
                                             <button className="btn btn-outline-primary border-0" onClick={() => handleEdit(u)}><i className="bi bi-pencil-square"></i></button>
                                             <button className="btn btn-outline-danger border-0" onClick={() => handleDelete(u.id)}><i className="bi bi-trash3"></i></button>
                                         </div>
