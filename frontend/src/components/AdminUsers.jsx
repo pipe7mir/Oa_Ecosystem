@@ -46,7 +46,7 @@ const AdminUsers = () => {
             if (formData.id) {
                 await apiClient.put(`/users/${formData.id}`, formData);
             } else {
-                await apiClient.post('/auth/register', formData);
+                await apiClient.post('/register', formData);
             }
             fetchUsers();
             setShowForm(false);

@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
                     setUser(parsedUser);
 
                     // Verify token is still valid
-                    const res = await apiClient.get('/auth/user');
+                    const res = await apiClient.get('/user');
                     setUser(res.data);
                     localStorage.setItem('user', JSON.stringify(res.data));
                 } catch (err) {
@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const signIn = async (data) => {
-        const response = await apiClient.post('/auth/login', data);
+        const response = await apiClient.post('/login', data);
         const { token, user: userData } = response.data;
 
         if (token && userData) {
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 
     const signOut = async () => {
         try {
-            await apiClient.post('/auth/logout');
+            await apiClient.post('/logout');
         } catch (e) {
             // Ignorar errores al desloguear
         } finally {
