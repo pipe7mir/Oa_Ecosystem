@@ -25,6 +25,38 @@ const AdminLayout = () => {
         setIsMobileMenuOpen(false);
     }, [location.pathname]);
 
+    // Prevent body scroll when mobile menu is open
+    useEffect(() => {
+        if (isMobileMenuOpen) {
+            const scrollY = window.scrollY;
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.left = '0';
+            document.body.style.right = '0';
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+        } else {
+            const scrollY = document.body.style.top;
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.left = '';
+            document.body.style.right = '';
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+            if (scrollY) {
+                window.scrollTo(0, parseInt(scrollY || '0') * -1);
+            }
+        }
+        return () => {
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.left = '';
+            document.body.style.right = '';
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+        };
+    }, [isMobileMenuOpen]);
+
     /**
      * LÓGICA DE CONTROL DE ACCESO (RBAC)
      * ---------------------------------
@@ -64,11 +96,15 @@ const AdminLayout = () => {
         left: 0,
         right: 0,
         bottom: 0,
+        width: '100vw',
+        height: '100vh',
         background: 'rgba(0,0,0,0.5)',
         zIndex: 1050,
         opacity: isMobileMenuOpen ? 1 : 0,
         visibility: isMobileMenuOpen ? 'visible' : 'hidden',
-        transition: 'opacity 0.3s, visibility 0.3s'
+        transition: 'opacity 0.3s, visibility 0.3s',
+        touchAction: 'none',
+        overscrollBehavior: 'contain'
     };
 
     const mobileMenuPanel = {
@@ -77,11 +113,14 @@ const AdminLayout = () => {
         left: isMobileMenuOpen ? 0 : '-280px',
         width: '280px',
         height: '100vh',
+        height: '100dvh',
         background: 'white',
         zIndex: 1051,
         transition: 'left 0.3s ease',
         overflowY: 'auto',
-        boxShadow: '2px 0 20px rgba(0,0,0,0.15)'
+        boxShadow: '2px 0 20px rgba(0,0,0,0.15)',
+        overscrollBehavior: 'contain',
+        WebkitOverflowScrolling: 'touch'
     };
 
     const hamburgerBtn = {

@@ -472,6 +472,48 @@
 }
 
 /* ==========================================================
+   SCROLL LOCK & MENU FIXES
+   ========================================================== */
+
+/* Prevent scroll when menu is open */
+html.menu-open,
+body.menu-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Mobile viewport height fix for iOS */
+.mobile-menu,
+.admin-mobile-menu {
+    height: 100vh;
+    height: 100dvh;
+    height: -webkit-fill-available;
+}
+
+/* Prevent overscroll/bounce on iOS */
+.mobile-menu-overlay,
+.admin-overlay {
+    touch-action: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+/* Ensure proper stacking context */
+.mobile-menu,
+.admin-mobile-panel {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Fix for horizontal scroll issue */
+html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
+/* ==========================================================
    PRINT STYLES
    ========================================================== */
 @media print {

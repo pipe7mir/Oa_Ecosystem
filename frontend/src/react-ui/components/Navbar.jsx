@@ -29,12 +29,34 @@ const Navbar = () => {
     // Prevent body scroll when mobile menu is open
     useEffect(() => {
         if (mobileMenuOpen) {
+            // Store current scroll position
+            const scrollY = window.scrollY;
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.left = '0';
+            document.body.style.right = '0';
             document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
         } else {
+            // Restore scroll position
+            const scrollY = document.body.style.top;
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.left = '';
+            document.body.style.right = '';
             document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+            if (scrollY) {
+                window.scrollTo(0, parseInt(scrollY || '0') * -1);
+            }
         }
         return () => {
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.left = '';
+            document.body.style.right = '';
             document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
         };
     }, [mobileMenuOpen]);
 
@@ -143,11 +165,15 @@ const Navbar = () => {
             left: 0,
             right: 0,
             bottom: 0,
+            width: '100vw',
+            height: '100vh',
             background: 'rgba(0, 0, 0, 0.5)',
             zIndex: 998,
             opacity: mobileMenuOpen ? 1 : 0,
             visibility: mobileMenuOpen ? 'visible' : 'hidden',
-            transition: 'opacity 0.3s ease, visibility 0.3s ease'
+            transition: 'opacity 0.3s ease, visibility 0.3s ease',
+            touchAction: 'none',
+            overscrollBehavior: 'contain'
         },
         mobileMenu: {
             position: 'fixed',
@@ -156,12 +182,15 @@ const Navbar = () => {
             width: '280px',
             maxWidth: '85vw',
             height: '100vh',
+            height: '100dvh',
             background: 'white',
             zIndex: 999,
             padding: '80px 24px 32px',
             boxShadow: '-5px 0 25px rgba(0, 0, 0, 0.15)',
             transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            overflowY: 'auto'
+            overflowY: 'auto',
+            overscrollBehavior: 'contain',
+            WebkitOverflowScrolling: 'touch'
         },
         mobileLink: {
             display: 'block',

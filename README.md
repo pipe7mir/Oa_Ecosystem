@@ -2,10 +2,26 @@
 
 Este repositorio contiene el ecosistema completo de OASIS, dividido en dos proyectos independientes para facilitar el despliegue y la escalabilidad.
 
+## 📱 Características
+
+- **PWA**: Instalable como app nativa en móviles con el logo oficial
+- **Responsive**: Diseño adaptativo para todos los dispositivos
+- **Admin Panel**: Panel de administración completo para gestión de contenido
+
 ## Estructura
 
 - **[/frontend](./frontend)**: Aplicación React construida con Vite. Diseñada para ser desplegada en **Vercel**.
-- **[/backend](./backend)**: API robusta construida con NestJS y TypeORM. Diseñada para ser desplegada en plataformas de contenedores como **Railway, Render o Fly.io** para soportar persistencia de SQLite o PostgreSQL.
+- **[/backend](./backend)**: API robusta construida con NestJS y TypeORM. Diseñada para ser desplegada en plataformas como **Railway, Render o Fly.io**.
+
+## 🚀 Despliegue Rápido
+
+**Para que las funciones de admin funcionen, necesitas:**
+
+1. **Base de datos PostgreSQL** (gratis en [Supabase](https://supabase.com) o [Neon](https://neon.tech))
+2. **Backend en Railway/Render** (no funciona bien en Vercel)
+3. **Frontend en Vercel** con `VITE_API_URL` configurada
+
+📖 **[Ver Guía Completa de Despliegue](./DEPLOYMENT.md)**
 
 ## Desarrollo Local
 
@@ -21,14 +37,24 @@ npm run start:dev
 ```
 El servidor correrá en `http://localhost:3000`.
 
-### 3. Iniciar Frontend
+### 3. Crear Usuario Admin
+```bash
+cd backend
+npm run seed
+```
+Credenciales: `admin@oasis.com` / `oasis123`
+
+### 4. Iniciar Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-La aplicación correrá en `http://localhost:5173`. Gracias al proxy configurado en `vite.config.js`, las peticiones a `/api` se redirigirán automáticamente al puerto 3000.
+La aplicación correrá en `http://localhost:5173`.
 
-## Despliegue
+## Variables de Entorno
 
-Consulte la [Guía de Despliegue](./walkthrough.md) para más detalles sobre cómo subir cada parte a su respectiva plataforma.
+Ver archivos `.env.example` en cada carpeta:
+- `backend/.env.example`
+- `frontend/.env.example`
+
