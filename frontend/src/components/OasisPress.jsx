@@ -23,6 +23,65 @@ const FONTS = [
 // Preset colors
 const COLORS = ['#5b2ea6', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#000000', '#ffffff', '#6b7280'];
 
+// ===============================
+// IMAGE LIBRARY
+// ===============================
+const IMAGE_LIBRARY = {
+    logos: [
+        { id: 'logo-1', name: 'Oasis Logo Principal', url: 'https://i.imgur.com/YvKQZCr.png', category: 'logos' },
+        { id: 'logo-2', name: 'Oasis Logo Blanco', url: 'https://i.imgur.com/8qQKfNL.png', category: 'logos' },
+        { id: 'logo-3', name: 'Oasis Logo Morado', url: 'https://i.imgur.com/J7kTxPr.png', category: 'logos' },
+        { id: 'logo-4', name: 'Oasis Icono', url: 'https://i.imgur.com/VdCbQYD.png', category: 'logos' },
+        { id: 'logo-5', name: 'Oasis Church Badge', url: 'https://i.imgur.com/wEJPqLM.png', category: 'logos' },
+    ],
+    social: [
+        { id: 'social-1', name: 'Instagram', url: 'https://cdn-icons-png.flaticon.com/512/174/174855.png', category: 'social' },
+        { id: 'social-2', name: 'Facebook', url: 'https://cdn-icons-png.flaticon.com/512/124/124010.png', category: 'social' },
+        { id: 'social-3', name: 'YouTube', url: 'https://cdn-icons-png.flaticon.com/512/174/174883.png', category: 'social' },
+        { id: 'social-4', name: 'TikTok', url: 'https://cdn-icons-png.flaticon.com/512/3046/3046121.png', category: 'social' },
+        { id: 'social-5', name: 'WhatsApp', url: 'https://cdn-icons-png.flaticon.com/512/124/124034.png', category: 'social' },
+        { id: 'social-6', name: 'Twitter/X', url: 'https://cdn-icons-png.flaticon.com/512/5969/5969020.png', category: 'social' },
+        { id: 'social-7', name: 'Spotify', url: 'https://cdn-icons-png.flaticon.com/512/174/174872.png', category: 'social' },
+        { id: 'social-8', name: 'Web Globe', url: 'https://cdn-icons-png.flaticon.com/512/1006/1006771.png', category: 'social' },
+    ],
+    backgrounds: [
+        { id: 'bg-1', name: 'Worship Lights', url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1920&q=80', category: 'backgrounds' },
+        { id: 'bg-2', name: 'Church Interior', url: 'https://images.unsplash.com/photo-1438032005730-c779502df39b?w=1920&q=80', category: 'backgrounds' },
+        { id: 'bg-3', name: 'Sunset Sky', url: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=1920&q=80', category: 'backgrounds' },
+        { id: 'bg-4', name: 'Mountains', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80', category: 'backgrounds' },
+        { id: 'bg-5', name: 'Ocean Waves', url: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1920&q=80', category: 'backgrounds' },
+        { id: 'bg-6', name: 'Stars Night', url: 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=1920&q=80', category: 'backgrounds' },
+        { id: 'bg-7', name: 'Forest Light', url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1920&q=80', category: 'backgrounds' },
+        { id: 'bg-8', name: 'Abstract Purple', url: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=1920&q=80', category: 'backgrounds' },
+        { id: 'bg-9', name: 'Bokeh Lights', url: 'https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?w=1920&q=80', category: 'backgrounds' },
+        { id: 'bg-10', name: 'Clouds', url: 'https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=1920&q=80', category: 'backgrounds' },
+    ],
+    decorative: [
+        { id: 'dec-1', name: 'Cross Gold', url: 'https://cdn-icons-png.flaticon.com/512/3004/3004430.png', category: 'decorative' },
+        { id: 'dec-2', name: 'Dove', url: 'https://cdn-icons-png.flaticon.com/512/616/616490.png', category: 'decorative' },
+        { id: 'dec-3', name: 'Bible', url: 'https://cdn-icons-png.flaticon.com/512/3004/3004416.png', category: 'decorative' },
+        { id: 'dec-4', name: 'Praying Hands', url: 'https://cdn-icons-png.flaticon.com/512/2621/2621216.png', category: 'decorative' },
+        { id: 'dec-5', name: 'Heart', url: 'https://cdn-icons-png.flaticon.com/512/833/833472.png', category: 'decorative' },
+        { id: 'dec-6', name: 'Star', url: 'https://cdn-icons-png.flaticon.com/512/1828/1828884.png', category: 'decorative' },
+        { id: 'dec-7', name: 'Music Notes', url: 'https://cdn-icons-png.flaticon.com/512/3659/3659784.png', category: 'decorative' },
+        { id: 'dec-8', name: 'Church Building', url: 'https://cdn-icons-png.flaticon.com/512/2330/2330457.png', category: 'decorative' },
+    ]
+};
+
+// Gradient presets for backgrounds
+const GRADIENT_PRESETS = [
+    { id: 'grad-1', name: 'Oasis Purple', value: 'linear-gradient(135deg, #5b2ea6 0%, #8b5cf6 100%)', overlay: 'linear-gradient(135deg, rgba(91,46,166,0.8) 0%, rgba(139,92,246,0.6) 100%)' },
+    { id: 'grad-2', name: 'Sunset', value: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', overlay: 'linear-gradient(135deg, rgba(240,147,251,0.7) 0%, rgba(245,87,108,0.7) 100%)' },
+    { id: 'grad-3', name: 'Ocean', value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', overlay: 'linear-gradient(135deg, rgba(102,126,234,0.7) 0%, rgba(118,75,162,0.7) 100%)' },
+    { id: 'grad-4', name: 'Forest', value: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', overlay: 'linear-gradient(135deg, rgba(17,153,142,0.7) 0%, rgba(56,239,125,0.7) 100%)' },
+    { id: 'grad-5', name: 'Fire', value: 'linear-gradient(135deg, #f12711 0%, #f5af19 100%)', overlay: 'linear-gradient(135deg, rgba(241,39,17,0.7) 0%, rgba(245,175,25,0.7) 100%)' },
+    { id: 'grad-6', name: 'Night Sky', value: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)', overlay: 'linear-gradient(135deg, rgba(15,12,41,0.8) 0%, rgba(48,43,99,0.7) 50%, rgba(36,36,62,0.8) 100%)' },
+    { id: 'grad-7', name: 'Dawn', value: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)', overlay: 'linear-gradient(135deg, rgba(255,236,210,0.5) 0%, rgba(252,182,159,0.5) 100%)' },
+    { id: 'grad-8', name: 'Royal', value: 'linear-gradient(135deg, #141E30 0%, #243B55 100%)', overlay: 'linear-gradient(135deg, rgba(20,30,48,0.8) 0%, rgba(36,59,85,0.8) 100%)' },
+    { id: 'grad-9', name: 'Transparent Dark', value: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%)', overlay: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%)' },
+    { id: 'grad-10', name: 'Transparent Light', value: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 100%)', overlay: 'linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.7) 100%)' },
+];
+
 // Default slide
 const createDefaultSlide = () => ({
     id: `slide-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -73,9 +132,16 @@ const OasisPress = () => {
     const [saving, setSaving] = useState(false);
     const [editingTextId, setEditingTextId] = useState(null);
     
+    // Image Library State
+    const [showImageLibrary, setShowImageLibrary] = useState(false);
+    const [imageLibraryMode, setImageLibraryMode] = useState('element'); // 'element' | 'background'
+    const [imageLibraryCategory, setImageLibraryCategory] = useState('all');
+    const [customImageUrl, setCustomImageUrl] = useState('');
+    
     // Refs
     const canvasRef = useRef(null);
     const touchStartRef = useRef({ x: 0, y: 0 });
+    const fileInputRef = useRef(null);
 
     // Liquid Glass styles
     const glassCard = {
@@ -223,6 +289,115 @@ const OasisPress = () => {
             updatedSlides[selectedSlide] = { ...updatedSlides[selectedSlide], background: color };
             setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
         }
+    };
+
+    const updateSlideBackgroundImage = (imageUrl, gradient = null) => {
+        if (!currentPresentation) return;
+        const slides = getSlides(currentPresentation);
+        const updatedSlides = [...slides];
+        if (updatedSlides[selectedSlide]) {
+            updatedSlides[selectedSlide] = {
+                ...updatedSlides[selectedSlide],
+                backgroundImage: imageUrl,
+                backgroundGradient: gradient
+            };
+            setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+        }
+    };
+
+    const clearSlideBackground = () => {
+        if (!currentPresentation) return;
+        const slides = getSlides(currentPresentation);
+        const updatedSlides = [...slides];
+        if (updatedSlides[selectedSlide]) {
+            updatedSlides[selectedSlide] = {
+                ...updatedSlides[selectedSlide],
+                background: '#ffffff',
+                backgroundImage: '',
+                backgroundGradient: null
+            };
+            setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+        }
+    };
+
+    // ===============================
+    // Image Library Functions
+    // ===============================
+    const openImageLibrary = (mode = 'element') => {
+        setImageLibraryMode(mode);
+        setShowImageLibrary(true);
+        setImageLibraryCategory('all');
+        setCustomImageUrl('');
+    };
+
+    const handleImageSelect = (image) => {
+        if (imageLibraryMode === 'background') {
+            updateSlideBackgroundImage(image.url);
+        } else {
+            addImageElement(image.url);
+        }
+        setShowImageLibrary(false);
+    };
+
+    const handleCustomImageAdd = () => {
+        if (!customImageUrl.trim()) return;
+        if (imageLibraryMode === 'background') {
+            updateSlideBackgroundImage(customImageUrl);
+        } else {
+            addImageElement(customImageUrl);
+        }
+        setShowImageLibrary(false);
+        setCustomImageUrl('');
+    };
+
+    const addImageElement = (src) => {
+        if (!currentPresentation) return;
+        const slides = getSlides(currentPresentation);
+        const currentSlide = slides[selectedSlide];
+        if (!currentSlide) return;
+
+        const newElement = {
+            id: `el-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: 'image',
+            x: 100,
+            y: 100,
+            width: 250,
+            height: 200,
+            src: src,
+            rotation: 0,
+            opacity: 1,
+            style: {
+                borderRadius: 8,
+                objectFit: 'cover',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+            }
+        };
+
+        const updatedSlides = [...slides];
+        updatedSlides[selectedSlide] = {
+            ...currentSlide,
+            elements: [...getElements(currentSlide), newElement]
+        };
+        setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+        setSelectedElement(newElement.id);
+    };
+
+    const handleFileUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        
+        // Convert to base64 for local use
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const dataUrl = event.target?.result;
+            if (imageLibraryMode === 'background') {
+                updateSlideBackgroundImage(dataUrl);
+            } else {
+                addImageElement(dataUrl);
+            }
+        };
+        reader.readAsDataURL(file);
+        setShowImageLibrary(false);
     };
 
     // ===============================
@@ -409,6 +584,220 @@ const OasisPress = () => {
     };
 
     // ===============================
+    // Image Library Modal
+    // ===============================
+    const ImageLibraryModal = () => {
+        const allImages = [
+            ...IMAGE_LIBRARY.logos,
+            ...IMAGE_LIBRARY.social,
+            ...IMAGE_LIBRARY.backgrounds,
+            ...IMAGE_LIBRARY.decorative
+        ];
+        
+        const filteredImages = imageLibraryCategory === 'all' 
+            ? allImages 
+            : IMAGE_LIBRARY[imageLibraryCategory] || [];
+
+        const categories = [
+            { id: 'all', name: 'Todos', icon: 'bi-grid-3x3-gap' },
+            { id: 'logos', name: 'Logos Oasis', icon: 'bi-award' },
+            { id: 'social', name: 'Redes Sociales', icon: 'bi-share' },
+            { id: 'backgrounds', name: 'Fondos', icon: 'bi-image' },
+            { id: 'decorative', name: 'Decorativos', icon: 'bi-stars' }
+        ];
+
+        return (
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                style={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.7)',
+                    backdropFilter: 'blur(8px)',
+                    zIndex: 9998,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '20px'
+                }}
+                onClick={() => setShowImageLibrary(false)}
+            >
+                <motion.div
+                    initial={{ scale: 0.9, y: 20 }}
+                    animate={{ scale: 1, y: 0 }}
+                    exit={{ scale: 0.9, y: 20 }}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                        ...glassCard,
+                        width: '90%',
+                        maxWidth: '900px',
+                        maxHeight: '85vh',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column'
+                    }}
+                >
+                    {/* Header */}
+                    <div className="p-4 border-bottom d-flex align-items-center justify-content-between">
+                        <h5 className="mb-0 fw-bold" style={{ color: theme.colors.primary }}>
+                            <i className="bi bi-images me-2"></i>
+                            {imageLibraryMode === 'background' ? 'Seleccionar Fondo' : 'Biblioteca de Imágenes'}
+                        </h5>
+                        <button 
+                            onClick={() => setShowImageLibrary(false)}
+                            className="btn btn-sm btn-outline-secondary rounded-circle"
+                            style={{ width: 36, height: 36 }}
+                        >
+                            <i className="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+
+                    {/* Categories */}
+                    <div className="px-4 py-3 border-bottom" style={{ background: 'rgba(91,46,166,0.03)' }}>
+                        <div className="d-flex flex-wrap gap-2">
+                            {categories.map(cat => (
+                                <button
+                                    key={cat.id}
+                                    onClick={() => setImageLibraryCategory(cat.id)}
+                                    className={`btn btn-sm rounded-pill ${imageLibraryCategory === cat.id ? 'btn-primary' : 'btn-outline-secondary'}`}
+                                >
+                                    <i className={`bi ${cat.icon} me-1`}></i>
+                                    {cat.name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Custom URL / Upload */}
+                    <div className="px-4 py-3 border-bottom">
+                        <div className="row g-2 align-items-center">
+                            <div className="col">
+                                <div className="input-group input-group-sm">
+                                    <span className="input-group-text"><i className="bi bi-link-45deg"></i></span>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        placeholder="Pegar URL de imagen..."
+                                        value={customImageUrl}
+                                        onChange={(e) => setCustomImageUrl(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleCustomImageAdd()}
+                                    />
+                                    <button 
+                                        className="btn btn-primary" 
+                                        onClick={handleCustomImageAdd}
+                                        disabled={!customImageUrl.trim()}
+                                    >
+                                        Agregar
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="col-auto">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    accept="image/*"
+                                    onChange={handleFileUpload}
+                                    style={{ display: 'none' }}
+                                />
+                                <button 
+                                    className="btn btn-sm btn-outline-primary"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    <i className="bi bi-upload me-1"></i>
+                                    Subir imagen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Gradients section (only for backgrounds) */}
+                    {imageLibraryMode === 'background' && (
+                        <div className="px-4 py-3 border-bottom">
+                            <h6 className="small fw-bold text-muted mb-2">
+                                <i className="bi bi-palette me-1"></i> Degradados
+                            </h6>
+                            <div className="d-flex flex-wrap gap-2">
+                                {GRADIENT_PRESETS.map(grad => (
+                                    <button
+                                        key={grad.id}
+                                        onClick={() => {
+                                            updateSlideBackgroundImage('', grad.value);
+                                            setShowImageLibrary(false);
+                                        }}
+                                        className="btn btn-sm p-0 rounded"
+                                        style={{
+                                            width: 60,
+                                            height: 40,
+                                            background: grad.value,
+                                            border: '2px solid #fff',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                                        }}
+                                        title={grad.name}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Image Grid */}
+                    <div className="flex-grow-1 overflow-auto p-4">
+                        <div className="row g-3">
+                            {filteredImages.map(img => (
+                                <div key={img.id} className="col-6 col-sm-4 col-md-3">
+                                    <motion.div
+                                        whileHover={{ scale: 1.03, boxShadow: '0 8px 25px rgba(91,46,166,0.25)' }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => handleImageSelect(img)}
+                                        style={{
+                                            aspectRatio: img.category === 'backgrounds' ? '16/9' : '1/1',
+                                            borderRadius: 12,
+                                            overflow: 'hidden',
+                                            cursor: 'pointer',
+                                            background: '#f8f9fa',
+                                            border: '2px solid transparent',
+                                            position: 'relative'
+                                        }}
+                                        className="shadow-sm"
+                                    >
+                                        <img
+                                            src={img.url}
+                                            alt={img.name}
+                                            style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: img.category === 'backgrounds' ? 'cover' : 'contain',
+                                                padding: img.category === 'backgrounds' ? 0 : 12
+                                            }}
+                                        />
+                                        <div 
+                                            className="position-absolute bottom-0 start-0 end-0 p-2 text-white text-center small"
+                                            style={{ 
+                                                background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+                                                fontSize: '0.7rem'
+                                            }}
+                                        >
+                                            {img.name}
+                                        </div>
+                                    </motion.div>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        {filteredImages.length === 0 && (
+                            <div className="text-center py-5 text-muted">
+                                <i className="bi bi-image display-4 mb-3 d-block opacity-50"></i>
+                                <p>No hay imágenes en esta categoría</p>
+                            </div>
+                        )}
+                    </div>
+                </motion.div>
+            </motion.div>
+        );
+    };
+
+    // ===============================
     // Presentation Mode
     // ===============================
     const PresentationMode = () => {
@@ -479,13 +868,33 @@ const OasisPress = () => {
                             width: '90vw',
                             maxWidth: '1200px',
                             aspectRatio: '16/9',
-                            background: currentSlideData.background || '#fff',
+                            background: currentSlideData.backgroundGradient || currentSlideData.background || '#fff',
                             borderRadius: '12px',
                             position: 'relative',
                             overflow: 'hidden',
                             boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
                         }}
                     >
+                        {/* Background Image */}
+                        {currentSlideData.backgroundImage && (
+                            <>
+                                <div style={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    backgroundImage: `url(${currentSlideData.backgroundImage})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center'
+                                }} />
+                                {currentSlideData.backgroundGradient && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        inset: 0,
+                                        background: GRADIENT_PRESETS.find(g => g.value === currentSlideData.backgroundGradient)?.overlay || currentSlideData.backgroundGradient
+                                    }} />
+                                )}
+                            </>
+                        )}
+                        
                         {elements.map(element => (
                             <motion.div
                                 key={element.id}
@@ -706,14 +1115,32 @@ const OasisPress = () => {
                                     className="position-relative"
                                     style={{
                                         aspectRatio: '16/9',
-                                        background: slide.background || '#fff',
+                                        background: slide.backgroundGradient || slide.background || '#fff',
                                         borderRadius: 8,
                                         border: selectedSlide === index ? `2px solid ${theme.colors.primary}` : '1px solid #ddd',
                                         cursor: 'pointer',
                                         overflow: 'hidden'
                                     }}
                                 >
-                                    <span className="position-absolute" style={{ top: 4, left: 6, fontSize: '0.65rem', fontWeight: 'bold', color: '#666', background: 'rgba(255,255,255,0.8)', padding: '0 4px', borderRadius: 3 }}>
+                                    {/* Thumbnail background image */}
+                                    {slide.backgroundImage && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            inset: 0,
+                                            backgroundImage: `url(${slide.backgroundImage})`,
+                                            backgroundSize: 'cover',
+                                            backgroundPosition: 'center'
+                                        }} />
+                                    )}
+                                    {slide.backgroundImage && slide.backgroundGradient && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            inset: 0,
+                                            background: GRADIENT_PRESETS.find(g => g.value === slide.backgroundGradient)?.overlay || slide.backgroundGradient
+                                        }} />
+                                    )}
+                                    
+                                    <span className="position-absolute" style={{ top: 4, left: 6, fontSize: '0.65rem', fontWeight: 'bold', color: '#666', background: 'rgba(255,255,255,0.8)', padding: '0 4px', borderRadius: 3, zIndex: 2 }}>
                                         {index + 1}
                                     </span>
                                     {/* Mini preview */}
@@ -765,8 +1192,11 @@ const OasisPress = () => {
                             <button onClick={() => addElement('shape')} className="btn btn-outline-primary btn-sm">
                                 <i className="bi bi-square me-1"></i> Forma
                             </button>
-                            <button onClick={() => addElement('image')} className="btn btn-outline-primary btn-sm">
+                            <button onClick={() => openImageLibrary('element')} className="btn btn-outline-primary btn-sm">
                                 <i className="bi bi-image me-1"></i> Imagen
+                            </button>
+                            <button onClick={() => openImageLibrary('background')} className="btn btn-outline-secondary btn-sm">
+                                <i className="bi bi-card-image me-1"></i> Fondo
                             </button>
                             <div className="ms-auto d-flex gap-2">
                                 <button onClick={() => setIsPresentMode(true)} className="btn btn-primary btn-sm rounded-pill px-3">
@@ -784,7 +1214,7 @@ const OasisPress = () => {
                             ref={canvasRef}
                             style={{
                                 aspectRatio: '16/9',
-                                background: currentSlideData.background || '#fff',
+                                background: currentSlideData.backgroundGradient || currentSlideData.background || '#fff',
                                 borderRadius: 12,
                                 position: 'relative',
                                 overflow: 'hidden',
@@ -792,6 +1222,26 @@ const OasisPress = () => {
                             }}
                             onClick={() => setSelectedElement(null)}
                         >
+                            {/* Background Image */}
+                            {currentSlideData.backgroundImage && (
+                                <>
+                                    <div style={{
+                                        position: 'absolute',
+                                        inset: 0,
+                                        backgroundImage: `url(${currentSlideData.backgroundImage})`,
+                                        backgroundSize: 'cover',
+                                        backgroundPosition: 'center'
+                                    }} />
+                                    {currentSlideData.backgroundGradient && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            inset: 0,
+                                            background: GRADIENT_PRESETS.find(g => g.value === currentSlideData.backgroundGradient)?.overlay || currentSlideData.backgroundGradient
+                                        }} />
+                                    )}
+                                </>
+                            )}
+                            
                             <AnimatePresence>
                                 {elements.map(element => (
                                     <motion.div
@@ -1056,8 +1506,11 @@ const OasisPress = () => {
                                     Diapositiva
                                 </h6>
                                 <div className="d-flex flex-column gap-3">
+                                    {/* Solid Color */}
                                     <div>
-                                        <label className="form-label small text-muted mb-1">Color de fondo</label>
+                                        <label className="form-label small text-muted mb-1">
+                                            <i className="bi bi-palette-fill me-1"></i> Color sólido
+                                        </label>
                                         <div className="d-flex flex-wrap gap-1 mb-2">
                                             {COLORS.map(color => (
                                                 <button
@@ -1070,7 +1523,10 @@ const OasisPress = () => {
                                                         border: currentSlideData.background === color ? `2px solid ${theme.colors.primary}` : '2px solid #ddd',
                                                         borderRadius: 4
                                                     }}
-                                                    onClick={() => updateSlideBackground(color)}
+                                                    onClick={() => {
+                                                        updateSlideBackground(color);
+                                                        updateSlideBackgroundImage('', null);
+                                                    }}
                                                 />
                                             ))}
                                         </div>
@@ -1078,9 +1534,109 @@ const OasisPress = () => {
                                             type="color"
                                             className="form-control form-control-color w-100"
                                             value={currentSlideData.background || '#ffffff'}
-                                            onChange={(e) => updateSlideBackground(e.target.value)}
+                                            onChange={(e) => {
+                                                updateSlideBackground(e.target.value);
+                                                updateSlideBackgroundImage('', null);
+                                            }}
                                         />
                                     </div>
+
+                                    {/* Gradients */}
+                                    <div>
+                                        <label className="form-label small text-muted mb-1">
+                                            <i className="bi bi-rainbow me-1"></i> Degradados
+                                        </label>
+                                        <div className="d-flex flex-wrap gap-1">
+                                            {GRADIENT_PRESETS.map(grad => (
+                                                <button
+                                                    key={grad.id}
+                                                    className="btn btn-sm p-0"
+                                                    style={{
+                                                        width: 40,
+                                                        height: 28,
+                                                        background: grad.value,
+                                                        border: currentSlideData.backgroundGradient === grad.value ? `2px solid ${theme.colors.primary}` : '2px solid #ddd',
+                                                        borderRadius: 4
+                                                    }}
+                                                    onClick={() => updateSlideBackgroundImage('', grad.value)}
+                                                    title={grad.name}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Background Image */}
+                                    <div>
+                                        <label className="form-label small text-muted mb-1">
+                                            <i className="bi bi-image me-1"></i> Imagen de fondo
+                                        </label>
+                                        {currentSlideData.backgroundImage && (
+                                            <div className="mb-2 position-relative" style={{ borderRadius: 8, overflow: 'hidden' }}>
+                                                <img 
+                                                    src={currentSlideData.backgroundImage} 
+                                                    alt="Background" 
+                                                    style={{ width: '100%', height: 80, objectFit: 'cover' }}
+                                                />
+                                                <button
+                                                    onClick={() => updateSlideBackgroundImage('')}
+                                                    className="btn btn-sm btn-danger position-absolute"
+                                                    style={{ top: 4, right: 4, width: 24, height: 24, padding: 0 }}
+                                                >
+                                                    <i className="bi bi-x"></i>
+                                                </button>
+                                            </div>
+                                        )}
+                                        <button 
+                                            onClick={() => openImageLibrary('background')}
+                                            className="btn btn-sm btn-outline-primary w-100"
+                                        >
+                                            <i className="bi bi-images me-1"></i>
+                                            {currentSlideData.backgroundImage ? 'Cambiar imagen' : 'Seleccionar imagen'}
+                                        </button>
+                                    </div>
+
+                                    {/* Gradient Overlay for Background Image */}
+                                    {currentSlideData.backgroundImage && (
+                                        <div>
+                                            <label className="form-label small text-muted mb-1">
+                                                <i className="bi bi-layers me-1"></i> Overlay (degradado sobre imagen)
+                                            </label>
+                                            <div className="d-flex flex-wrap gap-1">
+                                                <button
+                                                    className="btn btn-sm btn-outline-secondary"
+                                                    style={{ fontSize: '0.7rem' }}
+                                                    onClick={() => updateSlideBackgroundImage(currentSlideData.backgroundImage, null)}
+                                                >
+                                                    Sin overlay
+                                                </button>
+                                                {GRADIENT_PRESETS.slice(0, 6).map(grad => (
+                                                    <button
+                                                        key={grad.id}
+                                                        className="btn btn-sm p-0"
+                                                        style={{
+                                                            width: 32,
+                                                            height: 24,
+                                                            background: grad.overlay,
+                                                            border: currentSlideData.backgroundGradient === grad.value ? `2px solid ${theme.colors.primary}` : '1px solid #ddd',
+                                                            borderRadius: 4
+                                                        }}
+                                                        onClick={() => updateSlideBackgroundImage(currentSlideData.backgroundImage, grad.value)}
+                                                        title={grad.name}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Clear All */}
+                                    {(currentSlideData.backgroundImage || currentSlideData.backgroundGradient) && (
+                                        <button
+                                            onClick={clearSlideBackground}
+                                            className="btn btn-sm btn-outline-secondary"
+                                        >
+                                            <i className="bi bi-eraser me-1"></i> Limpiar fondo
+                                        </button>
+                                    )}
                                 </div>
                             </>
                         )}
@@ -1126,6 +1682,11 @@ const OasisPress = () => {
             {/* Present Mode Overlay */}
             <AnimatePresence>
                 {isPresentMode && currentPresentation && <PresentationMode />}
+            </AnimatePresence>
+
+            {/* Image Library Modal */}
+            <AnimatePresence>
+                {showImageLibrary && <ImageLibraryModal />}
             </AnimatePresence>
 
             {/* Header */}
