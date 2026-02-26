@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { theme } from '../react-ui/styles/theme';
 import Draggable from 'react-draggable';
 import apiClient from '../api/client';  // API client for backend requests
+import OasisPress from './OasisPress';  // Presentation editor
 
 // Logo assets
 import logoOasis from '../img/logos/LOGO1.png';
@@ -227,6 +228,7 @@ const TEMPLATES = [
    Main Component
  ───────────────────────────────────────────────────*/
 const AdminAnnouncements = () => {
+    const [activeMode, setActiveMode] = useState('anuncios'); // 'anuncios' | 'presentaciones'
     const [announcements, setAnnouncements] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [showTemplatePicker, setShowTemplatePicker] = useState(false);
@@ -770,17 +772,45 @@ const AdminAnnouncements = () => {
                     <h2 className="fw-bold mb-0 text-dark">Creador Unificado Oasis</h2>
                     <p className="text-muted small mb-0">Generador de contenido visual de alto impacto</p>
                 </div>
-                <button className="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onClick={() => {
-                    if (!showForm && !showTemplatePicker) {
-                        setShowTemplatePicker(true);
-                    } else {
-                        setShowForm(false);
-                        setShowTemplatePicker(false);
-                    }
-                }}>
-                    {showForm || showTemplatePicker ? 'Cerrar Panel' : '+ Crear Nuevo'}
-                </button>
+                {activeMode === 'anuncios' && (
+                    <button className="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onClick={() => {
+                        if (!showForm && !showTemplatePicker) {
+                            setShowTemplatePicker(true);
+                        } else {
+                            setShowForm(false);
+                            setShowTemplatePicker(false);
+                        }
+                    }}>
+                        {showForm || showTemplatePicker ? 'Cerrar Panel' : '+ Crear Nuevo'}
+                    </button>
+                )}
             </div>
+
+            {/* Tabs: Anuncios / Presentaciones */}
+            <div className="mb-4">
+                <div className="nav nav-pills p-1 rounded-pill shadow-sm d-inline-flex" style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)' }}>
+                    <button
+                        type="button"
+                        className={`nav-link rounded-pill px-4 py-2 fw-bold ${activeMode === 'anuncios' ? 'active' : 'text-dark'}`}
+                        onClick={() => setActiveMode('anuncios')}
+                    >
+                        <i className="bi bi-megaphone me-2"></i>Anuncios
+                    </button>
+                    <button
+                        type="button"
+                        className={`nav-link rounded-pill px-4 py-2 fw-bold ${activeMode === 'presentaciones' ? 'active' : 'text-dark'}`}
+                        onClick={() => setActiveMode('presentaciones')}
+                    >
+                        <i className="bi bi-easel2 me-2"></i>Oasis Press
+                    </button>
+                </div>
+            </div>
+
+            {/* Render based on active mode */}
+            {activeMode === 'presentaciones' ? (
+                <OasisPress />
+            ) : (
+                <>
 
             {/* Template Gallery Picker */}
             {showTemplatePicker && (
@@ -1338,6 +1368,8 @@ const AdminAnnouncements = () => {
                         ))}
                     </div>
                 </div>
+            )}
+                </>
             )}
 
             <style>{`
