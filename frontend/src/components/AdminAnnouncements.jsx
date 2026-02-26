@@ -1159,13 +1159,18 @@ const AdminAnnouncements = () => {
                                     ))}
                                 </div>
                             </div>
-                            <div className="card-body p-5 d-flex flex-column align-items-center justify-content-center" style={{ background: '#e9ebed' }}>
+                            <div className="card-body p-3 p-md-5 d-flex flex-column align-items-center justify-content-center" style={{ background: '#e9ebed' }}>
                                 <div ref={previewRef} id="preview-container" onMouseDown={onDragStart} onTouchStart={onDragStart}
                                     style={{
                                         width: formData.format === 'whatsapp' ? '448px' : (formData.format === 'youtube' ? '100%' : '608px'),
+                                        maxWidth: '100%',
                                         aspectRatio: fmt.aspect, position: 'relative', overflow: 'hidden', ...previewBgStyle, cursor: 'grab',
                                         boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', borderRadius: '12px',
-                                        containerType: 'inline-size'
+                                        containerType: 'inline-size',
+                                        touchAction: 'none',
+                                        userSelect: 'none',
+                                        WebkitUserSelect: 'none',
+                                        WebkitTouchCallout: 'none'
                                     }}>
 
                                     {/* Dark Overlay (Legacy) */}
@@ -1344,6 +1349,20 @@ const AdminAnnouncements = () => {
                 .hover-scale { transition: transform 0.2s; }
                 .hover-scale:hover { transform: scale(1.05); }
 
+                /* Touch support for Draggable elements */
+                #preview-container .react-draggable {
+                    touch-action: none !important;
+                    -webkit-user-select: none !important;
+                    user-select: none !important;
+                    -webkit-touch-callout: none !important;
+                }
+                
+                #preview-container .react-draggable * {
+                    touch-action: none !important;
+                    -webkit-user-select: none !important;
+                    user-select: none !important;
+                }
+
                 #preview-container:fullscreen {
                     width: 100vw !important;
                     height: 100vh !important;
@@ -1357,6 +1376,14 @@ const AdminAnnouncements = () => {
                 }
                 #preview-container:fullscreen .react-draggable {
                     cursor: default !important;
+                }
+                
+                /* Mobile responsive adjustments */
+                @media (max-width: 991px) {
+                    #preview-container {
+                        width: 100% !important;
+                        max-width: 400px !important;
+                    }
                 }
             `}</style>
         </div>
