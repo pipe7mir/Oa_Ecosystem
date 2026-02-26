@@ -17,6 +17,7 @@ import AdminBillboard from '../components/AdminBillboard';
 import AdminLayout from '../components/AdminLayout';
 import AdminLive from '../components/AdminLive';
 import AdminAbout from '../components/AdminAbout';
+import OasisPress from '../components/OasisPress';
 import Login from '../components/Login';
 import ProtectedRoute from '../components/ProtectedRoute';
 import Footer from './components/Footer';
@@ -68,6 +69,7 @@ const App = () => {
                         <Route path="/admin/ajustes" element={<AdminAjustes />} />
                         <Route path="/admin/live" element={<AdminLive />} />
                         <Route path="/admin/about" element={<AdminAbout />} />
+                        <Route path="/admin/oasispress" element={<OasisPress />} />
                         <Route path="/admin/creator" element={<AdminAnnouncements />} />
                     </Route>
                 </Route>

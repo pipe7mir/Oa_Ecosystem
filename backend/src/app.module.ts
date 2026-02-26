@@ -24,6 +24,7 @@ import { BillboardsModule } from './billboards/billboards.module';
 import { EventFormsModule } from './event-forms-module/event-forms.module';
 import { LiveModule } from './live/live.module';
 import { SettingsModule } from './settings-module/settings.module';
+import { PresentationsModule } from './presentations/presentations.module';
 import { TestCorsController } from './common/test-cors.controller';
 import { HealthController } from './health.controller';
 
@@ -73,6 +74,7 @@ import { HealthController } from './health.controller';
     EventFormsModule,
     LiveModule,
     SettingsModule,
+    PresentationsModule,
     EmailModule,
   ],
   controllers: [TestCorsController, HealthController],

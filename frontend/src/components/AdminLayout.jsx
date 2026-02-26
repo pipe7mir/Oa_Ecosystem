@@ -144,6 +144,7 @@ const AdminLayout = () => {
         { to: '/admin/solicitudes', label: 'Solicitudes', icon: 'bi-inbox' },
         { to: '/admin/recursos', label: 'Recursos', icon: 'bi-collection' },
         { to: '/admin/announcements', label: 'Anuncios', icon: 'bi-megaphone' },
+        { to: '/admin/oasispress', label: 'Oasis Press', icon: 'bi-easel2' },
         { to: '/admin/inscripciones', label: 'Inscripciones', icon: 'bi-journal-check' },
         { to: '/admin/cartelera', label: 'Cartelera', icon: 'bi-card-image' },
         { to: '/admin/users', label: 'Usuarios', icon: 'bi-people' },
@@ -158,7 +159,7 @@ const AdminLayout = () => {
      */
     const links = allLinks.filter(link => {
         if (role === 'admin') return true;
-        const editorAllowed = ['/admin/solicitudes', '/admin/announcements', '/admin/inscripciones', '/admin/cartelera', '/admin/live'];
+        const editorAllowed = ['/admin/solicitudes', '/admin/announcements', '/admin/oasispress', '/admin/inscripciones', '/admin/cartelera', '/admin/live'];
         return editorAllowed.includes(link.to);
     });
 
