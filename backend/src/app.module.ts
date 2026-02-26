@@ -44,13 +44,21 @@ import { HealthController } from './health.controller';
           throw new Error('DATABASE_URL environment variable is required');
         }
 
-        console.log('  ✅ Using PostgreSQL');
+        console.log('  ✅ Using PostgreSQL (Neon)');
         return {
           type: 'postgres',
           url: dbUrl,
           autoLoadEntities: true,
-          synchronize: true, // Only for development/initial setup
+          synchronize: true,
           ssl: { rejectUnauthorized: false },
+          // Connection pool settings for Neon
+          extra: {
+            connectionTimeoutMillis: 30000,
+            idleTimeoutMillis: 30000,
+            max: 10,
+          },
+          retryAttempts: 3,
+          retryDelay: 3000,
         };
       },
     }),

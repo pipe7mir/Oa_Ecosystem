@@ -2,16 +2,20 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+  
+  console.log('🚀 Starting OASIS API...');
+  console.log(`📡 Port: ${port}`);
+  console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 DATABASE_URL: ${process.env.DATABASE_URL ? 'configured' : 'NOT SET!'}`);
+
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log'],
   });
 
-  // Health check endpoints (before global prefix)
+  // Health check endpoints BEFORE global prefix
   const httpAdapter = app.getHttpAdapter();
   httpAdapter.get('/', (req, res) => {
-    res.json({ status: 'ok', message: 'OASIS API is running' });
-  });
-  httpAdapter.get('/api', (req, res) => {
     res.json({ status: 'ok', message: 'OASIS API is running' });
   });
   httpAdapter.get('/health', (req, res) => {
@@ -20,52 +24,26 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  // Dynamic CORS configuration
-  const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://oasis-brown.vercel.app',
-    process.env.FRONTEND_URL, // Allow custom frontend URL
-  ].filter(Boolean);
+  // Add /api health check AFTER global prefix is set
+  httpAdapter.get('/api', (req, res) => {
+    res.json({ status: 'ok', message: 'OASIS API is running' });
+  });
 
+  // CORS configuration
   app.enableCors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, Postman, etc.)
-      if (!origin) return callback(null, true);
-      
-      // Check if origin is in allowed list or matches Vercel pattern
-      if (
-        allowedOrigins.includes(origin) ||
-        origin.endsWith('.vercel.app') ||
-        origin.endsWith('.railway.app') ||
-        origin.endsWith('.onrender.com')
-      ) {
-        return callback(null, true);
-      }
-      
-      // In development, allow all origins
-      if (process.env.NODE_ENV !== 'production') {
-        return callback(null, true);
-      }
-      
-      callback(new Error('Not allowed by CORS'));
-    },
+    origin: true, // Allow all origins for now
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
   });
 
-  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-  
-  console.log('🚀 Starting OASIS API...');
-  console.log(`📡 Port: ${port}`);
-  console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
-  
   await app.listen(port, '0.0.0.0');
   console.log(`✅ Server is running on http://0.0.0.0:${port}`);
 }
 
 bootstrap().catch((error) => {
   console.error('❌ Failed to start application:', error);
+  console.error('Stack:', error.stack);
   process.exit(1);
+});
 });
