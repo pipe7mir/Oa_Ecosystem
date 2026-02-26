@@ -52,6 +52,18 @@ export class UsersService implements OnApplicationBootstrap {
         return this.usersRepo.save(user);
     }
 
+    async disable(id: number): Promise<User> {
+        const user = await this.findOne(id);
+        user.isApproved = false;
+        return this.usersRepo.save(user);
+    }
+
+    async toggleApproval(id: number): Promise<User> {
+        const user = await this.findOne(id);
+        user.isApproved = !user.isApproved;
+        return this.usersRepo.save(user);
+    }
+
     async updateRole(id: number, role: string): Promise<User> {
         const user = await this.findOne(id);
         user.role = role;

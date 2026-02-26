@@ -22,6 +22,16 @@ export class AdminUserController {
         return this.usersService.approve(id);
     }
 
+    @Patch(':id/disable')
+    async disable(@Param('id', ParseIntPipe) id: number) {
+        return this.usersService.disable(id);
+    }
+
+    @Patch(':id/toggle')
+    async toggle(@Param('id', ParseIntPipe) id: number) {
+        return this.usersService.toggleApproval(id);
+    }
+
     @Patch(':id/role')
     async updateRole(@Param('id', ParseIntPipe) id: number, @Body('role') role: string) {
         return this.usersService.updateRole(id, role);
