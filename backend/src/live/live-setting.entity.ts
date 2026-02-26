@@ -20,7 +20,7 @@ export class LiveSetting {
   @Column({ type: 'varchar', length: 255, name: 'bg_image', nullable: true })
   bgImage: string | null;
 
-  @Column({ type: 'float', name: 'overlay_opacity', default: 0.5 })
+  @Column({ type: 'real', name: 'overlay_opacity', default: 0.5 })
   overlayOpacity: number;
 
   @CreateDateColumn({ name: 'created_at' })

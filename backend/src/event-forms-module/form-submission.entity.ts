@@ -9,7 +9,7 @@ export class FormSubmission {
   @ManyToOne(() => EventForm, (form) => form.submissions, { onDelete: 'CASCADE' })
   eventForm: EventForm;
 
-  @Column({ type: 'json' })
+  @Column({ type: 'simple-json' })
   data: Record<string, any>;
 
   @CreateDateColumn({ name: 'created_at' })

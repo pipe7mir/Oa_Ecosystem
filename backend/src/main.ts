@@ -56,9 +56,16 @@ async function bootstrap() {
   });
 
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+  
+  console.log('🚀 Starting OASIS API...');
+  console.log(`📡 Port: ${port}`);
+  console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+  
   await app.listen(port, '0.0.0.0');
-  // eslint-disable-next-line no-console
-  console.log(`Nest server running on port ${port}`);
+  console.log(`✅ Server is running on http://0.0.0.0:${port}`);
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('❌ Failed to start application:', error);
+  process.exit(1);
+});

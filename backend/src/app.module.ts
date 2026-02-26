@@ -32,10 +32,15 @@ import { HealthController } from './health.controller';
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       useFactory: () => {
-        const isVercel = process.env.VERCEL === '1';
         const dbUrl = process.env.DATABASE_URL;
 
+        // Log database configuration for debugging
+        console.log('📦 Database Configuration:');
+        console.log('  DATABASE_URL exists:', !!dbUrl);
+        console.log('  NODE_ENV:', process.env.NODE_ENV);
+
         if (dbUrl) {
+          console.log('  Using PostgreSQL');
           return {
             type: 'postgres',
             url: dbUrl,
@@ -45,10 +50,10 @@ import { HealthController } from './health.controller';
           };
         }
 
+        console.log('  Using SQLite (fallback)');
         return {
           type: 'sqlite',
-          // En Vercel, el único directorio con permisos de escritura es /tmp
-          database: isVercel ? '/tmp/database.sqlite' : 'data/database.sqlite',
+          database: '/tmp/database.sqlite',
           autoLoadEntities: true,
           synchronize: true,
         };

@@ -12,7 +12,7 @@ export class EventForm {
   @Column({ type: 'text', nullable: true })
   description: string | null;
 
-  @Column({ type: 'json' })
+  @Column({ type: 'simple-json' })
   fields: Record<string, any>;
 
   @Column({ type: 'boolean', name: 'is_active', default: true })
