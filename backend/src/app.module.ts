@@ -25,6 +25,7 @@ import { EventFormsModule } from './event-forms-module/event-forms.module';
 import { LiveModule } from './live/live.module';
 import { SettingsModule } from './settings-module/settings.module';
 import { TestCorsController } from './common/test-cors.controller';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
@@ -66,6 +67,6 @@ import { TestCorsController } from './common/test-cors.controller';
     SettingsModule,
     EmailModule,
   ],
-  controllers: [TestCorsController],
+  controllers: [TestCorsController, HealthController],
 })
 export class AppModule { }

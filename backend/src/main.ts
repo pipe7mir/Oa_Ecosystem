@@ -4,6 +4,11 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Health check endpoint at root (before global prefix)
+  app.getHttpAdapter().get('/', (req, res) => {
+    res.json({ status: 'ok', message: 'OASIS API is running' });
+  });
+
   app.setGlobalPrefix('api');
 
   // Dynamic CORS configuration
