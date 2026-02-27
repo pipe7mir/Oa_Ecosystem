@@ -246,6 +246,7 @@ const AdminAnnouncements = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedElementId, setSelectedElementId] = useState(null);
     const [assets, setAssets] = useState({ oasis: null, iasd: null, rrss: null });
+    const [showLibrary, setShowLibrary] = useState(false);
 
     const DEFAULTS = {
         id: '', title: '', title2: '', speaker: '', content: '', tag: 'GALA', date: '', time: '',
