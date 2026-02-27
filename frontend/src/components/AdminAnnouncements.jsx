@@ -530,6 +530,13 @@ const AdminAnnouncements = () => {
             const w = h * aspect;
             ctx.drawImage(img, W * 0.95 - w, H * 0.04, w, h);
         }
+        if (formData.showRrss && assets.rrss) {
+            const img = await loadImg(assets.rrss);
+            const aspect = img.width / img.height;
+            const h = formData.rrssSize * (H / pH);
+            const w = h * aspect;
+            ctx.drawImage(img, W * 0.5 - w / 2, H * 0.95 - h, w, h);
+        }
 
         // Tag rendering with 4 styles
         if (formData.tag) {
@@ -1153,6 +1160,19 @@ const AdminAnnouncements = () => {
                                                 <img src={assets.oasis} style={{ height: `${formData.logoOasisSize}px`, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />
                                             </div>
                                         )}
+                                        {formData.showRrss && assets.rrss && (
+                                            <div
+                                                onMouseDown={() => setSelectedElementId('rrss')}
+                                                onTouchStart={() => setSelectedElementId('rrss')}
+                                                style={{
+                                                    position: 'absolute', bottom: '5%', left: '50%', transform: 'translateX(-50%)', cursor: 'pointer',
+                                                    outline: selectedElementId === 'rrss' ? '2px dashed #00d2f3' : 'none',
+                                                    outlineOffset: '4px', borderRadius: '4px', zIndex: 10
+                                                }}
+                                            >
+                                                <img src={assets.rrss} style={{ height: `${formData.rrssSize}px`, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />
+                                            </div>
+                                        )}
 
                                         {/* INTERACTIVE CONTENT WITH FRAMER MOTION */}
                                         <div className="p-4 d-flex flex-column justify-content-center" style={{ position: 'absolute', inset: 0, zIndex: 5 }}>
@@ -1389,11 +1409,62 @@ const AdminAnnouncements = () => {
                     
                     /* Mobile responsive adjustments */
                     @media (max-width: 991px) {
+                        .canva-sidebar {
+                            position: fixed !important;
+                            bottom: 0;
+                            left: 0;
+                            width: 100% !important;
+                            height: 60px !important;
+                            flex-direction: row !important;
+                            padding: 0 !important;
+                            justify-content: space-around !important;
+                            border-right: none !important;
+                            border-top: 1px solid rgba(255,255,255,0.1);
+                        }
+                        .canva-sidebar .nav-btn {
+                            height: 100% !important;
+                            margin: 0 !important;
+                        }
+                        .canva-sidebar .canva-logo-mini { display: none !important; }
+                        
+                        .canva-panel {
+                            position: fixed !important;
+                            bottom: 60px !important;
+                            left: 0 !important;
+                            width: 100% !important;
+                            height: auto !important;
+                            max-height: 50vh !important;
+                            border-radius: 20px 20px 0 0 !important;
+                            border-right: none !important;
+                            box-shadow: 0 -10px 30px rgba(0,0,0,0.1) !important;
+                            z-index: 100 !important;
+                        }
+                        .workspace-header {
+                            padding: 0.5rem !important;
+                        }
+                        .workspace-header .btn-sm {
+                            padding: 0.25rem 0.5rem !important;
+                            font-size: 0.7rem !important;
+                        }
+                        .workspace-body {
+                            padding-bottom: 70px !important;
+                        }
                         #preview-container {
                             width: 100% !important;
-                            max-width: 400px !important;
+                            max-width: 380px !important;
                         }
                     }
+
+                    /* Theme Overrides */
+                    .btn-primary { background-color: #5b2ea6 !important; border-color: #5b2ea6 !important; }
+                    .btn-primary:hover { background-color: #4a2487 !important; }
+                    .text-primary { color: #5b2ea6 !important; }
+                    .active-sidebar-btn { background: rgba(0, 211, 223, 0.2) !important; color: #00d3df !important; border-left: 3px solid #00d3df !important; }
+                    @media (max-width: 991px) {
+                        .active-sidebar-btn { border-left: none !important; border-top: 3px solid #00d3df !important; }
+                    }
+                    .canva-toolbar { border-bottom: 2px solid #00d3df !important; }
+
                     /* Patterns for Biblical Styles */
                     .content-box.pattern-dots::after {
                         content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
