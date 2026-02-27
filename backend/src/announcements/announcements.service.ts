@@ -57,6 +57,14 @@ export class AnnouncementsService {
         }
     }
 
+    async getColumns(): Promise<any[]> {
+        return this.announcementsRepo.query(`
+            SELECT column_name, data_type 
+            FROM information_schema.columns 
+            WHERE table_name = 'announcements'
+        `);
+    }
+
     async remove(id: number): Promise<void> {
         const announcement = await this.findOne(id);
         await this.announcementsRepo.remove(announcement);

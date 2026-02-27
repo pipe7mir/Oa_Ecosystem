@@ -6,6 +6,16 @@ import { AnnouncementsService } from './announcements.service';
 export class AnnouncementsController {
   constructor(private readonly announcementsService: AnnouncementsService) { }
 
+  @Get('debug/schema')
+  async getDbSchema() {
+    try {
+      const columns = await this.announcementsService.getColumns();
+      return { success: true, columns };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+
   @Get()
   async getPublicAnnouncements() {
     return this.announcementsService.findAll();
