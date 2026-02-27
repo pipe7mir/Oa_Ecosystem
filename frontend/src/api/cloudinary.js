@@ -9,7 +9,7 @@
 
 // Your Cloudinary credentials - update these with your actual values
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dlls51qjo';
-const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'dlls51qjo';
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'oasis_unsigned';
 
 /**
  * Upload a base64 image directly to Cloudinary
