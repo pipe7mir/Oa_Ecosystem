@@ -226,12 +226,10 @@ const TEMPLATES = [
 ];
 
 const SIDEBAR_ITEMS = [
-    { id: 'templates', label: 'Plantillas', icon: 'bi-grid-3x3-gap' },
-    { id: 'elements', label: 'Elementos', icon: 'bi-briefcase' },
-    { id: 'uploads', label: 'Subidos', icon: 'bi-cloud-arrow-up' },
-    { id: 'text', label: 'Texto', icon: 'bi-alphabet' },
-    { id: 'styles', label: 'Estilos', icon: 'bi-palette' },
-    { id: 'branding', label: 'Marca', icon: 'bi-shield-check' },
+    { id: 'design', label: 'Diseño', icon: 'bi-palette2' },
+    { id: 'media', label: 'Medios', icon: 'bi-images' },
+    { id: 'text', label: 'Texto', icon: 'bi-fonts' },
+    { id: 'brand', label: 'Marca', icon: 'bi-shield-check' },
 ];
 
 /* ─────────────────────────────────────────────────
@@ -241,7 +239,7 @@ const AdminAnnouncements = () => {
     const [activeMode, setActiveMode] = useState('anuncios'); // 'anuncios' | 'presentaciones'
     const [announcements, setAnnouncements] = useState([]);
     const [showForm, setShowForm] = useState(false);
-    const [activeSidebar, setActiveSidebar] = useState('templates');
+    const [activeSidebar, setActiveSidebar] = useState('design');
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(window.innerWidth < 992);
     const [activeAdvTab, setActiveAdvTab] = useState('pos'); // pos, style, brand
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -870,30 +868,83 @@ const AdminAnnouncements = () => {
                         <button className="btn-close" style={{ fontSize: '0.7rem' }} onClick={() => setIsSidebarCollapsed(true)}></button>
                     </div>
                     <div className="panel-content p-3">
-                        {activeSidebar === 'templates' && (
-                            <div className="row g-2">
-                                {TEMPLATES.map(tpl => (
-                                    <div key={tpl.id} className="col-6">
-                                        <div className="tpl-card rounded-3 cursor-pointer overflow-hidden border shadow-sm hover-scale mb-2"
-                                            onClick={() => applyTemplate(tpl)}
-                                            style={{ height: '100px', background: `linear-gradient(135deg, ${tpl.gradientStart}, ${tpl.gradientEnd})` }}>
-                                            <div className="d-flex h-100 align-items-center justify-content-center p-2 text-center text-white x-small fw-bold">
-                                                {tpl.name}
+                        {/* ══════════ DISEÑO: Plantillas + Fondos ══════════ */}
+                        {activeSidebar === 'design' && (
+                            <div className="design-panel">
+                                {/* Plantillas */}
+                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Plantillas</label>
+                                <div className="row g-2 mb-4">
+                                    {TEMPLATES.map(tpl => (
+                                        <div key={tpl.id} className="col-6">
+                                            <div className="tpl-card rounded-3 cursor-pointer overflow-hidden border shadow-sm hover-scale"
+                                                onClick={() => applyTemplate(tpl)}
+                                                style={{ height: '80px', background: `linear-gradient(135deg, ${tpl.gradientStart}, ${tpl.gradientEnd})` }}>
+                                                <div className="d-flex h-100 align-items-center justify-content-center p-2 text-center text-white x-small fw-bold">
+                                                    {tpl.name}
+                                                </div>
                                             </div>
                                         </div>
+                                    ))}
+                                </div>
+
+                                {/* Colores de Fondo */}
+                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Fondo</label>
+                                <div className="row g-2 mb-3">
+                                    <div className="col-6">
+                                        <input type="color" className="form-control form-control-color w-100 shadow-sm" style={{ height: '36px' }} value={formData.gradientStart} onChange={e => set('gradientStart', e.target.value)} title="Color inicial" />
                                     </div>
-                                ))}
+                                    <div className="col-6">
+                                        <input type="color" className="form-control form-control-color w-100 shadow-sm" style={{ height: '36px' }} value={formData.gradientEnd} onChange={e => set('gradientEnd', e.target.value)} title="Color final" />
+                                    </div>
+                                </div>
+                                <button className="btn btn-sm btn-outline-primary w-100 rounded-pill mb-3" onClick={() => setMany({ gradientStart: '#5b2ea6', gradientEnd: '#16213e' })}>
+                                    <i className="bi bi-stars me-1"></i>Colores Oasis
+                                </button>
+
+                                {/* Mezcla */}
+                                {formData.bgImage && (
+                                    <div className="p-2 bg-light rounded-3 border mb-3">
+                                        <div className="form-check form-switch">
+                                            <input className="form-check-input" type="checkbox" checked={formData.blendGradient} onChange={e => set('blendGradient', e.target.checked)} id="blendCheck" />
+                                            <label className="x-small fw-bold" htmlFor="blendCheck">Mezclar con imagen</label>
+                                        </div>
+                                        {formData.blendGradient && (
+                                            <>
+                                                <input type="range" className="form-range mt-2" min="0" max="1" step="0.05" value={formData.blendOpacity} onChange={e => set('blendOpacity', parseFloat(e.target.value))} />
+                                                <span className="x-small text-muted">{Math.round(formData.blendOpacity * 100)}%</span>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
-                        {activeSidebar === 'elements' && (
-                            <div className="elements-grid row g-2">
+
+                        {/* ══════════ MEDIOS: Imágenes + Subir ══════════ */}
+                        {activeSidebar === 'media' && (
+                            <div className="media-panel">
+                                {/* Subir imagen */}
+                                <div className="upload-area text-center p-3 border-dashed rounded-3 bg-light mb-4" style={{ cursor: 'pointer' }} onClick={() => fileInputRef.current.click()}>
+                                    <i className="bi bi-cloud-arrow-up fs-3 text-primary d-block mb-1"></i>
+                                    <span className="x-small text-muted">Subir imagen</span>
+                                    <input type="file" ref={fileInputRef} hidden onChange={handleFileChange} accept="image/*" />
+                                </div>
+                                {formData.bgImage && formData.bgMode === 'image' && (
+                                    <div className="mb-4 p-2 bg-light rounded-3 border">
+                                        <img src={formData.bgImage} className="img-fluid rounded-2 w-100" style={{ height: '80px', objectFit: 'cover' }} />
+                                        <button className="btn btn-link btn-sm text-danger w-100 p-0 mt-1" onClick={() => setMany({ bgImage: null, bgMode: 'gradient' })}>
+                                            <i className="bi bi-trash me-1"></i>Quitar
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Galería de stock */}
                                 {Object.entries(STOCK_CATEGORIES).map(([cat, imgs]) => (
-                                    <div key={cat} className="col-12 mb-3">
+                                    <div key={cat} className="mb-3">
                                         <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">{cat}</label>
                                         <div className="row g-1">
                                             {imgs.map((img, i) => (
                                                 <div key={i} className="col-4">
-                                                    <img src={img} onClick={() => handleSelectStock(img)} className="img-fluid rounded-2 cursor-pointer hover-scale shadow-sm" style={{ height: '60px', width: '100%', objectFit: 'cover' }} />
+                                                    <img src={img} onClick={() => handleSelectStock(img)} className="img-fluid rounded-2 cursor-pointer hover-scale shadow-sm" style={{ height: '55px', width: '100%', objectFit: 'cover' }} />
                                                 </div>
                                             ))}
                                         </div>
@@ -901,169 +952,92 @@ const AdminAnnouncements = () => {
                                 ))}
                             </div>
                         )}
+
+                        {/* ══════════ TEXTO: Fuentes y colores ══════════ */}
                         {activeSidebar === 'text' && (
-                            <div className="text-options">
-                                <button className="btn btn-light w-100 mb-2 py-3 rounded-3 border-dashed" onClick={() => set('title', 'Nuevo Título')}>
-                                    <h4 className="fw-bold mb-0">Agregar Título</h4>
-                                </button>
-                                <button className="btn btn-light w-100 mb-2 py-2 rounded-3" onClick={() => set('title2', 'Nuevo Subtítulo')}>
-                                    <h6 className="fw-bold mb-0">Agregar Subtítulo</h6>
-                                </button>
-                                <button className="btn btn-light w-100 mb-4 py-2 rounded-3" onClick={() => set('speaker', 'Expositor')}>
-                                    <span className="small">Agregar texto de cuerpo</span>
-                                </button>
+                            <div className="text-panel">
+                                {/* Agregar textos */}
+                                <div className="d-flex gap-2 mb-3">
+                                    <button className="btn btn-light flex-fill py-2 rounded-3 border" onClick={() => set('title', formData.title || 'Título')}>
+                                        <i className="bi bi-type-h1 d-block fs-5"></i>
+                                        <span className="x-small">Título</span>
+                                    </button>
+                                    <button className="btn btn-light flex-fill py-2 rounded-3 border" onClick={() => set('title2', formData.title2 || 'Subtítulo')}>
+                                        <i className="bi bi-type-h2 d-block fs-5"></i>
+                                        <span className="x-small">Sub</span>
+                                    </button>
+                                    <button className="btn btn-light flex-fill py-2 rounded-3 border" onClick={() => set('speaker', formData.speaker || 'Expositor')}>
+                                        <i className="bi bi-person d-block fs-5"></i>
+                                        <span className="x-small">Orador</span>
+                                    </button>
+                                </div>
 
+                                {/* Tipografías */}
                                 <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Tipografía</label>
-                                {FONTS.map(f => (
-                                    <button key={f.value} className="btn btn-outline-dark btn-sm w-100 mb-1 text-start d-flex justify-content-between align-items-center"
-                                        onClick={() => set(selectedElementId ? `${selectedElementId}Font` : 'titleFont', f.value)} style={{ fontFamily: f.value }}>
-                                        {f.label}
-                                        {formData[selectedElementId ? `${selectedElementId}Font` : 'titleFont'] === f.value && <i className="bi bi-check2"></i>}
-                                    </button>
-                                ))}
+                                <div className="mb-3">
+                                    {FONTS.map(f => (
+                                        <button key={f.value} className="btn btn-outline-dark btn-sm w-100 mb-1 text-start d-flex justify-content-between align-items-center"
+                                            onClick={() => set(selectedElementId ? `${selectedElementId}Font` : 'titleFont', f.value)} style={{ fontFamily: f.value, fontSize: '0.75rem' }}>
+                                            {f.label}
+                                            {formData[selectedElementId ? `${selectedElementId}Font` : 'titleFont'] === f.value && <i className="bi bi-check2"></i>}
+                                        </button>
+                                    ))}
+                                </div>
 
-                                {selectedElementId && (
-                                    <div className="mt-4 p-3 bg-light rounded-3 border">
-                                        <label className="x-small fw-bold text-primary text-uppercase mb-2 d-block">
-                                            Editar: {selectedElementId === 'title' ? 'Título' : selectedElementId === 'title2' ? 'Subtítulo' : selectedElementId === 'speaker' ? 'Expositor' : selectedElementId === 'tag' ? 'Etiqueta' : 'Contenido'}
-                                        </label>
-                                        <textarea
-                                            className="form-control form-control-sm border-0 bg-white shadow-sm mb-3"
-                                            rows="3"
-                                            style={{ fontSize: '0.8rem' }}
-                                            value={formData[selectedElementId]}
-                                            onChange={e => set(selectedElementId, e.target.value)}
-                                            placeholder="Escribe aquí..."
-                                        />
-                                        {/* Color picker for selected element */}
-                                        {!selectedElementId.toLowerCase().includes('logo') && (
-                                            <div className="d-flex align-items-center gap-2">
-                                                <label className="x-small text-muted mb-0">Color:</label>
-                                                <input
-                                                    type="color"
-                                                    className="form-control form-control-color border-0 shadow-sm"
-                                                    style={{ height: '30px', width: '50px', padding: '2px' }}
-                                                    value={formData[`${selectedElementId}Color`] || '#ffffff'}
-                                                    onChange={e => set(`${selectedElementId}Color`, e.target.value)}
-                                                />
-                                                <span className="x-small text-muted">{formData[`${selectedElementId}Color`] || '#ffffff'}</span>
-                                            </div>
-                                        )}
-                                        <div className="mt-2 text-end">
-                                            <button className="btn btn-sm btn-link text-muted x-small p-0" onClick={() => setSelectedElementId(null)}>Deseleccionar</button>
+                                {/* Colores rápidos */}
+                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Colores</label>
+                                <div className="list-group list-group-flush border rounded-3 overflow-hidden">
+                                    {[
+                                        { key: 'title', label: 'Título', icon: 'bi-type-h1' },
+                                        { key: 'title2', label: 'Subtítulo', icon: 'bi-type-h2' },
+                                        { key: 'speaker', label: 'Orador', icon: 'bi-person' },
+                                        { key: 'tag', label: 'Etiqueta', icon: 'bi-tag' },
+                                    ].map(({ key, label, icon }) => (
+                                        <div key={key} className="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                                            <span className="x-small fw-semibold"><i className={`bi ${icon} me-2`}></i>{label}</span>
+                                            <input type="color" className="form-control form-control-color border-0 p-0" style={{ height: '24px', width: '36px', cursor: 'pointer' }} value={formData[`${key}Color`] || '#ffffff'} onChange={e => set(`${key}Color`, e.target.value)} />
                                         </div>
-                                    </div>
-                                )}
-
-                                {/* Quick color panel for all elements */}
-                                <div className="mt-4">
-                                    <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Colores de Texto</label>
-                                    <div className="list-group list-group-flush border rounded-3 overflow-hidden shadow-sm">
-                                        {[
-                                            { key: 'title', label: 'Título' },
-                                            { key: 'title2', label: 'Subtítulo' },
-                                            { key: 'speaker', label: 'Expositor' },
-                                            { key: 'tag', label: 'Etiqueta' },
-                                            { key: 'content', label: 'Contenido' },
-                                        ].map(({ key, label }) => (
-                                            <div key={key} className="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
-                                                <span className="x-small fw-semibold">{label}</span>
-                                                <input
-                                                    type="color"
-                                                    className="form-control form-control-color border-0"
-                                                    style={{ height: '28px', width: '44px', padding: '2px', cursor: 'pointer' }}
-                                                    value={formData[`${key}Color`] || '#ffffff'}
-                                                    onChange={e => set(`${key}Color`, e.target.value)}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
+                                    ))}
                                 </div>
                             </div>
                         )}
-                        {activeSidebar === 'uploads' && (
-                            <div className="uploads-section text-center p-4 border-dashed rounded-4 bg-light">
-                                <i className="bi bi-cloud-arrow-up fs-2 text-muted mb-2 d-block"></i>
-                                <p className="x-small text-muted mb-3">Sube tus propias imágenes</p>
-                                <button className="btn btn-primary btn-sm rounded-pill w-100" onClick={() => fileInputRef.current.click()}>Subir Archivo</button>
-                                <input type="file" ref={fileInputRef} hidden onChange={handleFileChange} accept="image/*" />
-                                {formData.bgImage && formData.bgMode === 'image' && (
-                                    <div className="mt-3">
-                                        <img src={formData.bgImage} className="img-fluid rounded-3 shadow-sm" style={{ height: '80px', objectFit: 'cover' }} />
-                                        <button className="btn btn-link btn-sm text-danger d-block w-100 mt-1" onClick={() => setMany({ bgImage: null, bgMode: 'gradient' })}>Eliminar</button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                        {activeSidebar === 'styles' && (
-                            <div className="styles-panel">
-                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Colores de Fondo</label>
-                                <div className="row g-2 mb-4">
-                                    <div className="col-6">
-                                        <input type="color" className="form-control form-control-color w-100 shadow-sm" value={formData.gradientStart} onChange={e => set('gradientStart', e.target.value)} />
-                                    </div>
-                                    <div className="col-6">
-                                        <input type="color" className="form-control form-control-color w-100 shadow-sm" value={formData.gradientEnd} onChange={e => set('gradientEnd', e.target.value)} />
-                                    </div>
-                                    <div className="col-12 mt-2">
-                                        <button className="btn btn-sm btn-light w-100 rounded-pill" onClick={() => setMany({ gradientStart: '#5b2ea6', gradientEnd: '#16213e' })}>Default Oasis</button>
-                                    </div>
-                                </div>
 
-                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Mezcla con Imagen</label>
-                                <div className="p-3 bg-light rounded-3 shadow-sm border">
-                                    <div className="form-check form-switch mb-2">
-                                        <input className="form-check-input" type="checkbox" checked={formData.blendGradient} onChange={e => set('blendGradient', e.target.checked)} />
-                                        <label className="x-small fw-bold text-uppercase ms-1">Mezclar Degradado</label>
-                                    </div>
-                                    <input type="range" className="form-range" min="0" max="1" step="0.05" value={formData.blendOpacity} onChange={e => set('blendOpacity', parseFloat(e.target.value))} />
-                                    <div className="d-flex justify-content-between x-small text-muted mt-1"><span>{Math.round(formData.blendOpacity * 100)}%</span></div>
-                                </div>
-
-                                {formData.contentStyle === 'biblical' && (
-                                    <>
-                                        <label className="x-small fw-bold text-muted text-uppercase mb-2 mt-4 d-block">Trama (Patrón)</label>
-                                        <div className="row g-2">
-                                            {['none', 'dots', 'lines', 'grain'].map(p => (
-                                                <div key={p} className="col-3">
-                                                    <button
-                                                        className={`btn btn-sm w-100 rounded-3 border ${formData.contentPattern === p ? 'btn-primary border-primary' : 'btn-light'}`}
-                                                        onClick={() => set('contentPattern', p)}
-                                                        style={{ height: '40px', fontSize: '0.6rem' }}
-                                                    >
-                                                        {p.toUpperCase()}
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        )}
-                        {activeSidebar === 'branding' && (
-                            <div className="branding-panel">
-                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Logotipos e Iconos</label>
+                        {/* ══════════ MARCA: Logos ══════════ */}
+                        {activeSidebar === 'brand' && (
+                            <div className="brand-panel">
+                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Logotipos</label>
                                 <div className="list-group list-group-flush mb-4 shadow-sm rounded-3 border overflow-hidden">
-                                    <button className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${formData.showLogoOasis ? 'bg-primary-subtle' : ''}`} onClick={() => set('showLogoOasis', !formData.showLogoOasis)}>
-                                        <span className="x-small fw-bold">OASIS LOGO</span>
-                                        {formData.showLogoOasis ? <i className="bi bi-eye-fill"></i> : <i className="bi bi-eye-slash text-muted"></i>}
+                                    <button className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 ${formData.showLogoOasis ? 'bg-primary-subtle' : ''}`} onClick={() => set('showLogoOasis', !formData.showLogoOasis)}>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <img src={logoOasis} alt="Oasis" style={{ height: '24px' }} />
+                                            <span className="small fw-bold">Oasis</span>
+                                        </div>
+                                        <i className={`bi ${formData.showLogoOasis ? 'bi-eye-fill text-primary' : 'bi-eye-slash text-muted'}`}></i>
                                     </button>
-                                    <button className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${formData.showLogoIasd ? 'bg-primary-subtle' : ''}`} onClick={() => set('showLogoIasd', !formData.showLogoIasd)}>
-                                        <span className="x-small fw-bold">IASD LOGO</span>
-                                        {formData.showLogoIasd ? <i className="bi bi-eye-fill"></i> : <i className="bi bi-eye-slash text-muted"></i>}
+                                    <button className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 ${formData.showLogoIasd ? 'bg-primary-subtle' : ''}`} onClick={() => set('showLogoIasd', !formData.showLogoIasd)}>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <img src={logoAdventista} alt="IASD" style={{ height: '24px' }} />
+                                            <span className="small fw-bold">IASD</span>
+                                        </div>
+                                        <i className={`bi ${formData.showLogoIasd ? 'bi-eye-fill text-primary' : 'bi-eye-slash text-muted'}`}></i>
                                     </button>
-                                    <button className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${formData.showRrss ? 'bg-primary-subtle' : ''}`} onClick={() => set('showRrss', !formData.showRrss)}>
-                                        <span className="x-small fw-bold">RRSS ICONS</span>
-                                        {formData.showRrss ? <i className="bi bi-eye-fill"></i> : <i className="bi bi-eye-slash text-muted"></i>}
+                                    <button className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 ${formData.showRrss ? 'bg-primary-subtle' : ''}`} onClick={() => set('showRrss', !formData.showRrss)}>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <i className="bi bi-share fs-5 text-muted"></i>
+                                            <span className="small fw-bold">Redes Sociales</span>
+                                        </div>
+                                        <i className={`bi ${formData.showRrss ? 'bi-eye-fill text-primary' : 'bi-eye-slash text-muted'}`}></i>
                                     </button>
                                 </div>
-                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Escala de Logos</label>
-                                <div className="p-3 bg-light rounded-3 shadow-sm border">
-                                    <div className="mb-2">
-                                        <div className="d-flex justify-content-between x-small text-muted mb-1"><span>Icons</span><span>{formData.rrssSize}px</span></div>
-                                        <input type="range" className="form-range" min="10" max="100" value={formData.rrssSize} onChange={e => set('rrssSize', parseInt(e.target.value))} />
+
+                                {/* Tamaños */}
+                                {(formData.showLogoOasis || formData.showLogoIasd || formData.showRrss) && (
+                                    <div className="p-3 bg-light rounded-3 border">
+                                        <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Tamaño</label>
+                                        <div className="d-flex justify-content-between x-small text-muted mb-1"><span>Escala</span><span>{formData.rrssSize}px</span></div>
+                                        <input type="range" className="form-range" min="15" max="80" value={formData.rrssSize} onChange={e => set('rrssSize', parseInt(e.target.value))} />
                                     </div>
-                                </div>
+                                )}
                             </div>
                         )}
                     </div>
