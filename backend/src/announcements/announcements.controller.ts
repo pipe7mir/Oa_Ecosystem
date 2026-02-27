@@ -14,7 +14,12 @@ export class AnnouncementsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async createAnnouncement(@Body() data: any) {
-    return this.announcementsService.create(data);
+    try {
+      return await this.announcementsService.create(data);
+    } catch (error) {
+      console.error('❌ Error creating announcement:', error);
+      throw error;
+    }
   }
 
   @Post(':id')
@@ -24,7 +29,12 @@ export class AnnouncementsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() data: any,
   ) {
-    return this.announcementsService.update(id, data);
+    try {
+      return await this.announcementsService.update(id, data);
+    } catch (error) {
+      console.error('❌ Error updating announcement:', error);
+      throw error;
+    }
   }
 
   @Delete(':id')

@@ -25,15 +25,24 @@ export class AnnouncementsService {
     }
 
     async create(data: Partial<Announcement>): Promise<Announcement> {
-        const announcement = this.announcementsRepo.create(data);
-        // save debe recibir un solo objeto Announcement
-        return await this.announcementsRepo.save(announcement);
+        try {
+            const announcement = this.announcementsRepo.create(data);
+            return await this.announcementsRepo.save(announcement);
+        } catch (error) {
+            console.error('❌ Database error in create:', error);
+            throw error;
+        }
     }
 
     async update(id: number, data: any): Promise<Announcement> {
-        const announcement = await this.findOne(id);
-        Object.assign(announcement, data);
-        return await this.announcementsRepo.save(announcement);
+        try {
+            const announcement = await this.findOne(id);
+            Object.assign(announcement, data);
+            return await this.announcementsRepo.save(announcement);
+        } catch (error) {
+            console.error('❌ Database error in update:', error);
+            throw error;
+        }
     }
 
     async remove(id: number): Promise<void> {

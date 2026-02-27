@@ -53,7 +53,11 @@ export class SettingsController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
-      destination: './uploads',
+      destination: (req, file, cb) => {
+        // Use /tmp for Vercel, which is the only writable directory
+        const dest = process.env.VERCEL ? '/tmp' : './uploads';
+        cb(null, dest);
+      },
       filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
         cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
@@ -61,13 +65,18 @@ export class SettingsController {
     }),
   }))
   async upload(@UploadedFile() file: Express.Multer.File) {
-    if (!file) {
-      return { success: false, message: 'No file uploaded' };
+    try {
+      if (!file) {
+        return { success: false, message: 'No file uploaded' };
+      }
+      return {
+        filename: file.filename,
+        url: `/uploads/${file.filename}`
+      };
+    } catch (error) {
+      console.error('❌ Upload error:', error);
+      return { success: false, message: 'Upload failed', error: error.message };
     }
-    return {
-      filename: file.filename,
-      url: `/uploads/${file.filename}`
-    };
   }
 
   @Post('settings/test-email')
