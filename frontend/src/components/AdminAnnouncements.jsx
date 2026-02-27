@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { theme } from '../react-ui/styles/theme';
 import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';  // API client for backend requests
-import { uploadCanvasToCloudinary } from '../api/cloudinary';  // Direct Cloudinary upload
 import OasisPress from './OasisPress';  // Presentation editor
 
 // Logo assets
@@ -738,16 +737,24 @@ const AdminAnnouncements = () => {
         try {
             const canvas = await composeCanvas();
             
-            // Upload directly to Cloudinary (bypasses backend completely for images)
-            console.log('☁️ Uploading to Cloudinary...');
-            const uploadResult = await uploadCanvasToCloudinary(canvas, 600, 200);
-            
-            if (!uploadResult.success) {
-                throw new Error(uploadResult.error || 'Error al subir imagen a Cloudinary');
+            // Compress image to small base64 (max 50KB for database storage)
+            const MAX_WIDTH = 400;
+            const scale = Math.min(1, MAX_WIDTH / canvas.width);
+            const compCanvas = document.createElement('canvas');
+            compCanvas.width = Math.round(canvas.width * scale);
+            compCanvas.height = Math.round(canvas.height * scale);
+            const ctx = compCanvas.getContext('2d');
+            ctx.drawImage(canvas, 0, 0, compCanvas.width, compCanvas.height);
+
+            // Compress to ~50KB max
+            let quality = 0.6;
+            let imageUrl = compCanvas.toDataURL('image/jpeg', quality);
+            while (imageUrl.length > 50 * 1024 * 1.37 && quality > 0.2) {
+                quality = Math.max(0.2, quality - 0.1);
+                imageUrl = compCanvas.toDataURL('image/jpeg', quality);
             }
             
-            const imageUrl = uploadResult.imageUrl;
-            console.log('✅ Image uploaded to Cloudinary:', imageUrl);
+            console.log('📸 Image compressed:', (imageUrl.length / 1024).toFixed(1) + 'KB');
 
             const announcementData = {
                 title: formData.title,
@@ -756,7 +763,7 @@ const AdminAnnouncements = () => {
                 date: formData.date || null,
                 time: formData.time || null,
                 location: formData.location || null,
-                imageUrl: imageUrl  // Cloudinary URL
+                imageUrl: imageUrl  // Base64 stored directly in DB
             };
 
             if (formData.id) {
@@ -775,8 +782,16 @@ const AdminAnnouncements = () => {
     };
 
     const handleEdit = (ann) => {
-        const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-        const imgUrl = ann.imageUrl ? (ann.imageUrl.startsWith('http') ? ann.imageUrl : `${base}${ann.imageUrl}`) : null;
+        const base = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+        // Handle different imageUrl formats: base64, http URLs, or local filenames
+        let imgUrl = null;
+        if (ann.imageUrl) {
+            if (ann.imageUrl.startsWith('data:image') || ann.imageUrl.startsWith('http')) {
+                imgUrl = ann.imageUrl;
+            } else {
+                imgUrl = `${base}/uploads/${ann.imageUrl}`;
+            }
+        }
         setFormData({ ...DEFAULTS, id: ann.id, title: ann.title, content: ann.content, tag: ann.tag, date: ann.date?.split('T')[0], bgMode: imgUrl ? 'image' : 'gradient', bgImage: imgUrl });
         setShowForm(true);
     };
