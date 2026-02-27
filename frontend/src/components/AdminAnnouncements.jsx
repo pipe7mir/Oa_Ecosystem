@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { theme } from '../react-ui/styles/theme';
 import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';  // API client for backend requests
+import { uploadCanvasToCloudinary } from '../api/cloudinary';  // Cloudinary upload
 import OasisPress from './OasisPress';  // Presentation editor
 
 // Logo assets
@@ -737,24 +738,10 @@ const AdminAnnouncements = () => {
         try {
             const canvas = await composeCanvas();
             
-            // Compress image to small base64 (max 50KB for database storage)
-            const MAX_WIDTH = 400;
-            const scale = Math.min(1, MAX_WIDTH / canvas.width);
-            const compCanvas = document.createElement('canvas');
-            compCanvas.width = Math.round(canvas.width * scale);
-            compCanvas.height = Math.round(canvas.height * scale);
-            const ctx = compCanvas.getContext('2d');
-            ctx.drawImage(canvas, 0, 0, compCanvas.width, compCanvas.height);
-
-            // Compress to ~50KB max
-            let quality = 0.6;
-            let imageUrl = compCanvas.toDataURL('image/jpeg', quality);
-            while (imageUrl.length > 50 * 1024 * 1.37 && quality > 0.2) {
-                quality = Math.max(0.2, quality - 0.1);
-                imageUrl = compCanvas.toDataURL('image/jpeg', quality);
-            }
-            
-            console.log('📸 Image compressed:', (imageUrl.length / 1024).toFixed(1) + 'KB');
+            // Upload to Cloudinary (returns URL)
+            console.log('📤 Uploading to Cloudinary...');
+            const cloudinaryUrl = await uploadCanvasToCloudinary(canvas);
+            console.log('✅ Cloudinary URL:', cloudinaryUrl);
 
             const announcementData = {
                 title: formData.title,
@@ -763,7 +750,7 @@ const AdminAnnouncements = () => {
                 date: formData.date || null,
                 time: formData.time || null,
                 location: formData.location || null,
-                imageUrl: imageUrl  // Base64 stored directly in DB
+                imageUrl: cloudinaryUrl  // Cloudinary URL
             };
 
             if (formData.id) {

@@ -2,13 +2,14 @@
  * Cloudinary Direct Upload Service
  * Uploads images directly from browser to Cloudinary, bypassing backend
  * 
- * Required environment variables in Vercel:
+ * Configure in Vercel Environment Variables:
  * - VITE_CLOUDINARY_CLOUD_NAME: Your Cloudinary cloud name
  * - VITE_CLOUDINARY_UPLOAD_PRESET: Unsigned upload preset name
  */
 
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'demo';
-const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'oasis_unsigned';
+// Your Cloudinary credentials - update these with your actual values
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dlls51qjo';
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'dlls51qjo';
 
 /**
  * Upload a base64 image directly to Cloudinary
@@ -18,16 +19,25 @@ const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET |
  */
 export async function uploadToCloudinary(base64Image, folder = 'oasis-announcements') {
     try {
-        // Cloudinary upload URL
+        // Validate configuration
+        if (!CLOUDINARY_CLOUD_NAME || CLOUDINARY_CLOUD_NAME === 'demo') {
+            throw new Error('Cloudinary Cloud Name not configured');
+        }
+        if (!CLOUDINARY_UPLOAD_PRESET) {
+            throw new Error('Cloudinary Upload Preset not configured');
+        }
+
+        // Cloudinary upload URL - using YOUR cloud name
         const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 
-        // Prepare form data for upload
+        // Prepare form data for upload - ORDER MATTERS for some browsers
         const formData = new FormData();
         formData.append('file', base64Image);
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
         formData.append('folder', folder);
 
         console.log('☁️ Uploading to Cloudinary...', {
+            url: uploadUrl,
             cloud: CLOUDINARY_CLOUD_NAME,
             preset: CLOUDINARY_UPLOAD_PRESET,
             imageSize: (base64Image.length / 1024).toFixed(1) + 'KB'
@@ -38,13 +48,13 @@ export async function uploadToCloudinary(base64Image, folder = 'oasis-announceme
             body: formData
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            console.error('❌ Cloudinary upload failed:', errorData);
-            throw new Error(errorData.error?.message || `Upload failed: ${response.status}`);
+            console.error('❌ Cloudinary upload failed:', data);
+            throw new Error(data.error?.message || `Upload failed: ${response.status}`);
         }
 
-        const data = await response.json();
         console.log('✅ Cloudinary upload success:', data.secure_url);
 
         return {
