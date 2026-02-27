@@ -298,6 +298,7 @@ const AdminAnnouncements = () => {
         tagFont: 'AdventSans',
         dateFont: 'AdventSans',
         timeFont: 'AdventSans',
+        locationFont: 'AdventSans',
         // Colors with opacity
         titleColor: '#ffffff',
         title2Color: '#ffffff',
@@ -306,12 +307,18 @@ const AdminAnnouncements = () => {
         tagColor: '#ffffff',
         tagBgColor: '#5b2ea6',
         tagBorderColor: '#ffffff',
+        dateColor: '#ffffff',
+        timeColor: '#ffffff',
+        locationColor: '#ffffff',
         // Opacity per element (0-100)
         titleOpacity: 100,
         title2Opacity: 100,
         title3Opacity: 100,
         speakerOpacity: 100,
         tagOpacity: 100,
+        dateOpacity: 100,
+        timeOpacity: 100,
+        locationOpacity: 100,
         showAdvanced: false,
     };
 
@@ -984,122 +991,137 @@ const AdminAnnouncements = () => {
                             </div>
                         )}
 
-                        {/* ══════════ TEXTO: Fuentes y colores ══════════ */}
+                        {/* ══════════ TEXTO: Panel Unificado ══════════ */}
                         {activeSidebar === 'text' && (
                             <div className="text-panel">
-                                {/* Agregar textos - Solo iconos */}
-                                <div className="d-flex gap-1 mb-3">
-                                    <button className="btn btn-light flex-fill p-2 rounded-2 border" onClick={() => set('title', formData.title || 'Título')} title="Título H1">
-                                        <i className="bi bi-type-h1 fs-5"></i>
-                                    </button>
-                                    <button className="btn btn-light flex-fill p-2 rounded-2 border" onClick={() => set('title2', formData.title2 || 'Subtítulo')} title="Subtítulo H2">
-                                        <i className="bi bi-type-h2 fs-5"></i>
-                                    </button>
-                                    <button className="btn btn-light flex-fill p-2 rounded-2 border" onClick={() => set('title3', formData.title3 || 'Línea 3')} title="Línea Extra H3">
-                                        <i className="bi bi-type-h3 fs-5"></i>
-                                    </button>
-                                    <button className="btn btn-light flex-fill p-2 rounded-2 border" onClick={() => set('speaker', formData.speaker || 'Orador')} title="Orador">
-                                        <i className="bi bi-person fs-5"></i>
-                                    </button>
-                                    <button className="btn btn-light flex-fill p-2 rounded-2 border" onClick={() => set('tag', formData.tag || 'TAG')} title="Etiqueta">
-                                        <i className="bi bi-tag fs-5"></i>
-                                    </button>
+                                {/* Selector de elementos - Iconos cuadrados */}
+                                <div className="d-flex flex-wrap gap-1 mb-3">
+                                    {[
+                                        { id: 'title', icon: 'bi-type-h1', label: 'Título' },
+                                        { id: 'title2', icon: 'bi-type-h2', label: 'Sub 1' },
+                                        { id: 'title3', icon: 'bi-type-h3', label: 'Sub 2' },
+                                        { id: 'speaker', icon: 'bi-person', label: 'Orador' },
+                                        { id: 'tag', icon: 'bi-tag', label: 'Etiqueta' },
+                                        { id: 'date', icon: 'bi-calendar3', label: 'Fecha' },
+                                        { id: 'time', icon: 'bi-clock', label: 'Hora' },
+                                        { id: 'location', icon: 'bi-geo-alt', label: 'Lugar' },
+                                    ].map(el => (
+                                        <button key={el.id}
+                                            className={`btn p-2 rounded-2 border d-flex flex-column align-items-center justify-content-center ${selectedElementId === el.id ? 'btn-primary text-white' : 'btn-light'}`}
+                                            style={{ width: '48px', height: '48px' }}
+                                            onClick={() => setSelectedElementId(el.id)}
+                                            title={el.label}>
+                                            <i className={`bi ${el.icon} fs-5`}></i>
+                                            <span style={{ fontSize: '0.55rem', marginTop: '2px' }}>{el.label}</span>
+                                        </button>
+                                    ))}
                                 </div>
 
-                                {/* Tipografías compactas */}
-                                <div className="mb-3">
-                                    <div className="d-flex align-items-center gap-1 mb-2">
-                                        <i className="bi bi-fonts text-muted"></i>
-                                        <select className="form-select form-select-sm border-0 bg-light flex-grow-1" style={{ fontSize: '0.7rem' }}
-                                            value={formData[selectedElementId ? `${selectedElementId}Font` : 'titleFont'] || 'MoonRising'}
-                                            onChange={e => set(selectedElementId ? `${selectedElementId}Font` : 'titleFont', e.target.value)}>
-                                            {FONTS.map(f => <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {/* Panel de elemento seleccionado */}
+                                {/* Panel de controles del elemento seleccionado */}
                                 {selectedElementId && (
-                                    <div className="mb-3 p-2 bg-primary-subtle rounded-3 border border-primary">
+                                    <div className="selected-element-panel p-3 bg-light rounded-3 border mb-3">
                                         <div className="d-flex align-items-center justify-content-between mb-2">
-                                            <span className="x-small fw-bold text-primary text-uppercase">{selectedElementId}</span>
-                                            <button className="btn btn-sm p-0 text-muted" onClick={() => setSelectedElementId(null)}><i className="bi bi-x"></i></button>
+                                            <span className="small fw-bold text-primary text-uppercase">{selectedElementId}</span>
+                                            <button className="btn btn-sm p-0 text-muted" onClick={() => setSelectedElementId(null)}><i className="bi bi-x-lg"></i></button>
                                         </div>
-                                        <input type="text" className="form-control form-control-sm mb-2" style={{ fontSize: '0.75rem' }}
-                                            value={formData[selectedElementId] || ''} onChange={e => set(selectedElementId, e.target.value)} placeholder="Texto..." />
+
+                                        {/* Input de texto/fecha/hora según tipo */}
+                                        {selectedElementId === 'date' ? (
+                                            <input type="date" className="form-control form-control-sm mb-2"
+                                                value={formData.date || ''} onChange={e => set('date', e.target.value)} />
+                                        ) : selectedElementId === 'time' ? (
+                                            <input type="time" className="form-control form-control-sm mb-2"
+                                                value={formData.time || ''} onChange={e => set('time', e.target.value)} />
+                                        ) : (
+                                            <input type="text" className="form-control form-control-sm mb-2"
+                                                value={formData[selectedElementId] || ''} 
+                                                onChange={e => set(selectedElementId, e.target.value)} 
+                                                placeholder={`Texto de ${selectedElementId}...`} />
+                                        )}
+
+                                        {/* Fila: Fuente + Tamaño */}
+                                        <div className="d-flex gap-2 mb-2">
+                                            <div className="flex-grow-1">
+                                                <label className="x-small text-muted mb-1"><i className="bi bi-fonts me-1"></i>Fuente</label>
+                                                <select className="form-select form-select-sm" style={{ fontSize: '0.7rem' }}
+                                                    value={formData[`${selectedElementId}Font`] || 'AdventSans'}
+                                                    onChange={e => set(`${selectedElementId}Font`, e.target.value)}>
+                                                    {FONTS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+                                                </select>
+                                            </div>
+                                            <div style={{ width: '70px' }}>
+                                                <label className="x-small text-muted mb-1"><i className="bi bi-arrows-angle-expand me-1"></i>Tam</label>
+                                                <input type="number" className="form-control form-control-sm text-center"
+                                                    value={Math.round((formData[`${selectedElementId}Size`] || 1) * 10) / 10}
+                                                    onChange={e => set(`${selectedElementId}Size`, parseFloat(e.target.value) || 1)}
+                                                    step="0.1" min="0.1" max="10" />
+                                            </div>
+                                        </div>
+
+                                        {/* Fila: Opacidad + Color */}
+                                        <div className="d-flex gap-2 align-items-end">
+                                            <div className="flex-grow-1">
+                                                <label className="x-small text-muted mb-1"><i className="bi bi-droplet-half me-1"></i>Opacidad: {formData[`${selectedElementId}Opacity`] || 100}%</label>
+                                                <input type="range" className="form-range" min="0" max="100"
+                                                    value={formData[`${selectedElementId}Opacity`] || 100}
+                                                    onChange={e => set(`${selectedElementId}Opacity`, parseInt(e.target.value))} />
+                                            </div>
+                                            <div>
+                                                <label className="x-small text-muted mb-1"><i className="bi bi-palette me-1"></i>Color</label>
+                                                <div className="d-flex gap-1">
+                                                    <input type="color" className="form-control form-control-color border-0 rounded"
+                                                        style={{ width: '32px', height: '32px' }}
+                                                        value={formData[`${selectedElementId}Color`] || '#ffffff'}
+                                                        onChange={e => set(`${selectedElementId}Color`, e.target.value)} />
+                                                    <input type="text" className="form-control form-control-sm text-uppercase"
+                                                        style={{ width: '70px', fontSize: '0.65rem' }}
+                                                        value={(formData[`${selectedElementId}Color`] || '#ffffff').replace('#', '')}
+                                                        onChange={e => set(`${selectedElementId}Color`, `#${e.target.value.replace('#', '')}`)}
+                                                        maxLength={6} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Color de fondo para tag */}
+                                        {selectedElementId === 'tag' && (
+                                            <div className="mt-2 pt-2 border-top">
+                                                <label className="x-small text-muted mb-1"><i className="bi bi-square-fill me-1"></i>Fondo Tag</label>
+                                                <div className="d-flex gap-1">
+                                                    <input type="color" className="form-control form-control-color border-0 rounded"
+                                                        style={{ width: '32px', height: '32px' }}
+                                                        value={formData.tagBgColor || '#5b2ea6'}
+                                                        onChange={e => set('tagBgColor', e.target.value)} />
+                                                    <input type="text" className="form-control form-control-sm text-uppercase"
+                                                        style={{ width: '70px', fontSize: '0.65rem' }}
+                                                        value={(formData.tagBgColor || '#5b2ea6').replace('#', '')}
+                                                        onChange={e => set('tagBgColor', `#${e.target.value.replace('#', '')}`)}
+                                                        maxLength={6} />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
-                                {/* Tamaños y Opacidad - Estilo Illustrator */}
-                                <div className="mb-3">
-                                    <div className="d-flex align-items-center gap-1 mb-1">
-                                        <i className="bi bi-aspect-ratio text-muted" style={{ fontSize: '0.7rem' }}></i>
-                                        <span className="x-small text-muted fw-bold">TAMAÑO / OPACIDAD</span>
-                                    </div>
-                                    <div className="bg-light rounded-2 p-2" style={{ fontSize: '0.65rem' }}>
-                                        {[
-                                            { key: 'title', icon: 'H1' },
-                                            { key: 'title2', icon: 'H2' },
-                                            { key: 'title3', icon: 'H3' },
-                                            { key: 'speaker', icon: '👤' },
-                                            { key: 'tag', icon: '🏷' },
-                                        ].map(({ key, icon }) => (
-                                            <div key={key} className="d-flex align-items-center gap-1 mb-1">
-                                                <span className="text-muted" style={{ width: '22px', textAlign: 'center' }}>{icon}</span>
-                                                <input type="number" className="form-control form-control-sm border-0 bg-white text-center p-0" 
-                                                    style={{ width: '44px', height: '22px', fontSize: '0.65rem' }}
-                                                    value={Math.round((formData[`${key}Size`] || 1) * 10) / 10} 
-                                                    onChange={e => set(`${key}Size`, parseFloat(e.target.value) || 1)} 
-                                                    step="0.1" min="0.1" max="10" title="Tamaño" />
-                                                <input type="range" className="form-range flex-grow-1" style={{ height: '12px' }}
-                                                    min="0" max="100" value={formData[`${key}Opacity`] || 100}
-                                                    onChange={e => set(`${key}Opacity`, parseInt(e.target.value))} title="Opacidad" />
-                                                <span className="text-muted" style={{ width: '28px', textAlign: 'right' }}>{formData[`${key}Opacity`] || 100}%</span>
-                                            </div>
+                                {/* Colores rápidos (presets) */}
+                                <div className="quick-colors mb-3">
+                                    <label className="x-small text-muted fw-bold mb-1 d-block">COLORES RÁPIDOS</label>
+                                    <div className="d-flex gap-1 flex-wrap">
+                                        {['#ffffff', '#000000', '#5b2ea6', '#ff6b35', '#f7c59f', '#2ec4b6', '#e71d36', '#011627', '#ffd700', '#00ff88'].map(c => (
+                                            <button key={c} className="btn p-0 border rounded-1" 
+                                                style={{ width: '24px', height: '24px', background: c }}
+                                                onClick={() => selectedElementId && set(`${selectedElementId}Color`, c)} 
+                                                title={c}></button>
                                         ))}
                                     </div>
                                 </div>
 
-                                {/* Color Picker estilo Illustrator */}
-                                <div className="color-picker-pro">
-                                    <div className="d-flex align-items-center gap-1 mb-1">
-                                        <i className="bi bi-palette text-muted" style={{ fontSize: '0.7rem' }}></i>
-                                        <span className="x-small text-muted fw-bold">COLORES</span>
+                                {/* Info: selecciona elemento */}
+                                {!selectedElementId && (
+                                    <div className="text-center text-muted py-4">
+                                        <i className="bi bi-hand-index fs-1 opacity-25"></i>
+                                        <p className="x-small mt-2">Selecciona un elemento arriba para editarlo</p>
                                     </div>
-                                    <div className="bg-light rounded-2 p-2">
-                                        {/* Presets rápidos */}
-                                        <div className="d-flex gap-1 mb-2 flex-wrap">
-                                            {['#ffffff', '#000000', '#5b2ea6', '#ff6b35', '#f7c59f', '#2ec4b6', '#e71d36', '#011627'].map(c => (
-                                                <button key={c} className="btn p-0 border rounded-1" style={{ width: '20px', height: '20px', background: c }}
-                                                    onClick={() => selectedElementId && set(`${selectedElementId}Color`, c)} title={c}></button>
-                                            ))}
-                                        </div>
-                                        {/* Colores por elemento */}
-                                        <div style={{ fontSize: '0.65rem' }}>
-                                            {[
-                                                { key: 'title', icon: 'H1' },
-                                                { key: 'title2', icon: 'H2' },
-                                                { key: 'title3', icon: 'H3' },
-                                                { key: 'speaker', icon: '👤' },
-                                                { key: 'tag', icon: '🏷' },
-                                                { key: 'tagBg', icon: '▣', label: 'Fondo Tag' },
-                                            ].map(({ key, icon }) => (
-                                                <div key={key} className="d-flex align-items-center gap-1 mb-1">
-                                                    <span className="text-muted" style={{ width: '22px', textAlign: 'center' }}>{icon}</span>
-                                                    <input type="color" className="form-control form-control-color border-0 p-0 rounded-1" 
-                                                        style={{ width: '28px', height: '20px', cursor: 'pointer' }}
-                                                        value={formData[`${key}Color`] || '#ffffff'} 
-                                                        onChange={e => set(`${key}Color`, e.target.value)} />
-                                                    <input type="text" className="form-control form-control-sm border-0 bg-white p-0 text-uppercase" 
-                                                        style={{ fontSize: '0.6rem', height: '20px', flex: 1 }}
-                                                        value={(formData[`${key}Color`] || '#ffffff').replace('#', '')}
-                                                        onChange={e => set(`${key}Color`, `#${e.target.value.replace('#', '')}`)} 
-                                                        maxLength={6} />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         )}
 
@@ -1141,39 +1163,6 @@ const AdminAnnouncements = () => {
                                 )}
                             </div>
                         )}
-                    </div>
-
-                    {/* ── Fecha / Hora / Lugar ─────────────── */}
-                    <div className="px-3 pb-3 border-top pt-3">
-                        <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Detalles del Evento</label>
-                        <div className="mb-2">
-                            <label className="x-small text-muted mb-1 d-block">Fecha</label>
-                            <input
-                                type="date"
-                                className="form-control form-control-sm"
-                                value={formData.date || ''}
-                                onChange={e => set('date', e.target.value)}
-                            />
-                        </div>
-                        <div className="mb-2">
-                            <label className="x-small text-muted mb-1 d-block">Hora</label>
-                            <input
-                                type="time"
-                                className="form-control form-control-sm"
-                                value={formData.time || ''}
-                                onChange={e => set('time', e.target.value)}
-                            />
-                        </div>
-                        <div className="mb-2">
-                            <label className="x-small text-muted mb-1 d-block">Lugar</label>
-                            <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                placeholder="Ej: Templo Principal"
-                                value={formData.location || ''}
-                                onChange={e => set('location', e.target.value)}
-                            />
-                        </div>
                     </div>
 
                     {/* Bottom Publish Button in Panel (Optional/Secondary) */}
@@ -1462,12 +1451,36 @@ const AdminAnnouncements = () => {
                                             {(formData.date || formData.time) && (
                                                 <motion.div
                                                     drag dragMomentum={false}
-                                                    style={{ x: formData.datePos.x, y: formData.datePos.y, cursor: 'move' }}
+                                                    onMouseDown={() => setSelectedElementId('date')}
+                                                    onTouchStart={() => setSelectedElementId('date')}
+                                                    style={{ 
+                                                        x: formData.datePos.x, y: formData.datePos.y, cursor: 'move',
+                                                        outline: selectedElementId === 'date' ? '2px dashed #00d2f3' : 'none',
+                                                        outlineOffset: '4px', borderRadius: '30px'
+                                                    }}
                                                     onDragEnd={(e, info) => set('datePos', { x: formData.datePos.x + info.offset.x, y: formData.datePos.y + info.offset.y })}
                                                 >
-                                                    <div ref={dateRef} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', padding: '5px 15px', borderRadius: '30px', color: 'white', fontSize: `calc(${formData.dateSize * 3}cqw)`, whiteSpace: 'nowrap', fontFamily: formData.dateFont }}>
+                                                    <div ref={dateRef} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', padding: '5px 15px', borderRadius: '30px', color: formData.dateColor || 'white', fontSize: `calc(${formData.dateSize * 3}cqw)`, whiteSpace: 'nowrap', fontFamily: formData.dateFont, opacity: formData.dateOpacity / 100 }}>
                                                         <i className={`bi ${formData.date ? 'bi-calendar3' : 'bi-clock'} me-2`}></i>
                                                         {[formData.date ? new Date(formData.date + 'T00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' }) : '', formData.time].filter(Boolean).join(' - ')}
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                            {formData.location && (
+                                                <motion.div
+                                                    drag dragMomentum={false}
+                                                    onMouseDown={() => setSelectedElementId('location')}
+                                                    onTouchStart={() => setSelectedElementId('location')}
+                                                    style={{ 
+                                                        x: formData.locationPos.x, y: formData.locationPos.y, cursor: 'move',
+                                                        outline: selectedElementId === 'location' ? '2px dashed #00d2f3' : 'none',
+                                                        outlineOffset: '4px', borderRadius: '30px'
+                                                    }}
+                                                    onDragEnd={(e, info) => set('locationPos', { x: formData.locationPos.x + info.offset.x, y: formData.locationPos.y + info.offset.y })}
+                                                >
+                                                    <div ref={locationRef} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', padding: '5px 15px', borderRadius: '30px', color: formData.locationColor || 'white', fontSize: `calc(${formData.locationSize * 3}cqw)`, whiteSpace: 'nowrap', fontFamily: formData.locationFont || 'AdventSans', opacity: formData.locationOpacity / 100 }}>
+                                                        <i className="bi bi-geo-alt me-2"></i>
+                                                        {formData.location}
                                                     </div>
                                                 </motion.div>
                                             )}
