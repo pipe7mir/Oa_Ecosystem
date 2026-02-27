@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { theme } from '../react-ui/styles/theme';
-import Draggable from 'react-draggable';
+import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';  // API client for backend requests
 import OasisPress from './OasisPress';  // Presentation editor
 
@@ -224,6 +224,15 @@ const TEMPLATES = [
     }
 ];
 
+const SIDEBAR_ITEMS = [
+    { id: 'templates', label: 'Plantillas', icon: 'bi-grid-3x3-gap' },
+    { id: 'elements', label: 'Elementos', icon: 'bi-briefcase' },
+    { id: 'uploads', label: 'Subidos', icon: 'bi-cloud-arrow-up' },
+    { id: 'text', label: 'Texto', icon: 'bi-alphabet' },
+    { id: 'styles', label: 'Estilos', icon: 'bi-palette' },
+    { id: 'branding', label: 'Marca', icon: 'bi-shield-check' },
+];
+
 /* ─────────────────────────────────────────────────
    Main Component
  ───────────────────────────────────────────────────*/
@@ -231,10 +240,11 @@ const AdminAnnouncements = () => {
     const [activeMode, setActiveMode] = useState('anuncios'); // 'anuncios' | 'presentaciones'
     const [announcements, setAnnouncements] = useState([]);
     const [showForm, setShowForm] = useState(false);
-    const [showTemplatePicker, setShowTemplatePicker] = useState(false);
-    const [showLibrary, setShowLibrary] = useState(false);
+    const [activeSidebar, setActiveSidebar] = useState('templates');
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(window.innerWidth < 992);
     const [activeAdvTab, setActiveAdvTab] = useState('pos'); // pos, style, brand
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [selectedElementId, setSelectedElementId] = useState(null);
     const [assets, setAssets] = useState({ oasis: null, iasd: null, rrss: null });
 
     const DEFAULTS = {
@@ -763,448 +773,265 @@ const AdminAnnouncements = () => {
         }
         : { background: `linear-gradient(135deg, ${formData.gradientStart}, ${formData.gradientEnd})` };
 
-    return (
-        <div className="container-fluid py-4 animate-fade-in" style={{ background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)', minHeight: '100vh' }}>
-            <FontPreloader />
-            {/* Header */}
-            <div className="d-flex justify-content-between align-items-center mb-4 p-4 shadow-sm bg-white rounded-4 border-start border-primary border-5">
-                <div>
-                    <h2 className="fw-bold mb-0 text-dark">Creador Unificado Oasis</h2>
-                    <p className="text-muted small mb-0">Generador de contenido visual de alto impacto</p>
-                </div>
-                {activeMode === 'anuncios' && (
-                    <button className="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onClick={() => {
-                        if (!showForm && !showTemplatePicker) {
-                            setShowTemplatePicker(true);
-                        } else {
-                            setShowForm(false);
-                            setShowTemplatePicker(false);
-                        }
-                    }}>
-                        {showForm || showTemplatePicker ? 'Cerrar Panel' : '+ Crear Nuevo'}
-                    </button>
-                )}
+    // Canva UI Helpers
+    const renderSidebar = () => (
+        <div className="canva-sidebar d-flex flex-column align-items-center bg-dark text-white py-3 shadow-lg" style={{ width: '72px', zIndex: 100, position: 'relative' }}>
+            <div className="canva-logo-mini mb-4" onClick={() => navigate('/admin')}>
+                <img src={logoOasis} style={{ height: '32px' }} alt="Oasis" />
             </div>
-
-            {/* Tabs: Anuncios / Presentaciones */}
-            <div className="mb-4">
-                <div className="nav nav-pills p-1 rounded-pill shadow-sm d-inline-flex" style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)' }}>
-                    <button
-                        type="button"
-                        className={`nav-link rounded-pill px-4 py-2 fw-bold ${activeMode === 'anuncios' ? 'active' : 'text-dark'}`}
-                        onClick={() => setActiveMode('anuncios')}
-                    >
-                        <i className="bi bi-megaphone me-2"></i>Anuncios
-                    </button>
-                    <button
-                        type="button"
-                        className={`nav-link rounded-pill px-4 py-2 fw-bold ${activeMode === 'presentaciones' ? 'active' : 'text-dark'}`}
-                        onClick={() => setActiveMode('presentaciones')}
-                    >
-                        <i className="bi bi-easel2 me-2"></i>Oasis Press
-                    </button>
-                </div>
+            {SIDEBAR_ITEMS.map(item => (
+                <button
+                    key={item.id}
+                    onClick={() => {
+                        setActiveSidebar(item.id);
+                        setIsSidebarCollapsed(false);
+                    }}
+                    className={`nav-btn d-flex flex-column align-items-center justify-content-center border-0 mb-2 py-2 w-100 transition-all ${activeSidebar === item.id && !isSidebarCollapsed ? 'active-sidebar-btn' : 'text-white-50'}`}
+                    style={{ background: 'transparent', fontSize: '0.65rem' }}
+                >
+                    <i className={`bi ${item.icon} fs-4 mb-1`}></i>
+                    <span>{item.label}</span>
+                </button>
+            ))}
+            <div className="mt-auto">
+                <button className="nav-btn border-0 py-2 w-100 text-white-50" onClick={handleFullscreen} title="Fullscreen">
+                    <i className="bi bi-arrows-fullscreen"></i>
+                </button>
             </div>
+        </div>
+    );
 
-            {/* Render based on active mode */}
-            {activeMode === 'presentaciones' ? (
-                <OasisPress />
-            ) : (
-                <>
-
-            {/* Template Gallery Picker */}
-            {showTemplatePicker && (
-                <div className="card border-0 shadow-lg rounded-4 animate__animated animate__fadeInUp overflow-hidden mb-4">
-                    <div className="card-header bg-dark text-white p-3 d-flex align-items-center gap-2">
-                        <i className="bi bi-grid-3x3-gap"></i>
-                        <span className="fw-bold text-uppercase x-small letter-spacing-1">Selecciona una Plantilla Base</span>
+    const renderPanel = () => (
+        <AnimatePresence>
+            {!isSidebarCollapsed && (
+                <motion.div
+                    initial={{ x: -300 }}
+                    animate={{ x: 0 }}
+                    exit={{ x: -300 }}
+                    className="canva-panel bg-white border-end shadow-sm scrollbar-custom"
+                    style={{ width: '320px', zIndex: 90, overflowY: 'auto' }}
+                >
+                    <div className="p-3 d-flex justify-content-between align-items-center border-bottom sticky-top bg-white">
+                        <h6 className="fw-bold mb-0 text-uppercase letter-spacing-1">{SIDEBAR_ITEMS.find(i => i.id === activeSidebar)?.label}</h6>
+                        <button className="btn-close" style={{ fontSize: '0.7rem' }} onClick={() => setIsSidebarCollapsed(true)}></button>
                     </div>
-                    <div className="card-body p-4 bg-light">
-                        <div className="row g-3">
-                            {TEMPLATES.map(tpl => (
-                                <div key={tpl.id} className="col-md-6 col-lg-2-4">
-                                    <div className="card h-100 border-0 shadow-sm rounded-4 cursor-pointer transition-all hover-scale"
-                                        onClick={() => { resetForm(); applyTemplate(tpl); }}
-                                        style={{ overflow: 'hidden', borderBottom: `5px solid ${tpl.tagBgColor || '#ccc'}` }}>
-                                        <div className="p-3 text-center" style={{ background: `linear-gradient(135deg, ${tpl.gradientStart}, ${tpl.gradientEnd})`, height: '80px' }}>
-                                            <div className="badge rounded-pill" style={{ background: tpl.tagBgColor, color: tpl.tagColor || '#fff', fontSize: '0.6rem' }}>{tpl.tag}</div>
-                                        </div>
-                                        <div className="card-body p-2 text-center bg-white">
-                                            <h6 className="fw-bold mb-1 small">{tpl.name}</h6>
-                                            <div className="text-muted italic x-small mb-1" style={{ fontSize: '0.65rem' }}>{tpl.desc}</div>
-                                            <div className="x-small text-muted" style={{ fontSize: '0.6rem', borderTop: '1px solid #eee', paddingTop: '4px' }}>{tpl.titleFont} + {tpl.speakerFont === 'above-the-beyond-script' ? 'Script' : 'Sans'}</div>
+                    <div className="panel-content p-3">
+                        {activeSidebar === 'templates' && (
+                            <div className="row g-2">
+                                {TEMPLATES.map(tpl => (
+                                    <div key={tpl.id} className="col-6">
+                                        <div className="tpl-card rounded-3 cursor-pointer overflow-hidden border shadow-sm hover-scale mb-2"
+                                            onClick={() => applyTemplate(tpl)}
+                                            style={{ height: '100px', background: `linear-gradient(135deg, ${tpl.gradientStart}, ${tpl.gradientEnd})` }}>
+                                            <div className="d-flex h-100 align-items-center justify-content-center p-2 text-center text-white x-small fw-bold">
+                                                {tpl.name}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="text-center mt-4">
-                            <button className="btn btn-outline-secondary btn-sm rounded-pill px-4" onClick={() => setShowTemplatePicker(false)}>Cancelar</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {showForm && (
-                <div className="row g-4 animate__animated animate__fadeIn">
-                    {/* LEFT: Controls */}
-                    <div className="col-lg-5">
-                        <div className="card border-0 shadow-lg rounded-4 overflow-hidden" style={{ maxHeight: '85vh' }}>
-                            <div className="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
-                                <div className="d-flex align-items-center gap-2">
-                                    <i className="bi bi-sliders2 fs-5"></i>
-                                    <span className="fw-bold text-uppercase x-small letter-spacing-1">Canva OASIS</span>
-                                </div>
-                                <div className="form-check form-switch bg-light bg-opacity-10 px-3 py-1 rounded-pill border border-secondary">
-                                    <input className="form-check-input" type="checkbox" checked={formData.showAdvanced} onChange={e => set('showAdvanced', e.target.checked)} id="advToggle" />
-                                    <label className="form-check-label x-small fw-bold text-uppercase ms-1 cursor-pointer" htmlFor="advToggle" style={{ fontSize: '0.6rem' }}>Avanzado</label>
-                                </div>
+                                ))}
                             </div>
-                            <div className="card-body p-4 scrollbar-custom" style={{ overflowY: 'auto' }}>
-                                {formData.showAdvanced && (
-                                    <div className="nav nav-pills nav-justified bg-light p-1 rounded-pill mb-4 shadow-sm border">
-                                        <button type="button" className={`nav-link rounded-pill py-1 x-small fw-bold ${activeAdvTab === 'pos' ? 'active' : 'text-dark'}`} onClick={() => setActiveAdvTab('pos')}>📐 Posición</button>
-                                        <button type="button" className={`nav-link rounded-pill py-1 x-small fw-bold ${activeAdvTab === 'style' ? 'active' : 'text-dark'}`} onClick={() => setActiveAdvTab('style')}>🎨 Estilo</button>
-                                        <button type="button" className={`nav-link rounded-pill py-1 x-small fw-bold ${activeAdvTab === 'brand' ? 'active' : 'text-dark'}`} onClick={() => setActiveAdvTab('brand')}>🛡️ Marca</button>
+                        )}
+                        {activeSidebar === 'elements' && (
+                            <div className="elements-grid row g-2">
+                                {Object.entries(STOCK_CATEGORIES).map(([cat, imgs]) => (
+                                    <div key={cat} className="col-12 mb-3">
+                                        <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">{cat}</label>
+                                        <div className="row g-1">
+                                            {imgs.map((img, i) => (
+                                                <div key={i} className="col-4">
+                                                    <img src={img} onClick={() => handleSelectStock(img)} className="img-fluid rounded-2 cursor-pointer hover-scale shadow-sm" style={{ height: '60px', width: '100%', objectFit: 'cover' }} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {activeSidebar === 'text' && (
+                            <div className="text-options">
+                                <button className="btn btn-light w-100 mb-2 py-3 rounded-3 border-dashed" onClick={() => set('title', 'Nuevo Título')}>
+                                    <h4 className="fw-bold mb-0">Agregar Título</h4>
+                                </button>
+                                <button className="btn btn-light w-100 mb-2 py-2 rounded-3" onClick={() => set('title2', 'Nuevo Subtítulo')}>
+                                    <h6 className="fw-bold mb-0">Agregar Subtítulo</h6>
+                                </button>
+                                <button className="btn btn-light w-100 mb-4 py-2 rounded-3" onClick={() => set('speaker', 'Expositor')}>
+                                    <span className="small">Agregar texto de cuerpo</span>
+                                </button>
+
+                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Tipografía</label>
+                                {FONTS.map(f => (
+                                    <button key={f.value} className="btn btn-outline-dark btn-sm w-100 mb-1 text-start d-flex justify-content-between align-items-center"
+                                        onClick={() => set('titleFont', f.value)} style={{ fontFamily: f.value }}>
+                                        {f.label}
+                                        {formData.titleFont === f.value && <i className="bi bi-check2"></i>}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        {activeSidebar === 'uploads' && (
+                            <div className="uploads-section text-center p-4 border-dashed rounded-4 bg-light">
+                                <i className="bi bi-cloud-arrow-up fs-2 text-muted mb-2 d-block"></i>
+                                <p className="x-small text-muted mb-3">Sube tus propias imágenes</p>
+                                <button className="btn btn-primary btn-sm rounded-pill w-100" onClick={() => fileInputRef.current.click()}>Subir Archivo</button>
+                                <input type="file" ref={fileInputRef} hidden onChange={handleFileChange} accept="image/*" />
+                                {formData.bgImage && formData.bgMode === 'image' && (
+                                    <div className="mt-3">
+                                        <img src={formData.bgImage} className="img-fluid rounded-3 shadow-sm" style={{ height: '80px', objectFit: 'cover' }} />
+                                        <button className="btn btn-link btn-sm text-danger d-block w-100 mt-1" onClick={() => setMany({ bgImage: null, bgMode: 'gradient' })}>Eliminar</button>
                                     </div>
                                 )}
-                                <form onSubmit={handleSubmit} className="row g-3">
-
-                                    {/* ── SECCIÓN: CONTENIDO ── */}
-                                    <div className="col-12 mb-2">
-                                        <div className="d-flex align-items-center gap-2 mb-3">
-                                            <div className="bg-primary rounded-circle text-white d-flex align-items-center justify-content-center" style={{ width: 24, height: 24, fontSize: '0.7rem' }}>1</div>
-                                            <h6 className="fw-bold mb-0 text-uppercase letter-spacing-1">Información Base</h6>
-                                        </div>
-                                        <div className="row g-2">
-                                            <div className="col-12">
-                                                <label className="x-small fw-bold text-muted mb-1 text-uppercase">Título Principal</label>
-                                                <input className="form-control" value={formData.title} onChange={e => set('title', e.target.value)} placeholder="Ej: Servicio de Adoración" />
-                                            </div>
-                                            <div className="col-12 pt-1">
-                                                <label className="x-small fw-bold text-muted mb-1 text-uppercase">Título Secundario</label>
-                                                <input className="form-control" value={formData.title2} onChange={e => set('title2', e.target.value)} placeholder="Ej: Invitado Especial" />
-                                            </div>
-                                            <div className="col-6 pt-1">
-                                                <label className="x-small fw-bold text-muted mb-1 text-uppercase">Expositor</label>
-                                                <input className="form-control" value={formData.speaker} onChange={e => set('speaker', e.target.value)} placeholder="Pr. Juan Perez" />
-                                            </div>
-                                            <div className="col-6 pt-1">
-                                                <label className="x-small fw-bold text-muted mb-1 text-uppercase">Lugar</label>
-                                                <input className="form-control" value={formData.location} onChange={e => set('location', e.target.value)} placeholder="Auditorio Principal" />
-                                            </div>
-                                            <div className="col-6 pt-1">
-                                                <label className="x-small fw-bold text-muted mb-1 text-uppercase">Fecha</label>
-                                                <input type="date" className="form-control" value={formData.date} onChange={e => set('date', e.target.value)} />
-                                            </div>
-                                            <div className="col-6 pt-1">
-                                                <label className="x-small fw-bold text-muted mb-1 text-uppercase">Hora</label>
-                                                <input type="time" className="form-control" value={formData.time} onChange={e => set('time', e.target.value)} />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* ── SECCIÓN: TAGS & BRANDS ── */}
-                                    <div className="col-12 mb-2 pt-2 border-top">
-                                        <div className="d-flex align-items-center gap-2 mb-3">
-                                            <div className="bg-primary rounded-circle text-white d-flex align-items-center justify-content-center" style={{ width: 24, height: 24, fontSize: '0.7rem' }}>2</div>
-                                            <h6 className="fw-bold mb-0 text-uppercase letter-spacing-1">Identidad & Marcadores</h6>
-                                        </div>
-                                        <div className="row g-2">
-                                            <div className="col-8">
-                                                <label className="x-small fw-bold text-muted mb-1 text-uppercase">Texto Etiqueta</label>
-                                                <input className="form-control" value={formData.tag} onChange={e => set('tag', e.target.value)} />
-                                            </div>
-                                            <div className="col-4">
-                                                <label className="x-small fw-bold text-muted mb-1 text-uppercase">Estilo Tag</label>
-                                                <select className="form-select" value={formData.tagStyle} onChange={e => set('tagStyle', e.target.value)}>
-                                                    <option value="pill-translucent">💊 Traslúcido</option>
-                                                    <option value="outline">⬜ Borde</option>
-                                                    <option value="solid">⬛ Sólido</option>
-                                                    <option value="ghost">👻 Texto</option>
-                                                </select>
-                                            </div>
-
-                                            {/* Tag Advanced Tools */}
-                                            {formData.showAdvanced && activeAdvTab === 'pos' && (
-                                                <div className="col-12 mt-2 bg-white p-2 rounded-3 border shadow-sm">
-                                                    <div className="d-flex justify-content-between x-small text-muted mb-1">
-                                                        <span className="fw-bold text-uppercase x-small">Tamaño Etiqueta</span>
-                                                        <span>{formData.tagSize}vw</span>
-                                                    </div>
-                                                    <input type="range" className="form-range" min="0.5" max="8" step="0.1"
-                                                        value={formData.tagSize} onChange={e => set('tagSize', parseFloat(e.target.value))} />
-                                                    <div className="mt-2 text-center">
-                                                        <PosControl label="Posición Etiqueta" pos={formData.tagPos} onChange={val => set('tagPos', val)} />
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            <div className="col-12 mt-2">
-                                                <label className="x-small fw-bold text-muted mb-1 d-block text-uppercase">Habilitar Branding</label>
-                                                <div className="btn-group w-100 shadow-sm mb-2">
-                                                    <button type="button" className={`btn btn-sm ${formData.showLogoIasd ? 'btn-dark' : 'btn-outline-dark'}`} onClick={() => set('showLogoIasd', !formData.showLogoIasd)}>IASD</button>
-                                                    <button type="button" className={`btn btn-sm ${formData.showLogoOasis ? 'btn-dark' : 'btn-outline-dark'}`} onClick={() => set('showLogoOasis', !formData.showLogoOasis)}>OASIS</button>
-                                                    <button type="button" className={`btn btn-sm ${formData.showRrss ? 'btn-dark' : 'btn-outline-dark'}`} onClick={() => set('showRrss', !formData.showRrss)}>RRSS</button>
-                                                </div>
-                                            </div>
-
-                                            {/* Branding Logos Size Sliders (Advanced) */}
-                                            {formData.showAdvanced && activeAdvTab === 'brand' && (
-                                                <div className="col-12 p-3 bg-white rounded-4 shadow-sm mt-2 border">
-                                                    <label className="x-small fw-bold text-muted d-block mb-2 text-uppercase">Escala de Logos</label>
-                                                    <div className="row g-3">
-                                                        {formData.showLogoIasd && (
-                                                            <div className="col-6">
-                                                                <div className="d-flex justify-content-between x-small text-muted mb-1"><span>IASD</span><span>{formData.logoIasdSize}px</span></div>
-                                                                <input type="range" className="form-range" min="10" max="150" value={formData.logoIasdSize} onChange={e => set('logoIasdSize', parseInt(e.target.value))} />
-                                                            </div>
-                                                        )}
-                                                        {formData.showLogoOasis && (
-                                                            <div className="col-6">
-                                                                <div className="d-flex justify-content-between x-small text-muted mb-1"><span>OASIS</span><span>{formData.logoOasisSize}px</span></div>
-                                                                <input type="range" className="form-range" min="10" max="150" value={formData.logoOasisSize} onChange={e => set('logoOasisSize', parseInt(e.target.value))} />
-                                                            </div>
-                                                        )}
-                                                        {formData.showRrss && (
-                                                            <div className="col-12 mt-1">
-                                                                <div className="d-flex justify-content-between x-small text-muted mb-1"><span>RRSS ICON</span><span>{formData.rrssSize}px</span></div>
-                                                                <input type="range" className="form-range" min="10" max="100" value={formData.rrssSize} onChange={e => set('rrssSize', parseInt(e.target.value))} />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* ── SECCIÓN: ESTILO & TIPOGRAFÍA ── */}
-                                    <div className="col-12 mb-2 pt-2 border-top">
-                                        <div className="d-flex align-items-center gap-2 mb-3">
-                                            <div className="bg-primary rounded-circle text-white d-flex align-items-center justify-content-center" style={{ width: 24, height: 24, fontSize: '0.7rem' }}>3</div>
-                                            <h6 className="fw-bold mb-0 text-uppercase letter-spacing-1">Tipografía & Color</h6>
-                                        </div>
-
-                                        {/* Color & Typography (Advanced) */}
-                                        {formData.showAdvanced && activeAdvTab === 'style' && (
-                                            <div className="animate__animated animate__fadeIn">
-                                                {/* Color Grid */}
-                                                <div className="p-3 bg-white rounded-4 mb-3 border shadow-sm">
-                                                    <label className="x-small fw-bold text-muted d-block mb-2 text-uppercase">Paleta de Colores</label>
-                                                    <div className="row g-2">
-                                                        <div className="col-4 text-center">
-                                                            <label className="x-small d-block mb-1">Título 1</label>
-                                                            <input type="color" className="form-control form-control-color w-100 border-0 shadow-sm" value={formData.titleColor} onChange={e => set('titleColor', e.target.value)} />
-                                                        </div>
-                                                        <div className="col-4 text-center">
-                                                            <label className="x-small d-block mb-1">Título 2</label>
-                                                            <input type="color" className="form-control form-control-color w-100 border-0 shadow-sm" value={formData.title2Color} onChange={e => set('title2Color', e.target.value)} />
-                                                        </div>
-                                                        <div className="col-4 text-center">
-                                                            <label className="x-small d-block mb-1">Orador</label>
-                                                            <input type="color" className="form-control form-control-color w-100 border-0 shadow-sm" value={formData.speakerColor} onChange={e => set('speakerColor', e.target.value)} />
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Typography Controls */}
-                                                <div className="p-3 bg-white rounded-4 mb-3 border shadow-sm">
-                                                    <label className="x-small fw-bold text-muted d-block mb-3 text-uppercase">Fuentes Tipográficas</label>
-                                                    <div className="row g-3">
-                                                        <div className="col-6">
-                                                            <label className="x-small d-block mb-1">Título Principal</label>
-                                                            <select className="form-select form-select-sm" value={formData.titleFont} onChange={e => set('titleFont', e.target.value)}>
-                                                                {FONTS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-                                                            </select>
-                                                        </div>
-                                                        <div className="col-6">
-                                                            <label className="x-small d-block mb-1">Título Secundario</label>
-                                                            <select className="form-select form-select-sm" value={formData.title2Font} onChange={e => set('title2Font', e.target.value)}>
-                                                                {FONTS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-                                                            </select>
-                                                        </div>
-                                                        <div className="col-6">
-                                                            <label className="x-small d-block mb-1">Expositor</label>
-                                                            <select className="form-select form-select-sm" value={formData.speakerFont} onChange={e => set('speakerFont', e.target.value)}>
-                                                                {FONTS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-                                                            </select>
-                                                        </div>
-                                                        <div className="col-6">
-                                                            <label className="x-small d-block mb-1">Etiqueta/Info</label>
-                                                            <select className="form-select form-select-sm" value={formData.tagFont} onChange={e => {
-                                                                const val = e.target.value;
-                                                                setMany({ tagFont: val, dateFont: val, timeFont: val, locationFont: val });
-                                                            }}>
-                                                                {FONTS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Geometry & Scaling (Advanced) */}
-                                        {formData.showAdvanced && activeAdvTab === 'pos' && (
-                                            <div className="animate__animated animate__fadeIn">
-                                                {/* Position controls for Titles */}
-                                                <div className="px-1 mb-3 bg-white p-2 rounded-3 border shadow-sm">
-                                                    <label className="x-small fw-bold text-muted d-block mb-2 text-uppercase">Nivelación de Elementos</label>
-                                                    <PosControl label="Título Principal" pos={formData.titlePos} onChange={val => set('titlePos', val)} />
-                                                    <PosControl label="Título Secundario" pos={formData.title2Pos} onChange={val => set('title2Pos', val)} />
-                                                    <PosControl label="Crédito Orador" pos={formData.speakerPos} onChange={val => set('speakerPos', val)} />
-                                                    <PosControl label="Fecha & Hora" pos={formData.datePos} onChange={val => { setMany({ datePos: val, timePos: { ...val, x: -val.x } }); }} />
-                                                </div>
-
-                                                {/* Sizes Multi-Slider */}
-                                                <div className="p-3 bg-white rounded-4 border shadow-sm">
-                                                    <label className="x-small fw-bold text-muted d-block mb-3 text-uppercase">Escala Automática (VW)</label>
-                                                    <div className="mb-3">
-                                                        <div className="d-flex justify-content-between x-small text-muted mb-1"><span>Títulos</span><span>{formData.titleSize}vw</span></div>
-                                                        <input type="range" className="form-range" min="1" max="15" step="0.1" value={formData.titleSize}
-                                                            onChange={e => {
-                                                                const val = parseFloat(e.target.value);
-                                                                setMany({ titleSize: val, title2Size: val * 0.75, speakerSize: val * 0.85 });
-                                                            }} />
-                                                    </div>
-                                                    <div>
-                                                        <div className="d-flex justify-content-between x-small text-muted mb-1"><span>Información</span><span>{formData.dateSize}vw</span></div>
-                                                        <input type="range" className="form-range" min="1" max="10" step="0.1" value={formData.dateSize}
-                                                            onChange={e => {
-                                                                const val = parseFloat(e.target.value);
-                                                                setMany({ dateSize: val, timeSize: val, locationSize: val });
-                                                            }} />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* ── SECCIÓN: FONDO & DESCRIPCIÓN ── */}
-                                    <div className="col-12 mb-2 pt-2 border-top">
-                                        <div className="d-flex align-items-center gap-2 mb-3">
-                                            <div className="bg-primary rounded-circle text-white d-flex align-items-center justify-content-center" style={{ width: 24, height: 24, fontSize: '0.7rem' }}>4</div>
-                                            <h6 className="fw-bold mb-0 text-uppercase letter-spacing-1">Fondo & Textos</h6>
-                                        </div>
-                                        <div className="row g-2">
-                                            <div className="col-12">
-                                                <div className="d-flex gap-2 mb-2">
-                                                    <button type="button" className={`btn btn-sm flex-grow-1 ${formData.bgMode === 'gradient' ? 'btn-primary' : 'btn-outline-secondary'}`} onClick={() => setMany({ bgMode: 'gradient', blendGradient: false })}>Degradado</button>
-                                                    <button type="button" className={`btn btn-sm flex-grow-1 ${formData.bgMode === 'image' && !formData.blendGradient ? 'btn-primary' : 'btn-outline-secondary'}`} onClick={() => { setShowLibrary(true); set('blendGradient', false); }}>Biblioteca</button>
-                                                    <button type="button" className="btn btn-sm btn-outline-dark" onClick={() => fileInputRef.current.click()}>Subir</button>
-                                                    <input type="file" ref={fileInputRef} hidden onChange={handleFileChange} accept="image/*" />
-                                                </div>
-
-                                                {/* Image + Gradient Blend Control */}
-                                                {formData.bgImage && (
-                                                    <div className="form-check form-switch bg-light p-2 rounded-3 mb-2 px-4 shadow-sm">
-                                                        <input className="form-check-input" type="checkbox" checked={formData.blendGradient} onChange={e => set('blendGradient', e.target.checked)} />
-                                                        <label className="x-small fw-bold text-uppercase ms-1">Mezclar con Degradado</label>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Gradient Colors (Shown if mode is gradient OR blending is active) */}
-                                            {(formData.bgMode === 'gradient' || formData.blendGradient) && (
-                                                <div className="col-12 p-3 bg-light rounded-4 mb-2">
-                                                    <div className="row g-2">
-                                                        <div className="col-6"><label className="x-small d-block mb-1">Color 1</label><input type="color" className="form-control form-control-color w-100 shadow-sm" value={formData.gradientStart} onChange={e => set('gradientStart', e.target.value)} /></div>
-                                                        <div className="col-6"><label className="x-small d-block mb-1">Color 2</label><input type="color" className="form-control form-control-color w-100 shadow-sm" value={formData.gradientEnd} onChange={e => set('gradientEnd', e.target.value)} /></div>
-                                                        {formData.blendGradient && (
-                                                            <div className="col-12 mt-2 border-top pt-2">
-                                                                <div className="d-flex justify-content-between x-small text-muted mb-1"><span>Intensidad Degradado</span><span>{Math.round(formData.blendOpacity * 100)}%</span></div>
-                                                                <input type="range" className="form-range" min="0" max="1" step="0.05" value={formData.blendOpacity} onChange={e => set('blendOpacity', parseFloat(e.target.value))} />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            <div className="col-12 mt-2">
-                                                <div className="d-flex justify-content-between align-items-center mb-1">
-                                                    <label className="x-small fw-bold text-muted text-uppercase">Descripción / Texto Bíblico</label>
-                                                    <div className="form-check form-switch px-0 ms-2">
-                                                        <input className="form-check-input ms-0" type="checkbox" checked={formData.contentStyle === 'biblical'} onChange={e => set('contentStyle', e.target.checked ? 'biblical' : 'normal')} />
-                                                        <label className="x-small fw-bold ms-1">Fondo</label>
-                                                    </div>
-                                                </div>
-                                                <textarea className="form-control shadow-sm border-0" rows="3" value={formData.content} onChange={e => set('content', e.target.value)} placeholder="Agrega versículos o detalles..." />
-                                                <div className="mt-2 bg-light p-2 rounded-3">
-                                                    <div className="d-flex justify-content-between x-small text-muted mb-1">
-                                                        <span className="fw-bold text-uppercase">Tamaño Descripción</span>
-                                                        <span>{formData.contentSize}vw</span>
-                                                    </div>
-                                                    <input type="range" className="form-range mb-2" min="1" max="10" step="0.1" value={formData.contentSize} onChange={e => set('contentSize', parseFloat(e.target.value))} />
-
-                                                    {formData.contentStyle === 'biblical' && formData.showAdvanced && (
-                                                        <>
-                                                            <div className="d-flex justify-content-between x-small text-muted mb-1 border-top pt-2"><span>Opacidad Fondo (Modo Avanzado)</span><span>{Math.round(formData.contentBgOpacity * 100)}%</span></div>
-                                                            <input type="range" className="form-range" min="0" max="1" step="0.05" value={formData.contentBgOpacity} onChange={e => set('contentBgOpacity', parseFloat(e.target.value))} />
-                                                        </>
-                                                    )}
-                                                </div>
-
-                                                <div className="mt-3">
-                                                    {formData.showAdvanced ? (
-                                                        <>
-                                                            <PosControl label="Descripción" pos={formData.contentPos} onChange={val => set('contentPos', val)} />
-                                                            <div className="row g-2">
-                                                                <div className="col-6"><PosControl label="Fecha y Hora" pos={formData.datePos} onChange={val => set('datePos', val)} /></div>
-                                                                <div className="col-6"><PosControl label="Lugar" pos={formData.locationPos} onChange={val => set('locationPos', val)} /></div>
-                                                                <div className="col-6"><PosControl label="RRSS" pos={formData.rrssPos} onChange={val => set('rrssPos', val)} /></div>
-                                                            </div>
-                                                        </>
-                                                    ) : (
-                                                        <div className="text-center py-2">
-                                                            <span className="x-small text-muted italic">Usa el modo avanzado para mover elementos con precisión</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="col-12 pt-3 border-top mt-4">
-                                        <button type="submit" disabled={isSubmitting} className="btn btn-dark w-100 py-3 fw-bold rounded-pill shadow mb-2">
-                                            {isSubmitting ? <><span className="spinner-border spinner-border-sm me-2"></span>PUBLICANDO...</> : '✓ FINALIZAR Y PUBLICAR'}
-                                        </button>
-                                        <button type="button" onClick={handleDownload} className="btn btn-outline-dark w-100 rounded-pill"><i className="bi bi-download me-2"></i>Capturar Diseño</button>
-                                    </div>
-                                </form>
                             </div>
-                        </div>
-                    </div>
+                        )}
+                        {activeSidebar === 'styles' && (
+                            <div className="styles-panel">
+                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Colores de Fondo</label>
+                                <div className="row g-2 mb-4">
+                                    <div className="col-6">
+                                        <input type="color" className="form-control form-control-color w-100 shadow-sm" value={formData.gradientStart} onChange={e => set('gradientStart', e.target.value)} />
+                                    </div>
+                                    <div className="col-6">
+                                        <input type="color" className="form-control form-control-color w-100 shadow-sm" value={formData.gradientEnd} onChange={e => set('gradientEnd', e.target.value)} />
+                                    </div>
+                                    <div className="col-12 mt-2">
+                                        <button className="btn btn-sm btn-light w-100 rounded-pill" onClick={() => setMany({ gradientStart: '#5b2ea6', gradientEnd: '#16213e' })}>Default Oasis</button>
+                                    </div>
+                                </div>
 
-                    {/* RIGHT: Live Preview */}
-                    <div className="col-lg-7">
-                        <div className="card border-0 shadow-lg rounded-4 overflow-hidden bg-white">
-                            <div className="card-header bg-dark text-white p-3 d-flex justify-content-between align-items-center">
-                                <span className="fw-bold x-small text-uppercase letter-spacing-1">Vista Previa Estilo Oasis</span>
-                                <div className="btn-group btn-group-sm">
-                                    <button className="btn btn-sm btn-outline-light" onClick={handleFullscreen} title="Modo Proyectar">
-                                        <i className="bi bi-display"></i>
-                                    </button>
-                                    {Object.keys(FORMATS).map(k => (
-                                        <button key={k} className={`btn btn-sm ${formData.format === k ? 'btn-primary' : 'btn-outline-light'}`} onClick={() => set('format', k)}>
-                                            <i className={`bi ${FORMATS[k].icon}`}></i>
-                                        </button>
-                                    ))}
+                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Mezcla con Imagen</label>
+                                <div className="p-3 bg-light rounded-3 shadow-sm border">
+                                    <div className="form-check form-switch mb-2">
+                                        <input className="form-check-input" type="checkbox" checked={formData.blendGradient} onChange={e => set('blendGradient', e.target.checked)} />
+                                        <label className="x-small fw-bold text-uppercase ms-1">Mezclar Degradado</label>
+                                    </div>
+                                    <input type="range" className="form-range" min="0" max="1" step="0.05" value={formData.blendOpacity} onChange={e => set('blendOpacity', parseFloat(e.target.value))} />
+                                    <div className="d-flex justify-content-between x-small text-muted mt-1"><span>{Math.round(formData.blendOpacity * 100)}%</span></div>
                                 </div>
                             </div>
-                            <div className="card-body p-3 p-md-5 d-flex flex-column align-items-center justify-content-center" style={{ background: '#e9ebed' }}>
-                                <div ref={previewRef} id="preview-container" onMouseDown={onDragStart} onTouchStart={onDragStart}
-                                    style={{
-                                        width: formData.format === 'whatsapp' ? '448px' : (formData.format === 'youtube' ? '100%' : '608px'),
-                                        maxWidth: '100%',
-                                        aspectRatio: fmt.aspect, position: 'relative', overflow: 'hidden', ...previewBgStyle, cursor: 'grab',
-                                        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', borderRadius: '12px',
-                                        containerType: 'inline-size',
-                                        touchAction: 'none',
-                                        userSelect: 'none',
-                                        WebkitUserSelect: 'none',
-                                        WebkitTouchCallout: 'none'
-                                    }}>
+                        )}
+                        {activeSidebar === 'branding' && (
+                            <div className="branding-panel">
+                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Logotipos e Iconos</label>
+                                <div className="list-group list-group-flush mb-4 shadow-sm rounded-3 border overflow-hidden">
+                                    <button className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${formData.showLogoOasis ? 'bg-primary-subtle' : ''}`} onClick={() => set('showLogoOasis', !formData.showLogoOasis)}>
+                                        <span className="x-small fw-bold">OASIS LOGO</span>
+                                        {formData.showLogoOasis ? <i className="bi bi-eye-fill"></i> : <i className="bi bi-eye-slash text-muted"></i>}
+                                    </button>
+                                    <button className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${formData.showLogoIasd ? 'bg-primary-subtle' : ''}`} onClick={() => set('showLogoIasd', !formData.showLogoIasd)}>
+                                        <span className="x-small fw-bold">IASD LOGO</span>
+                                        {formData.showLogoIasd ? <i className="bi bi-eye-fill"></i> : <i className="bi bi-eye-slash text-muted"></i>}
+                                    </button>
+                                    <button className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${formData.showRrss ? 'bg-primary-subtle' : ''}`} onClick={() => set('showRrss', !formData.showRrss)}>
+                                        <span className="x-small fw-bold">RRSS ICONS</span>
+                                        {formData.showRrss ? <i className="bi bi-eye-fill"></i> : <i className="bi bi-eye-slash text-muted"></i>}
+                                    </button>
+                                </div>
+                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Escala de Logos</label>
+                                <div className="p-3 bg-light rounded-3 shadow-sm border">
+                                    <div className="mb-2">
+                                        <div className="d-flex justify-content-between x-small text-muted mb-1"><span>Icons</span><span>{formData.rrssSize}px</span></div>
+                                        <input type="range" className="form-range" min="10" max="100" value={formData.rrssSize} onChange={e => set('rrssSize', parseInt(e.target.value))} />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    {/* Bottom Publish Button in Panel (Optional/Secondary) */}
+                    <div className="p-3 border-top mt-auto">
+                        <button className="btn btn-dark w-100 rounded-pill x-small fw-bold py-2 shadow-sm" onClick={handleSubmit} disabled={isSubmitting}>
+                            {isSubmitting ? 'PUBLICANDO...' : '✓ GUARDAR Y PUBLICAR'}
+                        </button>
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
 
-                                    {/* Dark Overlay (Legacy) */}
+    const renderToolbar = () => (
+        <div className="canva-toolbar bg-white shadow rounded-pill p-1 px-3 mb-3 d-flex align-items-center gap-3 border shadow-sm mx-auto animate-fade-in" style={{ width: 'fit-content' }}>
+            <div className="d-flex align-items-center gap-2 border-end pe-3">
+                <select className="form-select form-select-sm border-0 bg-transparent fw-bold" style={{ width: '120px' }} value={formData.titleFont} onChange={e => set('titleFont', e.target.value)}>
+                    {FONTS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+                </select>
+            </div>
+            <div className="d-flex align-items-center gap-2 border-end pe-3">
+                <button className="btn btn-sm btn-light rounded-circle" onClick={() => set('titleSize', Math.max(1, formData.titleSize - 0.5))}><i className="bi bi-dash"></i></button>
+                <span className="fw-bold x-small" style={{ width: '30px', textAlign: 'center' }}>{formData.titleSize}</span>
+                <button className="btn btn-sm btn-light rounded-circle" onClick={() => set('titleSize', Math.min(15, formData.titleSize + 0.5))}><i className="bi bi-plus"></i></button>
+            </div>
+            <div className="d-flex align-items-center gap-2">
+                <input type="color" className="form-control form-control-color border-0 p-0 bg-transparent w-auto" style={{ height: '24px' }} value={formData.titleColor} onChange={e => set('titleColor', e.target.value)} />
+                <button className="btn btn-sm btn-light rounded-pill px-3 x-small fw-bold" onClick={() => set('showAdvanced', !formData.showAdvanced)}>
+                    {formData.showAdvanced ? 'Simple' : 'Avanzado'}
+                </button>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="canva-container d-flex" style={{ height: '100vh', width: '100vw', background: '#f4f7f8', overflow: 'hidden' }}>
+            <FontPreloader />
+
+            {/* Sidebar Navigation */}
+            {renderSidebar()}
+
+            {/* Config Panel (Drawer) */}
+            {renderPanel()}
+
+            {/* Main Workspace */}
+            <div className="canva-workspace flex-grow-1 d-flex flex-column" style={{ position: 'relative' }}>
+                {/* Header / Mode Switcher */}
+                <header className="workspace-header d-flex justify-content-between align-items-center p-3 border-bottom bg-white">
+                    <div className="d-flex align-items-center gap-3">
+                        <button className="btn btn-sm btn-light rounded-pill px-3 fw-bold" onClick={() => navigate('/admin')}>
+                            <i className="bi bi-house-door me-2"></i>Inicio
+                        </button>
+                        <div className="nav nav-pills p-1 rounded-pill bg-light x-small shadow-sm border">
+                            <button className={`nav-link rounded-pill px-3 py-1 fw-bold ${activeMode === 'anuncios' ? 'active' : 'text-dark'}`} onClick={() => setActiveMode('anuncios')}>Anuncios</button>
+                            <button className={`nav-link rounded-pill px-3 py-1 fw-bold ${activeMode === 'presentaciones' ? 'active' : 'text-dark'}`} onClick={() => setActiveMode('presentaciones')}>Presentaciones</button>
+                        </div>
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                        <span className="badge bg-secondary-subtle text-secondary rounded-pill px-3 border x-small">{formData.format.toUpperCase()} {fmt.W}x{fmt.H}</span>
+                        <button className="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold" onClick={() => setShowForm(!showForm)}>
+                            {showForm ? 'Ocultar Lista' : 'Ver Mis Anuncios'}
+                        </button>
+                        <button className="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm" onClick={handleDownload}>
+                            <i className="bi bi-download me-2"></i>Descargar
+                        </button>
+                    </div>
+                </header>
+
+                <main className="workspace-body flex-grow-1 d-flex flex-column align-items-center justify-content-center p-4" style={{ overflowY: 'auto', background: '#e9ecef', position: 'relative' }}>
+                    {activeMode === 'presentaciones' ? (
+                        <div className="w-100 h-100"><OasisPress /></div>
+                    ) : (
+                        <>
+
+                            {/* Toolbar (Contextual) */}
+                            {renderToolbar()}
+
+                            {/* Canvas Area */}
+                            <div className="canvas-wrapper d-flex align-items-center justify-content-center w-100" style={{ perspective: '1000px' }}>
+                                <motion.div
+                                    layout
+                                    ref={previewRef}
+                                    id="preview-container"
+                                    style={{
+                                        width: formData.format === 'whatsapp' ? '360px' : (formData.format === 'youtube' ? '100%' : '480px'),
+                                        maxWidth: '90%',
+                                        aspectRatio: fmt.aspect,
+                                        position: 'relative',
+                                        overflow: 'hidden',
+                                        ...previewBgStyle,
+                                        cursor: 'default',
+                                        boxShadow: '0 30px 60px -12px rgba(0,0,0,0.4), 0 18px 36px -18px rgba(0,0,0,0.5)',
+                                        borderRadius: '4px',
+                                        containerType: 'inline-size',
+                                        touchAction: 'none'
+                                    }}
+                                >
+                                    {/* Dark Overlay */}
                                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.8) 100%)', opacity: formData.bgOpacity, pointerEvents: 'none' }} />
 
                                     {/* BRANDING (Fixed Corners) */}
@@ -1219,12 +1046,17 @@ const AdminAnnouncements = () => {
                                         </div>
                                     )}
 
-                                    {/* CONTENT */}
-                                    <div className="p-3 p-md-4 d-flex flex-column justify-content-center" style={{ position: 'absolute', inset: 0, zIndex: 5 }}>
+                                    {/* INTERACTIVE CONTENT WITH FRAMER MOTION */}
+                                    <div className="p-4 d-flex flex-column justify-content-center" style={{ position: 'absolute', inset: 0, zIndex: 5 }}>
 
                                         {/* TAG */}
-                                        <Draggable nodeRef={tagRef} bounds="parent" position={formData.tagPos} onStop={(e, d) => set('tagPos', { x: d.x, y: d.y })}>
-                                            <div ref={tagRef} style={{ display: 'inline-block', cursor: 'move', alignSelf: 'center', marginBottom: '10px' }}>
+                                        <motion.div
+                                            drag
+                                            dragMomentum={false}
+                                            style={{ x: formData.tagPos.x, y: formData.tagPos.y, cursor: 'move', alignSelf: 'center', marginBottom: '10px' }}
+                                            onDragEnd={(e, info) => set('tagPos', { x: formData.tagPos.x + info.offset.x, y: formData.tagPos.y + info.offset.y })}
+                                        >
+                                            <div ref={tagRef}>
                                                 {formData.tagStyle === 'pill-translucent' ? (
                                                     <span style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(5px)', color: formData.tagColor, padding: '4px 15px', borderRadius: '50px', fontSize: `calc(${formData.tagSize * 2}cqw + 1cqw)`, fontWeight: 'bold', border: '1px solid rgba(255,255,255,0.3)', fontFamily: formData.tagFont }}>{formData.tag}</span>
                                                 ) : formData.tagStyle === 'outline' ? (
@@ -1235,123 +1067,125 @@ const AdminAnnouncements = () => {
                                                     <span style={{ background: formData.tagBgColor, color: formData.tagColor, padding: '4px 15px', borderRadius: '4px', fontSize: `calc(${formData.tagSize * 2}cqw + 1cqw)`, fontWeight: 'bold', fontFamily: formData.tagFont }}>{formData.tag}</span>
                                                 )}
                                             </div>
-                                        </Draggable>
+                                        </motion.div>
 
-                                        {/* TITLES & SPEAKER */}
-                                        <div className="mt-2">
-                                            <Draggable nodeRef={titleRef} bounds="parent" position={formData.titlePos} onStop={(e, d) => set('titlePos', { x: d.x, y: d.y })}>
-                                                <div ref={titleRef} style={{ cursor: 'move', textAlign: 'center' }}>
-                                                    <h2 style={{ color: formData.titleColor, fontFamily: formData.titleFont, fontSize: `calc(${formData.titleSize * 3}cqw + 1cqw)`, fontWeight: '800', textShadow: '0 2px 10px rgba(0,0,0,0.5)', lineHeight: 1.1 }}>{formData.title || 'Título'}</h2>
-                                                </div>
-                                            </Draggable>
+                                        {/* TITLES */}
+                                        <div className="mt-2 text-center w-100">
+                                            <motion.div drag dragMomentum={false}
+                                                style={{ x: formData.titlePos.x, y: formData.titlePos.y, cursor: 'move' }}
+                                                onDragEnd={(e, info) => set('titlePos', { x: formData.titlePos.x + info.offset.x, y: formData.titlePos.y + info.offset.y })}
+                                            >
+                                                <h2 ref={titleRef} style={{ color: formData.titleColor, fontFamily: formData.titleFont, fontSize: `calc(${formData.titleSize * 3}cqw + 1cqw)`, fontWeight: '800', textShadow: '0 2px 10px rgba(0,0,0,0.5)', lineHeight: 1.1, margin: 0 }}>{formData.title || 'Título'}</h2>
+                                            </motion.div>
 
-                                            <Draggable nodeRef={title2Ref} bounds="parent" position={formData.title2Pos} onStop={(e, d) => set('title2Pos', { x: d.x, y: d.y })}>
-                                                <div ref={title2Ref} style={{ cursor: 'move', textAlign: 'center' }}>
-                                                    <h4 style={{ color: formData.title2Color, fontFamily: formData.title2Font, fontSize: `calc(${formData.title2Size * 3}cqw + 1cqw)`, fontWeight: '400', opacity: 0.9 }}>{formData.title2}</h4>
-                                                </div>
-                                            </Draggable>
+                                            <motion.div drag dragMomentum={false}
+                                                style={{ x: formData.title2Pos.x, y: formData.title2Pos.y, cursor: 'move', marginTop: '10px' }}
+                                                onDragEnd={(e, info) => set('title2Pos', { x: formData.title2Pos.x + info.offset.x, y: formData.title2Pos.y + info.offset.y })}
+                                            >
+                                                <h4 ref={title2Ref} style={{ color: formData.title2Color, fontFamily: formData.title2Font, fontSize: `calc(${formData.title2Size * 3}cqw + 1cqw)`, fontWeight: '400', opacity: 0.9, margin: 0 }}>{formData.title2}</h4>
+                                            </motion.div>
 
-                                            <Draggable nodeRef={speakerRef} bounds="parent" position={formData.speakerPos} onStop={(e, d) => set('speakerPos', { x: d.x, y: d.y })}>
-                                                <div ref={speakerRef} style={{ cursor: 'move', textAlign: 'center' }}>
-                                                    <div style={{ color: formData.speakerColor, fontFamily: formData.speakerFont, fontSize: `calc(${formData.speakerSize * 3}cqw + 1.5cqw)` }}>{formData.speaker}</div>
-                                                </div>
-                                            </Draggable>
+                                            <motion.div drag dragMomentum={false}
+                                                style={{ x: formData.speakerPos.x, y: formData.speakerPos.y, cursor: 'move', marginTop: '15px' }}
+                                                onDragEnd={(e, info) => set('speakerPos', { x: formData.speakerPos.x + info.offset.x, y: formData.speakerPos.y + info.offset.y })}
+                                            >
+                                                <div ref={speakerRef} style={{ color: formData.speakerColor, fontFamily: formData.speakerFont, fontSize: `calc(${formData.speakerSize * 3}cqw + 1.5cqw)` }}>{formData.speaker}</div>
+                                            </motion.div>
                                         </div>
 
                                         {/* DESCRIPTION */}
                                         {formData.content && (
-                                            <Draggable nodeRef={contentRef} bounds="parent" position={formData.contentPos} onStop={(e, d) => set('contentPos', { x: d.x, y: d.y })}>
+                                            <motion.div
+                                                drag dragMomentum={false}
+                                                style={{ x: formData.contentPos.x, y: formData.contentPos.y, cursor: 'move', marginTop: '20px', alignSelf: 'center' }}
+                                                onDragEnd={(e, info) => set('contentPos', { x: formData.contentPos.x + info.offset.x, y: formData.contentPos.y + info.offset.y })}
+                                            >
                                                 <div ref={contentRef} style={{
-                                                    cursor: 'move', textAlign: 'center', margin: '15px auto', padding: '12px 20px',
+                                                    textAlign: 'center', padding: '12px 20px',
                                                     background: formData.contentStyle === 'biblical' ? `rgba(255,255,255,${formData.contentBgOpacity})` : 'transparent',
                                                     backdropFilter: formData.contentStyle === 'biblical' ? 'blur(4px)' : 'none',
-                                                    borderRadius: '16px', maxWidth: '90%'
+                                                    borderRadius: '16px', maxWidth: '300px'
                                                 }}>
                                                     <p style={{ color: 'white', fontSize: `calc(${formData.contentSize * 3}cqw + 1cqw)`, margin: 0, lineHeight: 1.4, fontFamily: formData.contentFont }}>{formData.content}</p>
                                                 </div>
-                                            </Draggable>
+                                            </motion.div>
                                         )}
 
                                         {/* INFO PILLS */}
                                         <div className="mt-auto pb-4 d-flex flex-wrap justify-content-center gap-2">
                                             {(formData.date || formData.time) && (
-                                                <Draggable nodeRef={dateRef} bounds="parent" position={formData.datePos} onStop={(e, d) => set('datePos', { x: d.x, y: d.y })}>
-                                                    <div ref={dateRef} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', padding: '5px 15px', borderRadius: '30px', color: 'white', fontSize: `calc(${formData.dateSize * 3}cqw)`, cursor: 'move', fontFamily: formData.dateFont }}>
+                                                <motion.div
+                                                    drag dragMomentum={false}
+                                                    style={{ x: formData.datePos.x, y: formData.datePos.y, cursor: 'move' }}
+                                                    onDragEnd={(e, info) => set('datePos', { x: formData.datePos.x + info.offset.x, y: formData.datePos.y + info.offset.y })}
+                                                >
+                                                    <div ref={dateRef} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', padding: '5px 15px', borderRadius: '30px', color: 'white', fontSize: `calc(${formData.dateSize * 3}cqw)`, whiteSpace: 'nowrap', fontFamily: formData.dateFont }}>
                                                         <i className={`bi ${formData.date ? 'bi-calendar3' : 'bi-clock'} me-2`}></i>
                                                         {[formData.date ? new Date(formData.date + 'T00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' }) : '', formData.time].filter(Boolean).join(' - ')}
                                                     </div>
-                                                </Draggable>
+                                                </motion.div>
                                             )}
-                                            {formData.location && <Draggable nodeRef={locationRef} bounds="parent" position={formData.locationPos} onStop={(e, d) => set('locationPos', { x: d.x, y: d.y })}><div ref={locationRef} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', padding: '5px 15px', borderRadius: '30px', color: 'white', fontSize: `calc(${formData.locationSize * 3}cqw)`, cursor: 'move', fontFamily: formData.tagFont || 'Arial' }}><i className="bi bi-geo-alt me-2"></i>{formData.location}</div></Draggable>}
                                         </div>
-
-                                        {/* RRSS */}
-                                        {formData.showRrss && (
-                                            <Draggable nodeRef={rrssRef} bounds="parent" position={formData.rrssPos} onStop={(e, d) => set('rrssPos', { x: d.x, y: d.y })}>
-                                                <div ref={rrssRef} style={{ cursor: 'move', width: '100%', textAlign: 'center' }}>
-                                                    <img src={assets.rrss} style={{ height: `${formData.rrssSize}px`, opacity: 0.9 }} />
-                                                </div>
-                                            </Draggable>
-                                        )}
                                     </div>
-                                </div>
-                                <div className="mt-3 x-small text-muted">{fmt.W} x {fmt.H} pixels | {fmt.desc}</div>
+                                </motion.div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            )}
 
-            {/* List Table */}
-            {!showForm && (
-                <div className="card border-0 shadow-sm mt-4 rounded-4 overflow-hidden">
-                    <div className="table-responsive">
-                        <table className="table table-hover align-middle mb-0">
-                            <thead className="bg-light"><tr><th className="ps-4">Anuncio</th><th className="text-end pe-4">Acciones</th></tr></thead>
-                            <tbody>
-                                {announcements.map(ann => {
-                                    const imgUrl = ann.image_url ? (ann.image_url.startsWith('http') ? ann.image_url : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${ann.image_url}`) : null;
-                                    return (
-                                        <tr key={ann.id}>
-                                            <td className="ps-4 py-3">
-                                                <div className="d-flex align-items-center gap-3">
-                                                    {imgUrl ? (
-                                                        <img src={imgUrl} alt={ann.title} className="rounded-3 shadow-sm" style={{ width: '80px', height: '80px', objectFit: 'cover' }} />
-                                                    ) : (
-                                                        <div className="bg-light rounded-3 d-flex align-items-center justify-content-center text-muted shadow-sm" style={{ width: '80px', height: '80px' }}>
-                                                            <i className="bi bi-image fs-4"></i>
+                            <div className="mt-4 d-flex gap-2">
+                                {Object.keys(FORMATS).map(k => (
+                                    <button key={k} className={`btn btn-sm rounded-pill px-3 fw-bold ${formData.format === k ? 'btn-dark' : 'btn-outline-dark'}`} onClick={() => set('format', k)}>
+                                        <i className={`bi ${FORMATS[k].icon} me-2`}></i>{FORMATS[k].label}
+                                    </button>
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </main>
+
+                {/* Bottom Announcements List (Drawer-like) */}
+                <AnimatePresence>
+                    {showForm && (
+                        <motion.div
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="announcements-list-drawer bg-white border-top shadow-lg"
+                            style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '40vh', zIndex: 110, overflowY: 'auto' }}
+                        >
+                            <div className="p-3 border-bottom d-flex justify-content-between align-items-center sticky-top bg-white">
+                                <h6 className="fw-bold mb-0">MIS ANUNCIOS</h6>
+                                <button className="btn-close" onClick={() => setShowForm(false)}></button>
+                            </div>
+                            <div className="p-0">
+                                <table className="table table-hover align-middle mb-0">
+                                    <tbody className="x-small">
+                                        {announcements.map(ann => {
+                                            const imgUrl = ann.image_url ? (ann.image_url.startsWith('http') ? ann.image_url : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${ann.image_url}`) : null;
+                                            return (
+                                                <tr key={ann.id}>
+                                                    <td className="ps-4">
+                                                        <div className="d-flex align-items-center gap-3 py-2">
+                                                            <img src={imgUrl || logoOasis} className="rounded-2 shadow-sm" style={{ width: '40px', height: '40px', objectFit: 'cover' }} />
+                                                            <div>
+                                                                <div className="fw-bold text-dark">{ann.title}</div>
+                                                                <div className="text-muted">{ann.tag}</div>
+                                                            </div>
                                                         </div>
-                                                    )}
-                                                    <div>
-                                                        <div className="fw-bold fs-6 mb-1 text-dark">{ann.title}</div>
-                                                        <div className="x-small text-muted mb-2 text-truncate" style={{ maxWidth: '400px' }}>{ann.content || 'Sin descripción'}</div>
-                                                        <div className="d-flex flex-wrap gap-2">
-                                                            <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill px-2 py-1 x-small fw-normal">
-                                                                <i className="bi bi-tag-fill me-1"></i>{ann.tag}
-                                                            </span>
-                                                            {ann.date && (
-                                                                <span className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2 py-1 x-small fw-normal">
-                                                                    <i className="bi bi-calendar3 me-1"></i>{new Date(ann.date + 'T00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="text-end pe-4">
-                                                <div className="btn-group btn-group-sm shadow-sm rounded-pill">
-                                                    <button className="btn btn-light border" onClick={() => handleEdit(ann)} title="Editar"><i className="bi bi-pencil-fill text-primary"></i></button>
-                                                    <button className="btn btn-light border text-danger" onClick={() => handleDelete(ann.id)} title="Eliminar"><i className="bi bi-trash-fill"></i></button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            )}
+                                                    </td>
+                                                    <td className="text-end pe-4">
+                                                        <button className="btn btn-sm btn-light border me-1" onClick={() => handleEdit(ann)}><i className="bi bi-pencil-fill text-primary"></i></button>
+                                                        <button className="btn btn-sm btn-light border text-danger" onClick={() => handleDelete(ann.id)}><i className="bi bi-trash-fill"></i></button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
 
             {/* Library Modal */}
             {showLibrary && (
@@ -1369,56 +1203,54 @@ const AdminAnnouncements = () => {
                     </div>
                 </div>
             )}
-                </>
-            )}
 
             <style>{`
-                .scrollbar-custom::-webkit-scrollbar { width: 6px; }
-                .scrollbar-custom::-webkit-scrollbar-track { background: #f1f1f1; }
-                .scrollbar-custom::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
-                .letter-spacing-1 { letter-spacing: 1px; }
-                .x-small { font-size: 0.7rem; }
-                .cursor-pointer { cursor: pointer; }
-                .hover-scale { transition: transform 0.2s; }
-                .hover-scale:hover { transform: scale(1.05); }
+                    .scrollbar-custom::-webkit-scrollbar { width: 6px; }
+                    .scrollbar-custom::-webkit-scrollbar-track { background: #f1f1f1; }
+                    .scrollbar-custom::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+                    .letter-spacing-1 { letter-spacing: 1px; }
+                    .x-small { font-size: 0.7rem; }
+                    .cursor-pointer { cursor: pointer; }
+                    .hover-scale { transition: transform 0.2s; }
+                    .hover-scale:hover { transform: scale(1.05); }
 
-                /* Touch support for Draggable elements */
-                #preview-container .react-draggable {
-                    touch-action: none !important;
-                    -webkit-user-select: none !important;
-                    user-select: none !important;
-                    -webkit-touch-callout: none !important;
-                }
-                
-                #preview-container .react-draggable * {
-                    touch-action: none !important;
-                    -webkit-user-select: none !important;
-                    user-select: none !important;
-                }
-
-                #preview-container:fullscreen {
-                    width: 100vw !important;
-                    height: 100vh !important;
-                    max-width: none !important;
-                    border-radius: 0 !important;
-                    cursor: default !important;
-                    background: black !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                }
-                #preview-container:fullscreen .react-draggable {
-                    cursor: default !important;
-                }
-                
-                /* Mobile responsive adjustments */
-                @media (max-width: 991px) {
-                    #preview-container {
-                        width: 100% !important;
-                        max-width: 400px !important;
+                    /* Touch support for Draggable elements */
+                    #preview-container .react-draggable {
+                        touch-action: none !important;
+                        -webkit-user-select: none !important;
+                        user-select: none !important;
+                        -webkit-touch-callout: none !important;
                     }
-                }
-            `}</style>
+                    
+                    #preview-container .react-draggable * {
+                        touch-action: none !important;
+                        -webkit-user-select: none !important;
+                        user-select: none !important;
+                    }
+
+                    #preview-container:fullscreen {
+                        width: 100vw !important;
+                        height: 100vh !important;
+                        max-width: none !important;
+                        border-radius: 0 !important;
+                        cursor: default !important;
+                        background: black !important;
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                    }
+                    #preview-container:fullscreen .react-draggable {
+                        cursor: default !important;
+                    }
+                    
+                    /* Mobile responsive adjustments */
+                    @media (max-width: 991px) {
+                        #preview-container {
+                            width: 100% !important;
+                            max-width: 400px !important;
+                        }
+                    }
+                `}</style>
         </div>
     );
 };
