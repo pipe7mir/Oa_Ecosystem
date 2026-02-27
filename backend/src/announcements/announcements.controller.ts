@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, ParseIntPipe, Res } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/jwt-auth.guard';
 import { AnnouncementsService } from './announcements.service';
 
@@ -13,19 +13,13 @@ export class AnnouncementsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async createAnnouncement(@Body() data: any, @Res() res: any) {
+  async createAnnouncement(@Body() data: any) {
     try {
-      const result = await this.announcementsService.create(data);
-      return res.status(201).json(result);
+      console.log('📝 Creating announcement with data:', JSON.stringify(data));
+      return await this.announcementsService.create(data);
     } catch (error: any) {
-      console.error('❌ Error creating announcement:', error);
-      return res.status(error.status || 400).json({
-        success: false,
-        message: 'Error al crear anuncio',
-        error: error.message,
-        stack: error.stack,
-        receivedData: data
-      });
+      console.error('❌ Error in createAnnouncement controller:', error);
+      throw error; // Let NestJS Global Exception Filter handle it
     }
   }
 
@@ -34,20 +28,14 @@ export class AnnouncementsController {
   @UseGuards(JwtAuthGuard)
   async updateAnnouncement(
     @Param('id', ParseIntPipe) id: number,
-    @Body() data: any,
-    @Res() res: any
+    @Body() data: any
   ) {
     try {
-      const result = await this.announcementsService.update(id, data);
-      return res.status(200).json(result);
+      console.log(`📝 Updating announcement ${id} with data:`, JSON.stringify(data));
+      return await this.announcementsService.update(id, data);
     } catch (error: any) {
-      console.error('❌ Error updating announcement:', error);
-      return res.status(error.status || 400).json({
-        success: false,
-        message: 'Error al actualizar anuncio',
-        error: error.message,
-        receivedData: data
-      });
+      console.error('❌ Error in updateAnnouncement controller:', error);
+      throw error;
     }
   }
 
