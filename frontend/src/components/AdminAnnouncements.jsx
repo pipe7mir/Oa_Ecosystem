@@ -737,8 +737,8 @@ const AdminAnnouncements = () => {
         try {
             const canvas = await composeCanvas();
             // ── Smart Compression (TinyPNG-style) ──────────────────────────
-            // Step 1: Scale canvas down to max 600px wide to reduce resolution
-            const MAX_WIDTH = 600;
+            // Step 1: Scale canvas down to max 400px wide to reduce resolution (reduced for Railway limits)
+            const MAX_WIDTH = 400;
             const scale = Math.min(1, MAX_WIDTH / canvas.width);
             const compCanvas = document.createElement('canvas');
             compCanvas.width = Math.round(canvas.width * scale);
@@ -746,15 +746,21 @@ const AdminAnnouncements = () => {
             const compCtx = compCanvas.getContext('2d');
             compCtx.drawImage(canvas, 0, 0, compCanvas.width, compCanvas.height);
 
-            // Step 2: Iteratively reduce JPEG quality until file fits under 400KB
-            const MAX_B64_KB = 400;
-            let quality = 0.82;
-            let imageUrl = compCanvas.toDataURL('image/jpeg', quality);
-            while (imageUrl.length > MAX_B64_KB * 1024 * 1.37 && quality > 0.3) {
+            // Step 2: Iteratively reduce JPEG quality until file fits under 100KB (reduced for Railway limits)
+            const MAX_B64_KB = 100;
+            let quality = 0.7;
+            let imageBase64 = compCanvas.toDataURL('image/jpeg', quality);
+            while (imageBase64.length > MAX_B64_KB * 1024 * 1.37 && quality > 0.3) {
                 quality = Math.max(0.3, quality - 0.08);
-                imageUrl = compCanvas.toDataURL('image/jpeg', quality);
+                imageBase64 = compCanvas.toDataURL('image/jpeg', quality);
             }
             // ── End compression ────────────────────────────────────────────
+
+            // Step 3: Upload image separately to avoid large body in announcement POST
+            console.log('📸 Uploading image...', (imageBase64.length / 1024).toFixed(1) + 'KB');
+            const uploadRes = await apiClient.post('/announcements/upload-image', { imageBase64 });
+            const imageUrl = uploadRes.data.imageUrl;
+            console.log('✅ Image uploaded:', imageUrl);
 
             const announcementData = {
                 title: formData.title,
@@ -763,7 +769,7 @@ const AdminAnnouncements = () => {
                 date: formData.date || null,
                 time: formData.time || null,
                 location: formData.location || null,
-                imageUrl: imageUrl
+                imageUrl: imageUrl  // Now just the filename, not base64
             };
 
             if (formData.id) {
@@ -774,6 +780,7 @@ const AdminAnnouncements = () => {
 
             fetchAnnouncements(); setShowForm(false); resetForm();
         } catch (err) {
+            console.error('❌ Save error:', err);
             const msg = err.response?.data?.error || err.response?.data?.message || err.message;
             alert('Error al guardar: ' + msg);
         }
