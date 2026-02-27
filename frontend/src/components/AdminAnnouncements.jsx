@@ -763,7 +763,10 @@ const AdminAnnouncements = () => {
             }
 
             fetchAnnouncements(); setShowForm(false); resetForm();
-        } catch (err) { alert('Error: ' + err.message); }
+        } catch (err) {
+            const msg = err.response?.data?.error || err.response?.data?.message || err.message;
+            alert('Error al guardar: ' + msg);
+        }
         finally { setIsSubmitting(false); }
     };
 

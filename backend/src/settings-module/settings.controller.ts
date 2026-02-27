@@ -73,7 +73,7 @@ export class SettingsController {
         filename: file.filename,
         url: `/uploads/${file.filename}`
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Upload error:', error);
       return { success: false, message: 'Upload failed', error: error.message };
     }
