@@ -1,9 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import * as fs from 'fs';
+import * as path from 'path';
 
 async function bootstrap() {
+  // Ensure uploads directory exists
+  const uploadsDir = path.join(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log(`📁 Created uploads directory at: ${uploadsDir}`);
+  }
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-  
+
   console.log('🚀 Starting OASIS API...');
   console.log(`📡 Port: ${port}`);
   console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);

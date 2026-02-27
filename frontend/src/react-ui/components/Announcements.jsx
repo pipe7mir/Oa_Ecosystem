@@ -24,7 +24,7 @@ const FullscreenModal = ({ announcement, onClose, onNext, onPrev, hasNext, hasPr
     const [visible, setVisible] = useState(false);
     const [imgVisible, setImgVisible] = useState(false);
     const stageRef = useRef(null);
-    const imageUrl = buildUrl(announcement?.image_url);
+    const imageUrl = buildUrl(announcement?.imageUrl || announcement?.image_url);
 
     // Bloqueo de scroll y animación de entrada
     useEffect(() => {
@@ -254,7 +254,7 @@ const Announcements = () => {
                         id: 1, title: 'Lanzamiento Nueva Web', tag: 'Tecnología',
                         date: '2023-11-20',
                         content: 'Estamos muy emocionados de presentar nuestra nueva plataforma digital.',
-                        image_url: null
+                        imageUrl: null
                     }]);
                 }
             } catch (error) {
@@ -336,7 +336,7 @@ const Announcements = () => {
                 }}
             >
                 {announcements.map((announcement) => {
-                    const thumbUrl = buildUrl(announcement.image_url);
+                    const thumbUrl = buildUrl(announcement.imageUrl || announcement.image_url);
                     return (
                         <div key={announcement.id} className="announcement-card-wrapper" style={{ minWidth: '280px', maxWidth: '320px', scrollSnapAlign: 'start', flexShrink: 0 }}>
                             <div
