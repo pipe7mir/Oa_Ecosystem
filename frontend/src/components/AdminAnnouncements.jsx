@@ -249,7 +249,7 @@ const AdminAnnouncements = () => {
     const [showTemplatePicker, setShowTemplatePicker] = useState(false);
 
     const DEFAULTS = {
-        id: '', title: '', title2: '', speaker: '', content: '', tag: 'GALA', date: '', time: '',
+        id: '', title: '', title2: '', title3: '', speaker: '', content: '', tag: 'GALA', date: '', time: '',
         format: 'instagram',
         bgMode: 'gradient',
         bgImage: null,
@@ -268,6 +268,7 @@ const AdminAnnouncements = () => {
         rrssSize: 28,
         titlePos: { x: 0, y: 108 },
         title2Pos: { x: 0, y: 104 },
+        title3Pos: { x: 0, y: 100 },
         speakerPos: { x: 0, y: 100 },
         tagPos: { x: 0, y: 51 },
         datePos: { x: 0, y: 0 },
@@ -279,6 +280,7 @@ const AdminAnnouncements = () => {
         locationSize: 1,
         titleSize: 2,
         title2Size: 1.5,
+        title3Size: 1.2,
         speakerSize: 1.7,
         contentSize: 1.8,
         tagSize: 0.5,
@@ -290,18 +292,26 @@ const AdminAnnouncements = () => {
         contentBgOpacity: 0.15,
         titleFont: 'MoonRising',
         title2Font: 'ModernAge',
+        title3Font: 'AdventSans',
         speakerFont: 'above-the-beyond-script',
         contentFont: 'ModernAge',
         tagFont: 'AdventSans',
         dateFont: 'AdventSans',
         timeFont: 'AdventSans',
-        // Colors
+        // Colors with opacity
         titleColor: '#ffffff',
         title2Color: '#ffffff',
+        title3Color: '#ffffff',
         speakerColor: '#ffffff',
         tagColor: '#ffffff',
         tagBgColor: '#5b2ea6',
         tagBorderColor: '#ffffff',
+        // Opacity per element (0-100)
+        titleOpacity: 100,
+        title2Opacity: 100,
+        title3Opacity: 100,
+        speakerOpacity: 100,
+        tagOpacity: 100,
         showAdvanced: false,
     };
 
@@ -320,6 +330,7 @@ const AdminAnnouncements = () => {
     // Refs for draggables
     const titleRef = useRef(null);
     const title2Ref = useRef(null);
+    const title3Ref = useRef(null);
     const speakerRef = useRef(null);
     const contentRef = useRef(null);
     const tagRef = useRef(null);
@@ -578,11 +589,13 @@ const AdminAnnouncements = () => {
             if (pos) {
                 const fs = Math.round(getFs(titleRef));
                 ctx.font = `${fs}px "${formData.titleFont}", serif`;
+                ctx.globalAlpha = (formData.titleOpacity || 100) / 100;
                 ctx.fillStyle = formData.titleColor; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
                 ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 15;
                 const lines = wrap(formData.title, W * 0.9);
                 lines.forEach((l, i) => ctx.fillText(l, pos.x + pos.w / 2, pos.y + i * fs * 1.15));
                 ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
             }
         }
 
@@ -592,9 +605,25 @@ const AdminAnnouncements = () => {
             if (pos) {
                 const fs = Math.round(getFs(title2Ref));
                 ctx.font = `${fs}px "${formData.title2Font}", Arial`;
+                ctx.globalAlpha = (formData.title2Opacity || 100) / 100;
                 ctx.fillStyle = formData.title2Color; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
                 const lines = wrap(formData.title2, W * 0.9);
                 lines.forEach((l, i) => ctx.fillText(l, pos.x + pos.w / 2, pos.y + i * fs * 1.15));
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        // Title 3
+        if (formData.title3) {
+            const pos = getRelPos(title3Ref);
+            if (pos) {
+                const fs = Math.round(getFs(title3Ref));
+                ctx.font = `${fs}px "${formData.title3Font}", Arial`;
+                ctx.globalAlpha = (formData.title3Opacity || 100) / 100;
+                ctx.fillStyle = formData.title3Color; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+                const lines = wrap(formData.title3, W * 0.9);
+                lines.forEach((l, i) => ctx.fillText(l, pos.x + pos.w / 2, pos.y + i * fs * 1.15));
+                ctx.globalAlpha = 1;
             }
         }
 
@@ -604,8 +633,10 @@ const AdminAnnouncements = () => {
             if (pos) {
                 const fs = Math.round(getFs(speakerRef));
                 ctx.font = `${fs}px "${formData.speakerFont}", cursive`;
+                ctx.globalAlpha = (formData.speakerOpacity || 100) / 100;
                 ctx.fillStyle = formData.speakerColor; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
                 ctx.fillText(formData.speaker, pos.x + pos.w / 2, pos.y);
+                ctx.globalAlpha = 1;
             }
         }
 
@@ -956,48 +987,118 @@ const AdminAnnouncements = () => {
                         {/* ══════════ TEXTO: Fuentes y colores ══════════ */}
                         {activeSidebar === 'text' && (
                             <div className="text-panel">
-                                {/* Agregar textos */}
-                                <div className="d-flex gap-2 mb-3">
-                                    <button className="btn btn-light flex-fill py-2 rounded-3 border" onClick={() => set('title', formData.title || 'Título')}>
-                                        <i className="bi bi-type-h1 d-block fs-5"></i>
-                                        <span className="x-small">Título</span>
+                                {/* Agregar textos - Solo iconos */}
+                                <div className="d-flex gap-1 mb-3">
+                                    <button className="btn btn-light flex-fill p-2 rounded-2 border" onClick={() => set('title', formData.title || 'Título')} title="Título H1">
+                                        <i className="bi bi-type-h1 fs-5"></i>
                                     </button>
-                                    <button className="btn btn-light flex-fill py-2 rounded-3 border" onClick={() => set('title2', formData.title2 || 'Subtítulo')}>
-                                        <i className="bi bi-type-h2 d-block fs-5"></i>
-                                        <span className="x-small">Sub</span>
+                                    <button className="btn btn-light flex-fill p-2 rounded-2 border" onClick={() => set('title2', formData.title2 || 'Subtítulo')} title="Subtítulo H2">
+                                        <i className="bi bi-type-h2 fs-5"></i>
                                     </button>
-                                    <button className="btn btn-light flex-fill py-2 rounded-3 border" onClick={() => set('speaker', formData.speaker || 'Expositor')}>
-                                        <i className="bi bi-person d-block fs-5"></i>
-                                        <span className="x-small">Orador</span>
+                                    <button className="btn btn-light flex-fill p-2 rounded-2 border" onClick={() => set('title3', formData.title3 || 'Línea 3')} title="Línea Extra H3">
+                                        <i className="bi bi-type-h3 fs-5"></i>
+                                    </button>
+                                    <button className="btn btn-light flex-fill p-2 rounded-2 border" onClick={() => set('speaker', formData.speaker || 'Orador')} title="Orador">
+                                        <i className="bi bi-person fs-5"></i>
+                                    </button>
+                                    <button className="btn btn-light flex-fill p-2 rounded-2 border" onClick={() => set('tag', formData.tag || 'TAG')} title="Etiqueta">
+                                        <i className="bi bi-tag fs-5"></i>
                                     </button>
                                 </div>
 
-                                {/* Tipografías */}
-                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Tipografía</label>
+                                {/* Tipografías compactas */}
                                 <div className="mb-3">
-                                    {FONTS.map(f => (
-                                        <button key={f.value} className="btn btn-outline-dark btn-sm w-100 mb-1 text-start d-flex justify-content-between align-items-center"
-                                            onClick={() => set(selectedElementId ? `${selectedElementId}Font` : 'titleFont', f.value)} style={{ fontFamily: f.value, fontSize: '0.75rem' }}>
-                                            {f.label}
-                                            {formData[selectedElementId ? `${selectedElementId}Font` : 'titleFont'] === f.value && <i className="bi bi-check2"></i>}
-                                        </button>
-                                    ))}
+                                    <div className="d-flex align-items-center gap-1 mb-2">
+                                        <i className="bi bi-fonts text-muted"></i>
+                                        <select className="form-select form-select-sm border-0 bg-light flex-grow-1" style={{ fontSize: '0.7rem' }}
+                                            value={formData[selectedElementId ? `${selectedElementId}Font` : 'titleFont'] || 'MoonRising'}
+                                            onChange={e => set(selectedElementId ? `${selectedElementId}Font` : 'titleFont', e.target.value)}>
+                                            {FONTS.map(f => <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.label}</option>)}
+                                        </select>
+                                    </div>
                                 </div>
 
-                                {/* Colores rápidos */}
-                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Colores</label>
-                                <div className="list-group list-group-flush border rounded-3 overflow-hidden">
-                                    {[
-                                        { key: 'title', label: 'Título', icon: 'bi-type-h1' },
-                                        { key: 'title2', label: 'Subtítulo', icon: 'bi-type-h2' },
-                                        { key: 'speaker', label: 'Orador', icon: 'bi-person' },
-                                        { key: 'tag', label: 'Etiqueta', icon: 'bi-tag' },
-                                    ].map(({ key, label, icon }) => (
-                                        <div key={key} className="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
-                                            <span className="x-small fw-semibold"><i className={`bi ${icon} me-2`}></i>{label}</span>
-                                            <input type="color" className="form-control form-control-color border-0 p-0" style={{ height: '24px', width: '36px', cursor: 'pointer' }} value={formData[`${key}Color`] || '#ffffff'} onChange={e => set(`${key}Color`, e.target.value)} />
+                                {/* Panel de elemento seleccionado */}
+                                {selectedElementId && (
+                                    <div className="mb-3 p-2 bg-primary-subtle rounded-3 border border-primary">
+                                        <div className="d-flex align-items-center justify-content-between mb-2">
+                                            <span className="x-small fw-bold text-primary text-uppercase">{selectedElementId}</span>
+                                            <button className="btn btn-sm p-0 text-muted" onClick={() => setSelectedElementId(null)}><i className="bi bi-x"></i></button>
                                         </div>
-                                    ))}
+                                        <input type="text" className="form-control form-control-sm mb-2" style={{ fontSize: '0.75rem' }}
+                                            value={formData[selectedElementId] || ''} onChange={e => set(selectedElementId, e.target.value)} placeholder="Texto..." />
+                                    </div>
+                                )}
+
+                                {/* Tamaños y Opacidad - Estilo Illustrator */}
+                                <div className="mb-3">
+                                    <div className="d-flex align-items-center gap-1 mb-1">
+                                        <i className="bi bi-aspect-ratio text-muted" style={{ fontSize: '0.7rem' }}></i>
+                                        <span className="x-small text-muted fw-bold">TAMAÑO / OPACIDAD</span>
+                                    </div>
+                                    <div className="bg-light rounded-2 p-2" style={{ fontSize: '0.65rem' }}>
+                                        {[
+                                            { key: 'title', icon: 'H1' },
+                                            { key: 'title2', icon: 'H2' },
+                                            { key: 'title3', icon: 'H3' },
+                                            { key: 'speaker', icon: '👤' },
+                                            { key: 'tag', icon: '🏷' },
+                                        ].map(({ key, icon }) => (
+                                            <div key={key} className="d-flex align-items-center gap-1 mb-1">
+                                                <span className="text-muted" style={{ width: '22px', textAlign: 'center' }}>{icon}</span>
+                                                <input type="number" className="form-control form-control-sm border-0 bg-white text-center p-0" 
+                                                    style={{ width: '44px', height: '22px', fontSize: '0.65rem' }}
+                                                    value={Math.round((formData[`${key}Size`] || 1) * 10) / 10} 
+                                                    onChange={e => set(`${key}Size`, parseFloat(e.target.value) || 1)} 
+                                                    step="0.1" min="0.1" max="10" title="Tamaño" />
+                                                <input type="range" className="form-range flex-grow-1" style={{ height: '12px' }}
+                                                    min="0" max="100" value={formData[`${key}Opacity`] || 100}
+                                                    onChange={e => set(`${key}Opacity`, parseInt(e.target.value))} title="Opacidad" />
+                                                <span className="text-muted" style={{ width: '28px', textAlign: 'right' }}>{formData[`${key}Opacity`] || 100}%</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Color Picker estilo Illustrator */}
+                                <div className="color-picker-pro">
+                                    <div className="d-flex align-items-center gap-1 mb-1">
+                                        <i className="bi bi-palette text-muted" style={{ fontSize: '0.7rem' }}></i>
+                                        <span className="x-small text-muted fw-bold">COLORES</span>
+                                    </div>
+                                    <div className="bg-light rounded-2 p-2">
+                                        {/* Presets rápidos */}
+                                        <div className="d-flex gap-1 mb-2 flex-wrap">
+                                            {['#ffffff', '#000000', '#5b2ea6', '#ff6b35', '#f7c59f', '#2ec4b6', '#e71d36', '#011627'].map(c => (
+                                                <button key={c} className="btn p-0 border rounded-1" style={{ width: '20px', height: '20px', background: c }}
+                                                    onClick={() => selectedElementId && set(`${selectedElementId}Color`, c)} title={c}></button>
+                                            ))}
+                                        </div>
+                                        {/* Colores por elemento */}
+                                        <div style={{ fontSize: '0.65rem' }}>
+                                            {[
+                                                { key: 'title', icon: 'H1' },
+                                                { key: 'title2', icon: 'H2' },
+                                                { key: 'title3', icon: 'H3' },
+                                                { key: 'speaker', icon: '👤' },
+                                                { key: 'tag', icon: '🏷' },
+                                                { key: 'tagBg', icon: '▣', label: 'Fondo Tag' },
+                                            ].map(({ key, icon }) => (
+                                                <div key={key} className="d-flex align-items-center gap-1 mb-1">
+                                                    <span className="text-muted" style={{ width: '22px', textAlign: 'center' }}>{icon}</span>
+                                                    <input type="color" className="form-control form-control-color border-0 p-0 rounded-1" 
+                                                        style={{ width: '28px', height: '20px', cursor: 'pointer' }}
+                                                        value={formData[`${key}Color`] || '#ffffff'} 
+                                                        onChange={e => set(`${key}Color`, e.target.value)} />
+                                                    <input type="text" className="form-control form-control-sm border-0 bg-white p-0 text-uppercase" 
+                                                        style={{ fontSize: '0.6rem', height: '20px', flex: 1 }}
+                                                        value={(formData[`${key}Color`] || '#ffffff').replace('#', '')}
+                                                        onChange={e => set(`${key}Color`, `#${e.target.value.replace('#', '')}`)} 
+                                                        maxLength={6} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -1255,7 +1356,7 @@ const AdminAnnouncements = () => {
                                             }}
                                             onDragEnd={(e, info) => set('tagPos', { x: formData.tagPos.x + info.offset.x, y: formData.tagPos.y + info.offset.y })}
                                         >
-                                            <div ref={tagRef}>
+                                            <div ref={tagRef} style={{ opacity: formData.tagOpacity / 100 }}>
                                                 {formData.tagStyle === 'pill-translucent' ? (
                                                     <span style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(5px)', color: formData.tagColor, padding: '4px 15px', borderRadius: '50px', fontSize: `calc(${formData.tagSize * 2}cqw + 1cqw)`, fontWeight: 'bold', border: '1px solid rgba(255,255,255,0.3)', fontFamily: formData.tagFont }}>{formData.tag}</span>
                                                 ) : formData.tagStyle === 'outline' ? (
@@ -1281,7 +1382,7 @@ const AdminAnnouncements = () => {
                                                 }}
                                                 onDragEnd={(e, info) => set('titlePos', { x: formData.titlePos.x + info.offset.x, y: formData.titlePos.y + info.offset.y })}
                                             >
-                                                <h2 ref={titleRef} style={{ color: formData.titleColor, fontFamily: formData.titleFont, fontSize: `calc(${formData.titleSize * 3}cqw + 1cqw)`, fontWeight: '800', textShadow: '0 2px 10px rgba(0,0,0,0.5)', lineHeight: 1.1, margin: 0 }}>{formData.title || 'Título'}</h2>
+                                                <h2 ref={titleRef} style={{ color: formData.titleColor, fontFamily: formData.titleFont, fontSize: `calc(${formData.titleSize * 3}cqw + 1cqw)`, fontWeight: '800', textShadow: '0 2px 10px rgba(0,0,0,0.5)', lineHeight: 1.1, margin: 0, opacity: formData.titleOpacity / 100 }}>{formData.title || 'Título'}</h2>
                                             </motion.div>
 
                                             <motion.div drag dragMomentum={false}
@@ -1295,8 +1396,25 @@ const AdminAnnouncements = () => {
                                                 }}
                                                 onDragEnd={(e, info) => set('title2Pos', { x: formData.title2Pos.x + info.offset.x, y: formData.title2Pos.y + info.offset.y })}
                                             >
-                                                <h4 ref={title2Ref} style={{ color: formData.title2Color, fontFamily: formData.title2Font, fontSize: `calc(${formData.title2Size * 3}cqw + 1cqw)`, fontWeight: '400', opacity: 0.9, margin: 0 }}>{formData.title2}</h4>
+                                                <h4 ref={title2Ref} style={{ color: formData.title2Color, fontFamily: formData.title2Font, fontSize: `calc(${formData.title2Size * 3}cqw + 1cqw)`, fontWeight: '400', opacity: formData.title2Opacity / 100, margin: 0 }}>{formData.title2}</h4>
                                             </motion.div>
+
+                                            {/* TITLE3 - Tercer subtítulo */}
+                                            {formData.title3 && (
+                                                <motion.div drag dragMomentum={false}
+                                                    onMouseDown={() => setSelectedElementId('title3')}
+                                                    onTouchStart={() => setSelectedElementId('title3')}
+                                                    style={{
+                                                        x: formData.title3Pos.x, y: formData.title3Pos.y, cursor: 'move', marginTop: '8px',
+                                                        outline: selectedElementId === 'title3' ? '2px dashed #00d2f3' : 'none',
+                                                        outlineOffset: '4px',
+                                                        borderRadius: '4px'
+                                                    }}
+                                                    onDragEnd={(e, info) => set('title3Pos', { x: formData.title3Pos.x + info.offset.x, y: formData.title3Pos.y + info.offset.y })}
+                                                >
+                                                    <h5 ref={title3Ref} style={{ color: formData.title3Color, fontFamily: formData.title3Font, fontSize: `calc(${formData.title3Size * 3}cqw + 0.8cqw)`, fontWeight: '400', opacity: formData.title3Opacity / 100, margin: 0 }}>{formData.title3}</h5>
+                                                </motion.div>
+                                            )}
 
                                             <motion.div drag dragMomentum={false}
                                                 onMouseDown={() => setSelectedElementId('speaker')}
@@ -1309,7 +1427,7 @@ const AdminAnnouncements = () => {
                                                 }}
                                                 onDragEnd={(e, info) => set('speakerPos', { x: formData.speakerPos.x + info.offset.x, y: formData.speakerPos.y + info.offset.y })}
                                             >
-                                                <div ref={speakerRef} style={{ color: formData.speakerColor, fontFamily: formData.speakerFont, fontSize: `calc(${formData.speakerSize * 3}cqw + 1.5cqw)` }}>{formData.speaker}</div>
+                                                <div ref={speakerRef} style={{ color: formData.speakerColor, fontFamily: formData.speakerFont, fontSize: `calc(${formData.speakerSize * 3}cqw + 1.5cqw)`, opacity: formData.speakerOpacity / 100 }}>{formData.speaker}</div>
                                             </motion.div>
                                         </div>
 
