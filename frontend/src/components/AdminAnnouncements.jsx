@@ -753,7 +753,7 @@ const AdminAnnouncements = () => {
                 content: formData.content,
                 tag: formData.tag,
                 date: formData.date,
-                image_url: imageUrl
+                imageUrl: imageUrl
             };
 
             if (formData.id) {
@@ -769,7 +769,7 @@ const AdminAnnouncements = () => {
 
     const handleEdit = (ann) => {
         const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-        const imgUrl = ann.image_url ? (ann.image_url.startsWith('http') ? ann.image_url : `${base}${ann.image_url}`) : null;
+        const imgUrl = ann.imageUrl ? (ann.imageUrl.startsWith('http') ? ann.imageUrl : `${base}${ann.imageUrl}`) : null;
         setFormData({ ...DEFAULTS, id: ann.id, title: ann.title, content: ann.content, tag: ann.tag, date: ann.date?.split('T')[0], bgMode: imgUrl ? 'image' : 'gradient', bgImage: imgUrl });
         setShowForm(true);
     };

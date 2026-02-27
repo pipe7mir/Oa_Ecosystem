@@ -2,6 +2,8 @@ import { Body, Controller, Get, Post, UploadedFile, UseGuards, UseInterceptors }
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { Setting } from './setting.entity';
 import { JwtAuthGuard } from '../common/jwt-auth.guard';
 import { EmailService } from '../email/email.service';
@@ -49,10 +51,23 @@ export class SettingsController {
 
   @Post('upload')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: './uploads',
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+      },
+    }),
+  }))
   async upload(@UploadedFile() file: Express.Multer.File) {
-    // TODO: integrate with actual file storage (local or cloud)
-    return { filename: file.originalname };
+    if (!file) {
+      return { success: false, message: 'No file uploaded' };
+    }
+    return {
+      filename: file.filename,
+      url: `/uploads/${file.filename}`
+    };
   }
 
   @Post('settings/test-email')
