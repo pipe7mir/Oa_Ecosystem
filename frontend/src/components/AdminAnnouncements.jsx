@@ -247,6 +247,7 @@ const AdminAnnouncements = () => {
     const [selectedElementId, setSelectedElementId] = useState(null);
     const [assets, setAssets] = useState({ oasis: null, iasd: null, rrss: null });
     const [showLibrary, setShowLibrary] = useState(false);
+    const [showTemplatePicker, setShowTemplatePicker] = useState(false);
 
     const DEFAULTS = {
         id: '', title: '', title2: '', speaker: '', content: '', tag: 'GALA', date: '', time: '',
@@ -752,7 +753,9 @@ const AdminAnnouncements = () => {
                 title: formData.title,
                 content: formData.content,
                 tag: formData.tag,
-                date: formData.date,
+                date: formData.date || null,
+                time: formData.time || null,
+                location: formData.location || null,
                 imageUrl: imageUrl
             };
 
@@ -1015,6 +1018,40 @@ const AdminAnnouncements = () => {
                             </div>
                         )}
                     </div>
+
+                    {/* ── Fecha / Hora / Lugar ─────────────── */}
+                    <div className="px-3 pb-3 border-top pt-3">
+                        <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Detalles del Evento</label>
+                        <div className="mb-2">
+                            <label className="x-small text-muted mb-1 d-block">Fecha</label>
+                            <input
+                                type="date"
+                                className="form-control form-control-sm"
+                                value={formData.date || ''}
+                                onChange={e => set('date', e.target.value)}
+                            />
+                        </div>
+                        <div className="mb-2">
+                            <label className="x-small text-muted mb-1 d-block">Hora</label>
+                            <input
+                                type="time"
+                                className="form-control form-control-sm"
+                                value={formData.time || ''}
+                                onChange={e => set('time', e.target.value)}
+                            />
+                        </div>
+                        <div className="mb-2">
+                            <label className="x-small text-muted mb-1 d-block">Lugar</label>
+                            <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                placeholder="Ej: Templo Principal"
+                                value={formData.location || ''}
+                                onChange={e => set('location', e.target.value)}
+                            />
+                        </div>
+                    </div>
+
                     {/* Bottom Publish Button in Panel (Optional/Secondary) */}
                     <div className="p-3 border-top mt-auto">
                         <button className="btn btn-dark w-100 rounded-pill x-small fw-bold py-2 shadow-sm" onClick={handleSubmit} disabled={isSubmitting}>

@@ -22,3 +22,7 @@ backend-nest/database.sqlite
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Uploads
+uploads/
+backend/uploads/
