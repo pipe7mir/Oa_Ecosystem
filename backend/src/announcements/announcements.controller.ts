@@ -32,13 +32,24 @@ export class AnnouncementsController {
   // Upload image endpoint - uses Cloudinary if configured, else saves locally
   @Post('upload-image')
   @UseGuards(JwtAuthGuard)
-  async uploadImage(@Body() body: { imageBase64: string }) {
+  async uploadImage(@Body() body: any) {
     try {
-      if (!body.imageBase64) {
-        throw new HttpException('No image provided', HttpStatus.BAD_REQUEST);
+      console.log('📥 Upload request received, body keys:', Object.keys(body || {}));
+      console.log('📥 Body type:', typeof body);
+      
+      // Handle both { imageBase64: "..." } and raw string
+      let imageBase64 = body?.imageBase64 || body;
+      
+      if (!imageBase64 || typeof imageBase64 !== 'string') {
+        console.error('❌ Invalid image data:', { 
+          hasBody: !!body, 
+          bodyType: typeof body,
+          hasImageBase64: !!body?.imageBase64 
+        });
+        throw new HttpException('No valid image provided', HttpStatus.BAD_REQUEST);
       }
-
-      const imageBase64 = body.imageBase64;
+      
+      console.log('📸 Image size:', (imageBase64.length / 1024).toFixed(1) + 'KB');
       
       // Try Cloudinary first if configured
       if (process.env.CLOUDINARY_URL) {

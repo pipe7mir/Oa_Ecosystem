@@ -1,7 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as express from 'express';
 
 async function bootstrap() {
   // Ensure uploads directory exists
@@ -17,29 +19,27 @@ async function bootstrap() {
   console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 DATABASE_URL: ${process.env.DATABASE_URL ? 'configured' : 'NOT SET!'}`);
 
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn', 'log'],
-    bodyParser: false, // Disable default body parser to configure custom limits
   });
 
-  // Configure body parser with 10MB limit BEFORE any routes (for base64 images)
-  const express = require('express');
+  // Configure body parser with 10MB limit for base64 images
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
   // Health check endpoints BEFORE global prefix
   const httpAdapter = app.getHttpAdapter();
-  httpAdapter.get('/', (req, res) => {
+  httpAdapter.get('/', (req: any, res: any) => {
     res.json({ status: 'ok', message: 'OASIS API is running' });
   });
-  httpAdapter.get('/health', (req, res) => {
+  httpAdapter.get('/health', (req: any, res: any) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
   app.setGlobalPrefix('api');
 
   // Add /api health check AFTER global prefix is set
-  httpAdapter.get('/api', (req, res) => {
+  httpAdapter.get('/api', (req: any, res: any) => {
     res.json({ status: 'ok', message: 'OASIS API is running' });
   });
 
