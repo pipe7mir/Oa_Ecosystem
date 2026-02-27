@@ -7,7 +7,8 @@ import GlassCard from './GlassCard';
 /* ─── Helper: Build full image URL safely ─────────────────────── */
 const buildUrl = (image_url) => {
     if (!image_url) return null;
-    if (image_url.startsWith('http')) return image_url;
+    if (image_url.startsWith('data:')) return image_url;   // base64 data URL — use as-is
+    if (image_url.startsWith('http')) return image_url;    // absolute URL — use as-is
     const base = import.meta.env.VITE_API_URL
         ? import.meta.env.VITE_API_URL.replace('/api', '')
         : 'http://localhost:8000';

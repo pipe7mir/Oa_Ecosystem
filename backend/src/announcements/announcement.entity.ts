@@ -26,7 +26,7 @@ export class Announcement {
     @Column({ type: 'varchar', length: 10, nullable: true })
     time: string;
 
-    @Column({ type: 'varchar', name: 'image_url', length: 255, nullable: true })
+    @Column({ type: 'text', name: 'image_url', nullable: true })
     imageUrl: string;
 
     @Column({ type: 'varchar', length: 255, nullable: true })

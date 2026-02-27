@@ -739,15 +739,13 @@ const AdminAnnouncements = () => {
             const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.93));
             const fileName = `ann-${Date.now()}.jpg`;
 
-            const uploadData = new FormData();
-            uploadData.append('file', blob, fileName);
-
-            // Upload image to NestJS Backend
-            const uploadRes = await apiClient.post('/upload', uploadData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+            // Convert canvas blob to base64 data URL — stored directly in DB
+            // (avoids ephemeral filesystem issue on Railway/Vercel)
+            const imageUrl = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
             });
-
-            const imageUrl = uploadRes.data.url || uploadRes.data.filename;
 
             const announcementData = {
                 title: formData.title,
