@@ -738,10 +738,15 @@ const AdminAnnouncements = () => {
         try {
             const canvas = await composeCanvas();
             
-            // Upload to Cloudinary (returns URL)
+            // Upload to Cloudinary (returns {success, imageUrl, error})
             console.log('📤 Uploading to Cloudinary...');
-            const cloudinaryUrl = await uploadCanvasToCloudinary(canvas);
-            console.log('✅ Cloudinary URL:', cloudinaryUrl);
+            const uploadResult = await uploadCanvasToCloudinary(canvas);
+            
+            if (!uploadResult.success) {
+                throw new Error(uploadResult.error || 'Cloudinary upload failed');
+            }
+            
+            console.log('✅ Cloudinary URL:', uploadResult.imageUrl);
 
             const announcementData = {
                 title: formData.title,
@@ -750,7 +755,7 @@ const AdminAnnouncements = () => {
                 date: formData.date || null,
                 time: formData.time || null,
                 location: formData.location || null,
-                imageUrl: cloudinaryUrl  // Cloudinary URL
+                imageUrl: uploadResult.imageUrl  // Extract URL from result object
             };
 
             if (formData.id) {
