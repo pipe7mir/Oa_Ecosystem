@@ -266,6 +266,7 @@ const AdminAnnouncements = () => {
         logoOasisSize: 40,
         logoIasdSize: 30,
         rrssSize: 28,
+        customLogos: [], // Array of {name, url}
         titlePos: { x: 0, y: 108 },
         title2Pos: { x: 0, y: 104 },
         title3Pos: { x: 0, y: 100 },
@@ -1128,39 +1129,113 @@ const AdminAnnouncements = () => {
                         {/* ══════════ MARCA: Logos ══════════ */}
                         {activeSidebar === 'brand' && (
                             <div className="brand-panel">
-                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Logotipos</label>
-                                <div className="list-group list-group-flush mb-4 shadow-sm rounded-3 border overflow-hidden">
-                                    <button className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 ${formData.showLogoOasis ? 'bg-primary-subtle' : ''}`} onClick={() => set('showLogoOasis', !formData.showLogoOasis)}>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <img src={logoOasis} alt="Oasis" style={{ height: '24px' }} />
-                                            <span className="small fw-bold">Oasis</span>
+                                {/* Selector de logos - Iconos cuadrados */}
+                                <div className="d-flex flex-wrap gap-2 mb-3">
+                                    {[
+                                        { id: 'logoOasis', src: logoOasis, label: 'Oasis', show: 'showLogoOasis', size: 'logoOasisSize' },
+                                        { id: 'logoIasd', src: logoAdventista, label: 'IASD', show: 'showLogoIasd', size: 'logoIasdSize' },
+                                        { id: 'rrss', icon: 'bi-share', label: 'RRSS', show: 'showRrss', size: 'rrssSize' },
+                                    ].map(logo => (
+                                        <div key={logo.id} className="position-relative">
+                                            <button
+                                                className={`btn p-2 rounded-3 border d-flex flex-column align-items-center justify-content-center ${formData[logo.show] ? 'btn-primary text-white' : 'btn-light'}`}
+                                                style={{ width: '64px', height: '64px' }}
+                                                onClick={() => set(logo.show, !formData[logo.show])}
+                                                title={logo.label}>
+                                                {logo.src ? (
+                                                    <img src={logo.src} alt={logo.label} style={{ height: '28px', maxWidth: '50px', objectFit: 'contain', filter: formData[logo.show] ? 'brightness(10)' : 'none' }} />
+                                                ) : (
+                                                    <i className={`bi ${logo.icon} fs-4`}></i>
+                                                )}
+                                                <span style={{ fontSize: '0.55rem', marginTop: '4px' }}>{logo.label}</span>
+                                            </button>
+                                            {formData[logo.show] && (
+                                                <span className="position-absolute top-0 end-0 translate-middle badge bg-success rounded-circle p-1" style={{ fontSize: '0.5rem' }}>
+                                                    <i className="bi bi-check"></i>
+                                                </span>
+                                            )}
                                         </div>
-                                        <i className={`bi ${formData.showLogoOasis ? 'bi-eye-fill text-primary' : 'bi-eye-slash text-muted'}`}></i>
-                                    </button>
-                                    <button className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 ${formData.showLogoIasd ? 'bg-primary-subtle' : ''}`} onClick={() => set('showLogoIasd', !formData.showLogoIasd)}>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <img src={logoAdventista} alt="IASD" style={{ height: '24px' }} />
-                                            <span className="small fw-bold">IASD</span>
+                                    ))}
+                                    
+                                    {/* Custom logos from storage */}
+                                    {(formData.customLogos || []).map((logo, idx) => (
+                                        <div key={`custom-${idx}`} className="position-relative">
+                                            <button
+                                                className={`btn p-2 rounded-3 border d-flex flex-column align-items-center justify-content-center ${formData[`showCustomLogo${idx}`] ? 'btn-primary text-white' : 'btn-light'}`}
+                                                style={{ width: '64px', height: '64px' }}
+                                                onClick={() => set(`showCustomLogo${idx}`, !formData[`showCustomLogo${idx}`])}
+                                                title={logo.name || `Logo ${idx + 1}`}>
+                                                <img src={logo.url} alt={logo.name} style={{ height: '28px', maxWidth: '50px', objectFit: 'contain', filter: formData[`showCustomLogo${idx}`] ? 'brightness(10)' : 'none' }} />
+                                                <span style={{ fontSize: '0.55rem', marginTop: '4px' }}>{logo.name?.slice(0, 6) || `#${idx + 1}`}</span>
+                                            </button>
+                                            <button 
+                                                className="position-absolute top-0 end-0 btn btn-sm btn-danger rounded-circle p-0" 
+                                                style={{ width: '16px', height: '16px', fontSize: '0.5rem', lineHeight: 1 }}
+                                                onClick={e => { e.stopPropagation(); set('customLogos', (formData.customLogos || []).filter((_, i) => i !== idx)); }}>
+                                                <i className="bi bi-x"></i>
+                                            </button>
                                         </div>
-                                        <i className={`bi ${formData.showLogoIasd ? 'bi-eye-fill text-primary' : 'bi-eye-slash text-muted'}`}></i>
-                                    </button>
-                                    <button className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 ${formData.showRrss ? 'bg-primary-subtle' : ''}`} onClick={() => set('showRrss', !formData.showRrss)}>
-                                        <div className="d-flex align-items-center gap-2">
-                                            <i className="bi bi-share fs-5 text-muted"></i>
-                                            <span className="small fw-bold">Redes Sociales</span>
-                                        </div>
-                                        <i className={`bi ${formData.showRrss ? 'bi-eye-fill text-primary' : 'bi-eye-slash text-muted'}`}></i>
-                                    </button>
+                                    ))}
+                                    
+                                    {/* Add custom logo button */}
+                                    <label className="btn btn-outline-secondary p-2 rounded-3 border-dashed d-flex flex-column align-items-center justify-content-center" style={{ width: '64px', height: '64px', cursor: 'pointer' }}>
+                                        <i className="bi bi-plus-lg fs-4"></i>
+                                        <span style={{ fontSize: '0.55rem', marginTop: '4px' }}>Añadir</span>
+                                        <input type="file" accept="image/*" className="d-none" onChange={async e => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            const reader = new FileReader();
+                                            reader.onload = () => {
+                                                const newLogos = [...(formData.customLogos || []), { name: file.name.replace(/\.[^.]+$/, ''), url: reader.result }];
+                                                set('customLogos', newLogos);
+                                            };
+                                            reader.readAsDataURL(file);
+                                            e.target.value = '';
+                                        }} />
+                                    </label>
                                 </div>
 
-                                {/* Tamaños */}
-                                {(formData.showLogoOasis || formData.showLogoIasd || formData.showRrss) && (
-                                    <div className="p-3 bg-light rounded-3 border">
-                                        <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Tamaño</label>
-                                        <div className="d-flex justify-content-between x-small text-muted mb-1"><span>Escala</span><span>{formData.rrssSize}px</span></div>
-                                        <input type="range" className="form-range" min="15" max="80" value={formData.rrssSize} onChange={e => set('rrssSize', parseInt(e.target.value))} />
+                                {/* Tamaño individual por logo activo */}
+                                <div className="bg-light rounded-3 p-3 border">
+                                    <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">TAMAÑO POR LOGO</label>
+                                    <div style={{ fontSize: '0.7rem' }}>
+                                        {formData.showLogoOasis && (
+                                            <div className="d-flex align-items-center gap-2 mb-2">
+                                                <img src={logoOasis} alt="Oasis" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+                                                <input type="range" className="form-range flex-grow-1" min="15" max="80" 
+                                                    value={formData.logoOasisSize} onChange={e => set('logoOasisSize', parseInt(e.target.value))} />
+                                                <span className="text-muted" style={{ width: '35px' }}>{formData.logoOasisSize}px</span>
+                                            </div>
+                                        )}
+                                        {formData.showLogoIasd && (
+                                            <div className="d-flex align-items-center gap-2 mb-2">
+                                                <img src={logoAdventista} alt="IASD" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+                                                <input type="range" className="form-range flex-grow-1" min="15" max="80" 
+                                                    value={formData.logoIasdSize} onChange={e => set('logoIasdSize', parseInt(e.target.value))} />
+                                                <span className="text-muted" style={{ width: '35px' }}>{formData.logoIasdSize}px</span>
+                                            </div>
+                                        )}
+                                        {formData.showRrss && (
+                                            <div className="d-flex align-items-center gap-2 mb-2">
+                                                <i className="bi bi-share" style={{ width: '24px', textAlign: 'center' }}></i>
+                                                <input type="range" className="form-range flex-grow-1" min="15" max="80" 
+                                                    value={formData.rrssSize} onChange={e => set('rrssSize', parseInt(e.target.value))} />
+                                                <span className="text-muted" style={{ width: '35px' }}>{formData.rrssSize}px</span>
+                                            </div>
+                                        )}
+                                        {(formData.customLogos || []).map((logo, idx) => formData[`showCustomLogo${idx}`] && (
+                                            <div key={idx} className="d-flex align-items-center gap-2 mb-2">
+                                                <img src={logo.url} alt={logo.name} style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+                                                <input type="range" className="form-range flex-grow-1" min="15" max="80" 
+                                                    value={formData[`customLogoSize${idx}`] || 30} onChange={e => set(`customLogoSize${idx}`, parseInt(e.target.value))} />
+                                                <span className="text-muted" style={{ width: '35px' }}>{formData[`customLogoSize${idx}`] || 30}px</span>
+                                            </div>
+                                        ))}
+                                        {!formData.showLogoOasis && !formData.showLogoIasd && !formData.showRrss && !(formData.customLogos || []).some((_, idx) => formData[`showCustomLogo${idx}`]) && (
+                                            <p className="text-muted text-center mb-0 py-2"><i className="bi bi-eye-slash me-2"></i>Activa un logo para ajustar tamaño</p>
+                                        )}
                                     </div>
-                                )}
+                                </div>
                             </div>
                         )}
                     </div>
