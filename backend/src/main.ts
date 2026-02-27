@@ -19,12 +19,13 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log'],
-    bodyParser: true,
+    bodyParser: false, // Disable default body parser to configure custom limits
   });
 
-  // Increase body size limit to 10MB to support base64 image storage
-  app.use(require('express').json({ limit: '10mb' }));
-  app.use(require('express').urlencoded({ extended: true, limit: '10mb' }));
+  // Configure body parser with 10MB limit BEFORE any routes (for base64 images)
+  const express = require('express');
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
   // Health check endpoints BEFORE global prefix
   const httpAdapter = app.getHttpAdapter();
