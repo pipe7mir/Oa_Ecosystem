@@ -736,16 +736,25 @@ const AdminAnnouncements = () => {
 
         try {
             const canvas = await composeCanvas();
-            const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.93));
-            const fileName = `ann-${Date.now()}.jpg`;
+            // ── Smart Compression (TinyPNG-style) ──────────────────────────
+            // Step 1: Scale canvas down to max 600px wide to reduce resolution
+            const MAX_WIDTH = 600;
+            const scale = Math.min(1, MAX_WIDTH / canvas.width);
+            const compCanvas = document.createElement('canvas');
+            compCanvas.width = Math.round(canvas.width * scale);
+            compCanvas.height = Math.round(canvas.height * scale);
+            const compCtx = compCanvas.getContext('2d');
+            compCtx.drawImage(canvas, 0, 0, compCanvas.width, compCanvas.height);
 
-            // Convert canvas blob to base64 data URL — stored directly in DB
-            // (avoids ephemeral filesystem issue on Railway/Vercel)
-            const imageUrl = await new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.readAsDataURL(blob);
-            });
+            // Step 2: Iteratively reduce JPEG quality until file fits under 400KB
+            const MAX_B64_KB = 400;
+            let quality = 0.82;
+            let imageUrl = compCanvas.toDataURL('image/jpeg', quality);
+            while (imageUrl.length > MAX_B64_KB * 1024 * 1.37 && quality > 0.3) {
+                quality = Math.max(0.3, quality - 0.08);
+                imageUrl = compCanvas.toDataURL('image/jpeg', quality);
+            }
+            // ── End compression ────────────────────────────────────────────
 
             const announcementData = {
                 title: formData.title,
