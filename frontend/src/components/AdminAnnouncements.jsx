@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { theme } from '../react-ui/styles/theme';
 import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';  // API client for backend requests
+import { uploadCanvasToCloudinary } from '../api/cloudinary';  // Direct Cloudinary upload
 import OasisPress from './OasisPress';  // Presentation editor
 
 // Logo assets
@@ -736,31 +737,17 @@ const AdminAnnouncements = () => {
 
         try {
             const canvas = await composeCanvas();
-            // ── Smart Compression (TinyPNG-style) ──────────────────────────
-            // Step 1: Scale canvas down to max 400px wide to reduce resolution (reduced for Railway limits)
-            const MAX_WIDTH = 400;
-            const scale = Math.min(1, MAX_WIDTH / canvas.width);
-            const compCanvas = document.createElement('canvas');
-            compCanvas.width = Math.round(canvas.width * scale);
-            compCanvas.height = Math.round(canvas.height * scale);
-            const compCtx = compCanvas.getContext('2d');
-            compCtx.drawImage(canvas, 0, 0, compCanvas.width, compCanvas.height);
-
-            // Step 2: Iteratively reduce JPEG quality until file fits under 100KB (reduced for Railway limits)
-            const MAX_B64_KB = 100;
-            let quality = 0.7;
-            let imageBase64 = compCanvas.toDataURL('image/jpeg', quality);
-            while (imageBase64.length > MAX_B64_KB * 1024 * 1.37 && quality > 0.3) {
-                quality = Math.max(0.3, quality - 0.08);
-                imageBase64 = compCanvas.toDataURL('image/jpeg', quality);
+            
+            // Upload directly to Cloudinary (bypasses backend completely for images)
+            console.log('☁️ Uploading to Cloudinary...');
+            const uploadResult = await uploadCanvasToCloudinary(canvas, 600, 200);
+            
+            if (!uploadResult.success) {
+                throw new Error(uploadResult.error || 'Error al subir imagen a Cloudinary');
             }
-            // ── End compression ────────────────────────────────────────────
-
-            // Step 3: Upload image separately to avoid large body in announcement POST
-            console.log('📸 Uploading image...', (imageBase64.length / 1024).toFixed(1) + 'KB');
-            const uploadRes = await apiClient.post('/announcements/upload-image', { imageBase64 });
-            const imageUrl = uploadRes.data.imageUrl;
-            console.log('✅ Image uploaded:', imageUrl);
+            
+            const imageUrl = uploadResult.imageUrl;
+            console.log('✅ Image uploaded to Cloudinary:', imageUrl);
 
             const announcementData = {
                 title: formData.title,
@@ -769,7 +756,7 @@ const AdminAnnouncements = () => {
                 date: formData.date || null,
                 time: formData.time || null,
                 location: formData.location || null,
-                imageUrl: imageUrl  // Now just the filename, not base64
+                imageUrl: imageUrl  // Cloudinary URL
             };
 
             if (formData.id) {
