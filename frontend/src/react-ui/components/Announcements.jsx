@@ -385,12 +385,30 @@ const Announcements = () => {
                                         </h3>
                                         <p style={{
                                             fontSize: '0.95rem', color: theme.colors.text.secondary,
-                                            marginBottom: '0', flexGrow: 1,
+                                            marginBottom: '8px', flexGrow: 1,
                                             display: '-webkit-box', WebkitLineClamp: 3,
                                             WebkitBoxOrient: 'vertical', overflow: 'hidden',
                                         }}>
                                             {announcement.content || announcement.description}
                                         </p>
+                                        {/* Date / Time / Location row */}
+                                        {(announcement.date || announcement.time || announcement.location) && (
+                                            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                {(announcement.date || announcement.time) && (
+                                                    <span style={{ fontSize: '0.8rem', color: theme.colors.text.secondary, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                        <i className="bi bi-calendar3" style={{ color: theme.colors.primary }}></i>
+                                                        {announcement.date && new Date(announcement.date + 'T00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                                        {announcement.time && ` — ${announcement.time}`}
+                                                    </span>
+                                                )}
+                                                {announcement.location && (
+                                                    <span style={{ fontSize: '0.8rem', color: theme.colors.text.secondary, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                        <i className="bi bi-geo-alt-fill" style={{ color: theme.colors.primary }}></i>
+                                                        {announcement.location}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </GlassCard>
                             </div>

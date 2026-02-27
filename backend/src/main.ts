@@ -19,7 +19,12 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log'],
+    bodyParser: true,
   });
+
+  // Increase body size limit to 10MB to support base64 image storage
+  app.use(require('express').json({ limit: '10mb' }));
+  app.use(require('express').urlencoded({ extended: true, limit: '10mb' }));
 
   // Health check endpoints BEFORE global prefix
   const httpAdapter = app.getHttpAdapter();

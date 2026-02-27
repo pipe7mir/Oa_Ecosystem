@@ -914,20 +914,61 @@ const AdminAnnouncements = () => {
 
                                 {selectedElementId && (
                                     <div className="mt-4 p-3 bg-light rounded-3 border">
-                                        <label className="x-small fw-bold text-primary text-uppercase mb-2 d-block">Editar {selectedElementId === 'title' ? 'Título' : selectedElementId === 'title2' ? 'Subtítulo' : selectedElementId === 'speaker' ? 'Expositor' : selectedElementId === 'tag' ? 'Etiqueta' : 'Contenido'}</label>
+                                        <label className="x-small fw-bold text-primary text-uppercase mb-2 d-block">
+                                            Editar: {selectedElementId === 'title' ? 'Título' : selectedElementId === 'title2' ? 'Subtítulo' : selectedElementId === 'speaker' ? 'Expositor' : selectedElementId === 'tag' ? 'Etiqueta' : 'Contenido'}
+                                        </label>
                                         <textarea
-                                            className="form-control form-control-sm border-0 bg-white shadow-sm"
+                                            className="form-control form-control-sm border-0 bg-white shadow-sm mb-3"
                                             rows="3"
                                             style={{ fontSize: '0.8rem' }}
                                             value={formData[selectedElementId]}
                                             onChange={e => set(selectedElementId, e.target.value)}
                                             placeholder="Escribe aquí..."
                                         />
+                                        {/* Color picker for selected element */}
+                                        {!selectedElementId.toLowerCase().includes('logo') && (
+                                            <div className="d-flex align-items-center gap-2">
+                                                <label className="x-small text-muted mb-0">Color:</label>
+                                                <input
+                                                    type="color"
+                                                    className="form-control form-control-color border-0 shadow-sm"
+                                                    style={{ height: '30px', width: '50px', padding: '2px' }}
+                                                    value={formData[`${selectedElementId}Color`] || '#ffffff'}
+                                                    onChange={e => set(`${selectedElementId}Color`, e.target.value)}
+                                                />
+                                                <span className="x-small text-muted">{formData[`${selectedElementId}Color`] || '#ffffff'}</span>
+                                            </div>
+                                        )}
                                         <div className="mt-2 text-end">
                                             <button className="btn btn-sm btn-link text-muted x-small p-0" onClick={() => setSelectedElementId(null)}>Deseleccionar</button>
                                         </div>
                                     </div>
                                 )}
+
+                                {/* Quick color panel for all elements */}
+                                <div className="mt-4">
+                                    <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Colores de Texto</label>
+                                    <div className="list-group list-group-flush border rounded-3 overflow-hidden shadow-sm">
+                                        {[
+                                            { key: 'title', label: 'Título' },
+                                            { key: 'title2', label: 'Subtítulo' },
+                                            { key: 'speaker', label: 'Expositor' },
+                                            { key: 'tag', label: 'Etiqueta' },
+                                            { key: 'content', label: 'Contenido' },
+                                        ].map(({ key, label }) => (
+                                            <div key={key} className="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                                                <span className="x-small fw-semibold">{label}</span>
+                                                <input
+                                                    type="color"
+                                                    className="form-control form-control-color border-0"
+                                                    style={{ height: '28px', width: '44px', padding: '2px', cursor: 'pointer' }}
+                                                    value={formData[`${key}Color`] || '#ffffff'}
+                                                    onChange={e => set(`${key}Color`, e.target.value)}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         )}
                         {activeSidebar === 'uploads' && (
