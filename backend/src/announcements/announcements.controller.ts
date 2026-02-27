@@ -3,6 +3,12 @@ import { JwtAuthGuard } from '../common/jwt-auth.guard';
 import { AnnouncementsService } from './announcements.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configure Cloudinary if CLOUDINARY_URL is set
+if (process.env.CLOUDINARY_URL) {
+  console.log('☁️ Cloudinary configured for image storage');
+}
 
 @Controller('announcements')
 export class AnnouncementsController {
@@ -23,7 +29,7 @@ export class AnnouncementsController {
     return this.announcementsService.findAll();
   }
 
-  // Upload image endpoint - saves base64 as file and returns URL
+  // Upload image endpoint - uses Cloudinary if configured, else saves locally
   @Post('upload-image')
   @UseGuards(JwtAuthGuard)
   async uploadImage(@Body() body: { imageBase64: string }) {
@@ -32,23 +38,35 @@ export class AnnouncementsController {
         throw new HttpException('No image provided', HttpStatus.BAD_REQUEST);
       }
 
-      // Extract base64 data (remove data:image/...;base64, prefix if present)
-      const base64Data = body.imageBase64.replace(/^data:image\/\w+;base64,/, '');
-      const buffer = Buffer.from(base64Data, 'base64');
+      const imageBase64 = body.imageBase64;
       
-      // Generate unique filename
+      // Try Cloudinary first if configured
+      if (process.env.CLOUDINARY_URL) {
+        try {
+          console.log('☁️ Uploading to Cloudinary...');
+          const result = await cloudinary.uploader.upload(imageBase64, {
+            folder: 'oasis-announcements',
+            resource_type: 'image',
+          });
+          console.log(`✅ Cloudinary upload success: ${result.secure_url}`);
+          return { success: true, imageUrl: result.secure_url };
+        } catch (cloudErr: any) {
+          console.error('⚠️ Cloudinary upload failed, falling back to local:', cloudErr.message);
+        }
+      }
+
+      // Fallback: save locally (note: Railway doesn't persist files across deploys)
+      const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+      const buffer = Buffer.from(base64Data, 'base64');
       const filename = `ann-${Date.now()}.jpg`;
       const uploadsDir = path.join(process.cwd(), 'uploads');
       
-      // Ensure uploads directory exists
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }
       
-      const filePath = path.join(uploadsDir, filename);
-      fs.writeFileSync(filePath, buffer);
-      
-      console.log(`📸 Image uploaded: ${filename} (${buffer.length} bytes)`);
+      fs.writeFileSync(path.join(uploadsDir, filename), buffer);
+      console.log(`📸 Local upload: ${filename} (${buffer.length} bytes)`);
       return { success: true, imageUrl: filename };
     } catch (error: any) {
       console.error('❌ Error uploading image:', error);
