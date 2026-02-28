@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { theme } from '../react-ui/styles/theme';
 import apiClient from '../api/client';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import pptxgen from 'pptxgenjs';
 
 // ===============================
 // OASIS PRESS - Presentation Editor
@@ -96,140 +99,6 @@ const createDefaultSlide = () => ({
     background: '#ffffff',
     backgroundImage: '',
     elements: [],
-    transition: 'morph'
-});
-
-// Default presentation
-const createDefaultPresentation = () => ({
-    title: 'Nueva Presentación',
-    description: '',
-    slides: [createDefaultSlide()],
-    settings: { aspectRatio: '16:9', defaultTransition: 'morph' }
-});
-
-// Helper to safely get slides
-const getSlides = (presentation) => {
-    if (!presentation) return [];
-    if (Array.isArray(presentation.slides)) return presentation.slides;
-    return [];
-};
-
-// Helper to safely get slide
-const getSlide = (presentation, index) => {
-    const slides = getSlides(presentation);
-    return slides[index] || null;
-};
-
-// Helper to safely get elements
-const getElements = (slide) => {
-    if (!slide) return [];
-    if (Array.isArray(slide.elements)) return slide.elements;
-    return [];
-};
-
-// Virtual Coordinate System Constants
-const VIRTUAL_WIDTH = 1200;
-const VIRTUAL_HEIGHT = 675; // 16:9
-
-const SlideContent = ({ slide, scale = 1, isPresenting = false, selectedElement = null, setSelectedElement = () => { }, editingTextId = null, setEditingTextId = () => { }, updateElement = () => { } }) => {
-    const elements = getElements(slide);
-
-    return (
-        <div style={{
-            position: 'absolute',
-            inset: 0,
-            width: VIRTUAL_WIDTH,
-            height: VIRTUAL_HEIGHT,
-            transform: `scale(${scale})`,
-            transformOrigin: 'top left',
-            overflow: 'hidden',
-            pointerEvents: isPresenting ? 'none' : 'auto'
-        }}>
-            {/* Background Image */}
-            {slide.backgroundImage && (
-                <>
-                    <div style={{
-                        position: 'absolute',
-                        inset: 0,
-                        backgroundImage: `url(${slide.backgroundImage})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                    }} />
-                    {slide.backgroundGradient && (
-                        <div style={{
-                            position: 'absolute',
-                            inset: 0,
-                            background: GRADIENT_PRESETS.find(g => g.value === slide.backgroundGradient)?.overlay || slide.backgroundGradient
-                        }} />
-                    )}
-                </>
-            )}
-
-            {elements.map(element => (
-                <motion.div
-                    key={element.id}
-                    layoutId={slide.transitionType === 'morph' ? element.id : undefined}
-                    drag={!isPresenting}
-                    dragMomentum={false}
-                    onDragEnd={(_, info) => {
-                        updateElement(element.id, {
-                            x: Math.max(0, element.x + info.offset.x / scale),
-                            y: Math.max(0, element.y + info.offset.y / scale)
-                        });
-                    }}
-                    onClick={(e) => { e.stopPropagation(); setSelectedElement(element.id); }}
-                    style={{
-                        position: 'absolute',
-                        left: element.x,
-                        top: element.y,
-                        width: element.width,
-                        minHeight: element.type === 'text' || element.type === 'heading' ? 40 : element.height,
-                        height: element.type === 'text' || element.type === 'heading' ? 'auto' : element.height,
-                        cursor: isPresenting ? 'default' : 'move',
-                        transform: `rotate(${element.rotation || 0}deg)`,
-                        opacity: element.opacity || 1,
-                        ...element.style,
-                        outline: (!isPresenting && selectedElement === element.id) ? `2px solid ${theme.colors.primary}` : 'none',
-                        outlineOffset: 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: element.style?.textAlign || 'center'
-                    }}
-                >
-                    {(element.type === 'text' || element.type === 'heading') && (
-                        <div
-                            contentEditable={!isPresenting}
-                            suppressContentEditableWarning
-                            onFocus={() => setEditingTextId(element.id)}
-                            onBlur={(e) => {
-                                updateElement(element.id, { content: e.target.textContent });
-                                setEditingTextId(null);
-                            }}
-                            style={{
-                                outline: 'none',
-                                width: '100%',
-                                minHeight: '1em',
-                                cursor: editingTextId === element.id ? 'text' : isPresenting ? 'default' : 'move'
-                            }}
-                        >
-                            {element.content}
-                        </div>
-                    )}
-                    {element.type === 'shape' && (
-                        <div style={{ width: '100%', height: '100%', borderRadius: element.style?.borderRadius }} />
-                    )}
-                    {element.type === 'image' && (
-                        <img
-                            src={element.src || 'https://via.placeholder.com/200x200?text=Imagen'}
-                            alt=""
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: element.style?.borderRadius }}
-                        />
-                    )}
-                </motion.div>
-            ))}
-        </div>
-    );
-};
 
 const OasisPress = () => {
     // State
@@ -1242,8 +1111,17 @@ const OasisPress = () => {
                         <button
                             key={color}
                             className="btn btn-sm p-0"
-                            style={{ width: 24, height: 24, background: color, border: '2px solid #fff', borderRadius: 4, boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
-                            onClick={() => updateElementStyle(element.id, { color })}
+                            style={{
+                                                        width: 24,
+                                                        height: 24,
+                                                        background: color,
+                                                        border: currentSlideData.background === color ? `2px solid ${theme.colors.primary}` : '2px solid #ddd',
+                                                        borderRadius: 4
+                                                    }}
+                                                    onClick={() => {
+                                                        updateSlideBackground(color);
+                                                        updateSlideBackgroundImage('', null);
+                                                    }}
                         />
                     ))}
                 </div>
@@ -1294,6 +1172,12 @@ const OasisPress = () => {
                                 </button>
                                 <button onClick={() => setIsPresentMode(true)} className="btn btn-sm btn-primary px-4" style={{ borderRadius: '6px' }}>
                                     <i className="bi bi-play-fill me-1"></i> Proyectar
+                                </button>
+                                <button onClick={handleExportPDF} className="btn btn-sm btn-outline-danger px-3" style={{ borderRadius: '6px' }}>
+                                    <i className="bi bi-file-earmark-pdf me-1"></i> Exportar PDF
+                                </button>
+                                <button onClick={handleExportPPTX} className="btn btn-sm btn-outline-warning px-3" style={{ borderRadius: '6px' }}>
+                                    <i className="bi bi-file-earmark-slides me-1"></i> Exportar PPTX
                                 </button>
                             </div>
                         </div>
