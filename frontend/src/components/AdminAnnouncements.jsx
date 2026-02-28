@@ -1484,30 +1484,25 @@ const AdminAnnouncements = () => {
                                 </div>
                             </div>
 
-                            {/* Grupo: LOGOS */}
-                            <div className="d-flex flex-column px-3">
-                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Logos</span>
-                                <div className="d-flex gap-1">
+                            {/* Grupo: LOGOS - Format vertical apilado */}
+                            <div className="d-flex align-items-start px-3">
+                                <div className="d-flex flex-column gap-1">
+                                    <span className="small text-muted" style={{ fontSize: '0.55rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Logos</span>
                                     <button 
-                                        className={`btn p-1 ${formData.showLogoOasis ? 'btn-primary' : 'btn-light'}`}
-                                        style={{ width: '32px', height: '32px' }}
+                                        className={`btn p-1 d-flex align-items-center gap-2 ${formData.showLogoOasis ? 'btn-primary' : 'btn-light'}`}
+                                        style={{ width: '85px', height: '28px', fontSize: '0.6rem' }}
                                         onClick={() => set('showLogoOasis', !formData.showLogoOasis)}
                                         title="Logo Oasis">
-                                        <img src={logoOasis} style={{ height: '18px', filter: formData.showLogoOasis ? 'brightness(10)' : 'none' }} alt="Oasis" />
+                                        <img src={logoOasis} style={{ height: '16px', filter: formData.showLogoOasis ? 'brightness(10)' : 'none' }} alt="" />
+                                        <span className={formData.showLogoOasis ? 'text-white' : ''}>Oasis</span>
                                     </button>
                                     <button 
-                                        className={`btn p-1 ${formData.showLogoIasd ? 'btn-primary' : 'btn-light'}`}
-                                        style={{ width: '32px', height: '32px' }}
+                                        className={`btn p-1 d-flex align-items-center gap-2 ${formData.showLogoIasd ? 'btn-primary' : 'btn-light'}`}
+                                        style={{ width: '85px', height: '28px', fontSize: '0.6rem' }}
                                         onClick={() => set('showLogoIasd', !formData.showLogoIasd)}
                                         title="Logo IASD">
-                                        <img src={logoAdventista} style={{ height: '18px', filter: formData.showLogoIasd ? 'brightness(10)' : 'none' }} alt="IASD" />
-                                    </button>
-                                    <button 
-                                        className={`btn p-1 ${formData.showRrss ? 'btn-primary' : 'btn-light'}`}
-                                        style={{ width: '32px', height: '32px' }}
-                                        onClick={() => set('showRrss', !formData.showRrss)}
-                                        title="Redes Sociales">
-                                        <i className={`bi bi-share ${formData.showRrss ? 'text-white' : ''}`}></i>
+                                        <img src={logoAdventista} style={{ height: '16px', filter: formData.showLogoIasd ? 'brightness(10)' : 'none' }} alt="" />
+                                        <span className={formData.showLogoIasd ? 'text-white' : ''}>IASD</span>
                                     </button>
                                 </div>
                             </div>
@@ -1690,10 +1685,10 @@ const AdminAnnouncements = () => {
             {activeMode === 'anuncios' && renderRibbon()}
 
             {/* Main Workspace */}
-            <div className="canva-workspace flex-grow-1 d-flex flex-column" style={{ position: 'relative' }}>
+            <div className="canva-workspace flex-grow-1 d-flex" style={{ position: 'relative' }}>
                 <main
-                    className="workspace-body flex-grow-1 d-flex flex-column align-items-center justify-content-center"
-                    style={{ overflowY: 'auto', background: '#e9ecef', position: 'relative', padding: '1.5rem' }}
+                    className="workspace-body flex-grow-1 d-flex align-items-center justify-content-center"
+                    style={{ overflowY: 'auto', background: '#e9ecef', position: 'relative', padding: '1.5rem', width: '100%' }}
                     onMouseDown={(e) => {
                         if (e.target === e.currentTarget) setSelectedElementId(null);
                     }}
@@ -1702,16 +1697,16 @@ const AdminAnnouncements = () => {
                         <div className="w-100 h-100"><OasisPress /></div>
                     ) : (
                         <>
-                            {/* Canvas Area */}
-                            <div className="canvas-wrapper d-flex align-items-center justify-content-center" style={{ perspective: '1000px', position: 'relative', width: '100%', maxWidth: '100%' }}>
+                            {/* Canvas Area - Centered */}
+                            <div className="canvas-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, perspective: '1000px' }}>
                                 
                                 <motion.div
                                     layout
                                     ref={previewRef}
                                     id="preview-container"
                                     style={{
-                                        width: formData.format === 'whatsapp' ? '280px' : (formData.format === 'youtube' ? '100%' : '380px'),
-                                        maxWidth: isMobile ? '85%' : '70%',
+                                        width: formData.format === 'whatsapp' ? '280px' : (formData.format === 'youtube' ? '600px' : '380px'),
+                                        maxWidth: isMobile ? '85%' : '500px',
                                         aspectRatio: currentFmt.aspect,
                                         position: 'relative',
                                         overflow: 'hidden',
@@ -1720,8 +1715,7 @@ const AdminAnnouncements = () => {
                                         boxShadow: '0 30px 60px -12px rgba(0,0,0,0.4), 0 18px 36px -18px rgba(0,0,0,0.5)',
                                         borderRadius: '4px',
                                         containerType: 'inline-size',
-                                        touchAction: 'none',
-                                        margin: '0 auto'
+                                        touchAction: 'none'
                                     }}
                                 >
                                     {/* Dark Overlay */}
