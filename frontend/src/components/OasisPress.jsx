@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import pptxgen from 'pptxgenjs';
 
@@ -126,6 +125,7 @@ const OasisPress = () => {
     };
     // Exportar PDF/PPTX
     const handleExportPDF = async () => {
+        const { jsPDF } = await import('jspdf');
         const doc = new jsPDF();
         for (let i = 0; i < slides.length; i++) {
             if (canvasRef.current) {
