@@ -499,11 +499,7 @@ const ImageLibraryModal = () => {
                     <h5 className="mb-0 fw-bold" style={{ color: theme.colors.primary }}>
                         <i className="bi bi-images me-2"></i>
                         {imageLibraryMode === 'background' ? 'Seleccionar Fondo' : 'Biblioteca de Imágenes'}
-                    </h5>
-                    <button
-                        onClick={() => setShowImageLibrary(false)}
-                        className="btn btn-sm btn-outline-secondary rounded-circle"
-                        style={{ width: 36, height: 36 }}
+
                     >
                         <i className="bi bi-x-lg"></i>
                     </button>
