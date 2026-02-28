@@ -1299,86 +1299,8 @@ const AdminAnnouncements = () => {
         return (
             <div className="ribbon-container bg-white border-bottom shadow-sm flex-shrink-0" style={{ borderRadius: '0' }}>
 
-                {/* ── Fila 1: Barra de título estilo PowerPoint ── */}
-                <div style={{
-                    background: '#1f1f2e',
-                    display: 'flex', alignItems: 'center',
-                    padding: '4px 10px', gap: '10px', minHeight: '36px',
-                }}>
-                    <img src={logoOasis} style={{ height: '22px', cursor: 'pointer', flexShrink: 0 }} alt="Oasis" onClick={() => navigate('/admin')} />
-                    <span style={{ color: '#a78bfa', fontWeight: 800, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '1.2px', flexShrink: 0 }}>
-                        OasisPress
-                    </span>
-                    <div style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
-
-                    <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto', flexShrink: 0 }}>
-                        <button
-                            onClick={() => setShowForm(!showForm)}
-                            title="Mis Anuncios"
-                            style={{
-                                background: showForm ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.08)',
-                                border: '1px solid rgba(255,255,255,0.15)',
-                                borderRadius: '6px', color: '#e2e2ff',
-                                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                padding: '3px 10px', cursor: 'pointer', transition: 'background 0.15s',
-                                gap: '1px', minWidth: '52px',
-                            }}
-                        >
-                            <i className="bi bi-folder2-open" style={{ fontSize: '1rem' }}></i>
-                            <span style={{ fontSize: '0.55rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Mis Anuncios</span>
-                        </button>
-
-                        <button
-                            onClick={handleDownloadPNG}
-                            title="Descargar PNG"
-                            style={{
-                                background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-                                borderRadius: '6px', color: '#e2e2ff',
-                                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                padding: '3px 10px', cursor: 'pointer', transition: 'background 0.15s',
-                                gap: '1px', minWidth: '52px',
-                            }}
-                        >
-                            <i className="bi bi-image" style={{ fontSize: '1rem' }}></i>
-                            <span style={{ fontSize: '0.55rem', fontWeight: 600 }}>PNG</span>
-                        </button>
-
-                        <button
-                            onClick={handleSubmit}
-                            disabled={isSubmitting}
-                            title="Guardar y Publicar"
-                            style={{
-                                background: isSubmitting ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.85)',
-                                border: '1px solid rgba(16,185,129,0.5)',
-                                borderRadius: '6px', color: '#fff',
-                                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                padding: '3px 14px', cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                                transition: 'background 0.15s', gap: '1px', minWidth: '60px', fontWeight: 700,
-                            }}
-                        >
-                            <i className={`bi ${isSubmitting ? 'bi-hourglass-split' : 'bi-cloud-arrow-up'}`} style={{ fontSize: '1rem' }}></i>
-                            <span style={{ fontSize: '0.55rem', fontWeight: 700 }}>{isSubmitting ? 'Guardando…' : 'Guardar'}</span>
-                        </button>
-
-                        <button
-                            onClick={handleFullscreen}
-                            title="Pantalla completa"
-                            style={{
-                                background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
-                                borderRadius: '6px', color: '#e2e2ff',
-                                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                padding: '3px 10px', cursor: 'pointer', transition: 'background 0.15s',
-                                gap: '1px', minWidth: '52px',
-                            }}
-                        >
-                            <i className="bi bi-arrows-fullscreen" style={{ fontSize: '1rem' }}></i>
-                            <span style={{ fontSize: '0.55rem', fontWeight: 600 }}>Compartir</span>
-                        </button>
-                    </div>
-                </div>
-
-                {/* ── Fila 2: Tabs de pestañas ── */}
-                <div className="d-flex border-bottom px-2" style={{ gap: '0', background: '#f8f9fa' }}>
+                {/* ── Tab row: tabs + acciones derecha (sin barra oscura) ── */}
+                <div className="d-flex border-bottom px-1" style={{ gap: '0', background: '#f8f9fa', alignItems: 'stretch' }}>
                     {['Inicio', 'Insertar', 'Diseño', 'Formato'].map(tab => (
                         <button
                             key={tab}
@@ -1387,107 +1309,203 @@ const AdminAnnouncements = () => {
                                 border: 'none',
                                 borderBottom: activeRibbonTab === tab.toLowerCase() ? '3px solid #5b2ea6' : '3px solid transparent',
                                 background: 'transparent',
-                                padding: '5px 18px',
+                                padding: '5px 16px',
                                 fontSize: '0.82rem',
                                 fontWeight: activeRibbonTab === tab.toLowerCase() ? 700 : 400,
                                 color: activeRibbonTab === tab.toLowerCase() ? '#5b2ea6' : '#555',
                                 cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap',
                             }}
-                        >
-                            {tab}
-                        </button>
+                        >{tab}</button>
                     ))}
+
+                    {/* Acciones al lado derecho — sin barra oscura */}
+                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', paddingRight: '8px', flexShrink: 0 }}>
+                        <button onClick={() => setShowForm(!showForm)} title="Mis Anuncios"
+                            style={{ border: '1px solid #dee2e6', borderRadius: '6px', background: showForm ? '#ede9fe' : '#fff', color: showForm ? '#5b2ea6' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 9px', cursor: 'pointer', gap: '0', minWidth: '46px', fontSize: '0.55rem', fontWeight: 600 }}>
+                            <i className="bi bi-folder2-open" style={{ fontSize: '0.95rem' }}></i>
+                            <span style={{ whiteSpace: 'nowrap' }}>Mis Anuncios</span>
+                        </button>
+                        <button onClick={handleDownloadPNG} title="Descargar PNG"
+                            style={{ border: '1px solid #dee2e6', borderRadius: '6px', background: '#fff', color: '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 9px', cursor: 'pointer', gap: '0', minWidth: '38px', fontSize: '0.55rem', fontWeight: 600 }}>
+                            <i className="bi bi-image" style={{ fontSize: '0.95rem' }}></i>
+                            <span>PNG</span>
+                        </button>
+                        <button onClick={handleSubmit} disabled={isSubmitting} title="Guardar y Publicar"
+                            style={{ border: 'none', borderRadius: '6px', background: isSubmitting ? '#6ee7b7' : '#10b981', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 12px', cursor: isSubmitting ? 'not-allowed' : 'pointer', gap: '0', minWidth: '50px', fontSize: '0.55rem', fontWeight: 700 }}>
+                            <i className={`bi ${isSubmitting ? 'bi-hourglass-split' : 'bi-cloud-arrow-up'}`} style={{ fontSize: '0.95rem' }}></i>
+                            <span>{isSubmitting ? 'Guardando…' : 'Guardar'}</span>
+                        </button>
+                        <button onClick={handleFullscreen} title="Pantalla completa"
+                            style={{ border: '1px solid #dee2e6', borderRadius: '6px', background: '#fff', color: '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 9px', cursor: 'pointer', gap: '0', minWidth: '46px', fontSize: '0.55rem', fontWeight: 600 }}>
+                            <i className="bi bi-arrows-fullscreen" style={{ fontSize: '0.95rem' }}></i>
+                            <span>Compartir</span>
+                        </button>
+                    </div>
                 </div>
 
-                {/* Ribbon Content */}
-                <div className="px-3 py-2 bg-white d-flex align-items-center gap-4 flex-wrap" style={{ minHeight: '60px' }}>
+                {/* ── Ribbon Content ── */}
+                <div style={{ display: 'flex', alignItems: 'stretch', padding: '4px 6px', minHeight: '62px', overflowX: 'auto', background: '#fff' }}>
 
                     {/* ═══════ INICIO ═══════ */}
                     {activeRibbonTab === 'inicio' && (
                         <>
-                            {/* Grupo: Elemento */}
-                            <div className="d-flex flex-column align-items-center px-3 border-end">
-                                <div className="d-flex gap-2 mb-1">
-                                    <select
-                                        className="form-select form-select-sm py-0"
-                                        style={{ fontSize: '0.75rem', width: '120px', height: '28px' }}
-                                        value={selectedElementId || 'title'}
-                                        onChange={(e) => setSelectedElementId(e.target.value === 'title' ? null : e.target.value)}
-                                    >
-                                        <option value="title">Título</option>
-                                        <option value="title2">Subtítulo</option>
-                                        <option value="title3">Línea 3</option>
-                                        <option value="tag">Etiqueta</option>
-                                        <option value="dateTime">Fecha/Hora</option>
-                                        <option value="location">Ubicación</option>
-                                        <option value="logo">Logo Oasis</option>
-                                        <option value="rrss">Redes Sociales</option>
-                                    </select>
-                                </div>
-                                <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Elemento</span>
+                            {/* ── Grupo: Elemento ── */}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px', borderRight: '1px solid #e9ecef', justifyContent: 'space-between', gap: '3px' }}>
+                                <select
+                                    className="form-select form-select-sm"
+                                    style={{ fontSize: '0.73rem', width: '112px', height: '26px', padding: '0 6px' }}
+                                    value={selectedElementId || 'title'}
+                                    onChange={(e) => setSelectedElementId(e.target.value === 'title' ? null : e.target.value)}
+                                >
+                                    <option value="title">Título (H1)</option>
+                                    <option value="title2">Subtítulo (H2)</option>
+                                    <option value="title3">Línea 3 (H3)</option>
+                                    <option value="speaker">Orador</option>
+                                    <option value="tag">Etiqueta</option>
+                                    <option value="date">Fecha</option>
+                                    <option value="time">Hora</option>
+                                    <option value="location">Ubicación</option>
+                                    <option value="content">Contenido</option>
+                                </select>
+                                <span style={{ fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px' }}>Elemento</span>
                             </div>
 
-                            {/* Grupo: Tamaño */}
-                            <div className="d-flex flex-column align-items-center px-3 border-end">
-                                <div className="d-flex gap-1 mb-1 align-items-center">
-                                    <button
-                                        onClick={() => set(fontSizeKey, Math.max(isLogo ? 10 : 0.1, (formData[fontSizeKey] || 1) - (isLogo ? 5 : 0.1)))}
-                                        className="btn btn-sm btn-light py-0 px-2"
+                            {/* ── Grupo: Fuente ── */}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px', borderRight: '1px solid #e9ecef', justifyContent: 'space-between', gap: '3px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    {/* Selector de fuente */}
+                                    <select
+                                        className="form-select form-select-sm"
+                                        style={{ fontSize: '0.7rem', width: '108px', height: '26px', padding: '0 4px' }}
+                                        value={formData[fontKey] || 'MoonRising'}
+                                        onChange={(e) => set(fontKey, e.target.value)}
                                     >
-                                        <i className="bi bi-dash"></i>
-                                    </button>
-                                    <span className="fw-bold px-2" style={{ fontSize: '0.8rem', minWidth: '40px', textAlign: 'center', background: '#f8f9fa', borderRadius: '4px', padding: '2px' }}>
+                                        {FONTS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+                                        <option value="Arial">Arial</option>
+                                        <option value="Georgia">Georgia</option>
+                                        <option value="Times New Roman">Times New Roman</option>
+                                        <option value="Courier New">Courier New</option>
+                                        <option value="Verdana">Verdana</option>
+                                        <option value="Trebuchet MS">Trebuchet MS</option>
+                                    </select>
+                                    {/* A- A+ tamaño */}
+                                    <button onClick={() => set(fontSizeKey, Math.max(isLogo ? 10 : 0.1, (formData[fontSizeKey] || 1) - (isLogo ? 5 : 0.1)))}
+                                        style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: '#f8f9fa', width: '24px', height: '26px', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}
+                                        title="Reducir fuente">A<sup style={{ fontSize: '0.45rem' }}>-</sup></button>
+                                    <span style={{ minWidth: '32px', textAlign: 'center', fontSize: '0.75rem', fontWeight: 700, background: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '4px', padding: '2px 3px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         {isLogo ? Math.round(formData[fontSizeKey] || 60) : (formData[fontSizeKey] || 1).toFixed(1)}
                                     </span>
-                                    <button
-                                        onClick={() => set(fontSizeKey, Math.min(600, (formData[fontSizeKey] || 1) + (isLogo ? 5 : 0.1)))}
-                                        className="btn btn-sm btn-light py-0 px-2"
-                                    >
-                                        <i className="bi bi-plus"></i>
-                                    </button>
+                                    <button onClick={() => set(fontSizeKey, Math.min(600, (formData[fontSizeKey] || 1) + (isLogo ? 5 : 0.1)))}
+                                        style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: '#f8f9fa', width: '24px', height: '26px', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}
+                                        title="Agrandar fuente">A<sup style={{ fontSize: '0.45rem' }}>+</sup></button>
                                 </div>
-                                <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Tamaño</span>
+                                <span style={{ fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px' }}>Fuente</span>
                             </div>
 
-                            {/* Grupo: Color (solo texto) */}
+                            {/* ── Grupo: Formato de texto (N K S tachado sombra) ── */}
                             {!isLogo && (
-                                <div className="d-flex flex-column align-items-center px-3 border-end">
-                                    <div className="d-flex gap-1 mb-1">
-                                        <input
-                                            type="color"
-                                            className="form-control form-control-color p-0"
-                                            style={{ width: 28, height: 28, border: '2px solid #ddd', borderRadius: '4px' }}
-                                            value={formData[fontColorKey] || '#ffffff'}
-                                            onChange={(e) => set(fontColorKey, e.target.value)}
-                                        />
-                                        {['#ffffff', '#000000', '#5b2ea6', '#f59e0b', '#ef4444'].map(c => (
-                                            <button
-                                                key={c}
-                                                onClick={() => set(fontColorKey, c)}
-                                                style={{ width: 22, height: 22, background: c, border: formData[fontColorKey] === c ? '2px solid #5b2ea6' : '1px solid #ddd', borderRadius: '3px' }}
-                                            />
-                                        ))}
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px', borderRight: '1px solid #e9ecef', justifyContent: 'space-between', gap: '3px' }}>
+                                    <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
+                                        {[
+                                            { key: 'Bold', label: 'N', title: 'Negrita', style: { fontWeight: 900, fontFamily: 'serif' } },
+                                            { key: 'Italic', label: 'K', title: 'Cursiva', style: { fontStyle: 'italic', fontFamily: 'serif' } },
+                                            { key: 'Underline', label: 'S', title: 'Subrayado', style: { textDecoration: 'underline' } },
+                                            { key: 'Strike', label: 'S', title: 'Tachado', style: { textDecoration: 'line-through', color: '#888' } },
+                                            { key: 'Shadow', label: 'A', title: 'Sombra de texto', style: { textShadow: '2px 2px 0 rgba(0,0,0,0.5)', fontWeight: 700 } },
+                                        ].map(btn => {
+                                            const stateKey = `${target}${btn.key}`;
+                                            const isOn = !!formData[stateKey];
+                                            return (
+                                                <button key={btn.key} onClick={() => set(stateKey, !isOn)} title={btn.title}
+                                                    style={{ ...btn.style, width: '26px', height: '26px', border: `1px solid ${isOn ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '4px', background: isOn ? '#ede9fe' : '#f8f9fa', color: isOn ? '#5b2ea6' : '#333', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                    {btn.label}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
-                                    <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Color</span>
+                                    <span style={{ fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px' }}>Fuente</span>
                                 </div>
                             )}
 
-                            {/* Grupo: Formato */}
-                            <div className="d-flex flex-column align-items-center px-3">
-                                <div className="d-flex gap-1 mb-1">
-                                    {Object.keys(FORMATS).map(k => (
-                                        <button
-                                            key={k}
-                                            onClick={() => set('format', k)}
-                                            className={`btn btn-sm ${formData.format === k ? 'btn-primary' : 'btn-light'}`}
-                                            style={{ padding: '4px 8px' }}
-                                            title={FORMATS[k].label}
-                                        >
-                                            <i className={`bi ${FORMATS[k].icon}`}></i>
+                            {/* ── Grupo: Color ── */}
+                            {!isLogo && (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px', borderRight: '1px solid #e9ecef', justifyContent: 'space-between', gap: '3px' }}>
+                                    <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', maxWidth: '140px', alignItems: 'center' }}>
+                                        <input type="color"
+                                            style={{ width: '26px', height: '26px', padding: '0', border: '2px solid #dee2e6', borderRadius: '4px', cursor: 'pointer' }}
+                                            value={formData[fontColorKey] || '#ffffff'}
+                                            onChange={(e) => set(fontColorKey, e.target.value)}
+                                            title="Color personalizado"
+                                        />
+                                        {['#ffffff', '#000000', '#5b2ea6', '#7c3aed', '#2563eb', '#0891b2', '#059669', '#16a34a', '#ca8a04', '#ea580c', '#dc2626', '#db2777'].map(c => (
+                                            <button key={c} onClick={() => set(fontColorKey, c)}
+                                                style={{ width: '20px', height: '20px', background: c, border: formData[fontColorKey] === c ? '2px solid #5b2ea6' : '1px solid #ccc', borderRadius: '3px', cursor: 'pointer', flexShrink: 0 }}
+                                                title={c}
+                                            />
+                                        ))}
+                                    </div>
+                                    <span style={{ fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px' }}>Color</span>
+                                </div>
+                            )}
+
+                            {/* ── Grupo: Alineación ── */}
+                            {!isLogo && (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px', borderRight: '1px solid #e9ecef', justifyContent: 'space-between', gap: '3px' }}>
+                                    <div style={{ display: 'flex', gap: '2px' }}>
+                                        {[
+                                            { val: 'left', icon: 'bi-text-left', title: 'Izquierda' },
+                                            { val: 'center', icon: 'bi-text-center', title: 'Centro' },
+                                            { val: 'right', icon: 'bi-text-right', title: 'Derecha' },
+                                            { val: 'justify', icon: 'bi-justify', title: 'Justificado' },
+                                        ].map(a => {
+                                            const alignKey = `${target}Align`;
+                                            const isOn = (formData[alignKey] || 'center') === a.val;
+                                            return (
+                                                <button key={a.val} onClick={() => set(alignKey, a.val)} title={a.title}
+                                                    style={{ width: '26px', height: '26px', border: `1px solid ${isOn ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '4px', background: isOn ? '#ede9fe' : '#f8f9fa', color: isOn ? '#5b2ea6' : '#333', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <i className={`bi ${a.icon}`}></i>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    <span style={{ fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px' }}>Párrafo</span>
+                                </div>
+                            )}
+
+                            {/* ── Grupo: Interlineado ── */}
+                            {!isLogo && (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px', borderRight: '1px solid #e9ecef', justifyContent: 'space-between', gap: '3px' }}>
+                                    <div style={{ display: 'flex', gap: '2px', flexDirection: 'column' }}>
+                                        {[
+                                            { val: 1.0, icon: 'bi-text-paragraph', label: '1.0' },
+                                            { val: 1.5, icon: 'bi-text-paragraph', label: '1.5' },
+                                            { val: 2.0, icon: 'bi-text-paragraph', label: '2.0' },
+                                        ].map(ls => {
+                                            const lsKey = `${target}LineHeight`;
+                                            const isOn = (formData[lsKey] || 1.2) === ls.val;
+                                            return (
+                                                <button key={ls.val} onClick={() => set(lsKey, ls.val)} title={`Interlineado ${ls.label}`}
+                                                    style={{ height: '17px', border: `1px solid ${isOn ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '3px', background: isOn ? '#ede9fe' : '#f8f9fa', color: isOn ? '#5b2ea6' : '#333', cursor: 'pointer', fontSize: '0.6rem', fontWeight: isOn ? 700 : 400, padding: '0 6px' }}>
+                                                    {ls.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    <span style={{ fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px' }}>Espaciado</span>
+                                </div>
+                            )}
+
+                            {/* ── Grupo: Formato de diapositiva ── */}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px', justifyContent: 'space-between', gap: '3px' }}>
+                                <div style={{ display: 'flex', gap: '2px' }}>
+                                    {Object.entries(FORMATS).map(([k, f]) => (
+                                        <button key={k} onClick={() => set('format', k)} title={`${f.label} — ${f.desc}`}
+                                            style={{ width: '28px', height: '26px', border: `1px solid ${formData.format === k ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '4px', background: formData.format === k ? '#ede9fe' : '#f8f9fa', color: formData.format === k ? '#5b2ea6' : '#555', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <i className={`bi ${f.icon}`}></i>
                                         </button>
                                     ))}
                                 </div>
-                                <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Formato</span>
+                                <span style={{ fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px' }}>Formato</span>
                             </div>
                         </>
                     )}
