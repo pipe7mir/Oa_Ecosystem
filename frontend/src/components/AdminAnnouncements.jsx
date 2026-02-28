@@ -1370,13 +1370,13 @@ const AdminAnnouncements = () => {
                                 <span style={{ fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px' }}>Elemento</span>
                             </div>
 
-                            {/* ── Grupo: Fuente ── */}
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px', borderRight: '1px solid #e9ecef', justifyContent: 'space-between', gap: '3px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    {/* Selector de fuente */}
+                            {/* ── Grupo: Fuente (unificado: familia + tamaño + N K S tachado sombra) ── */}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '2px 10px', borderRight: '1px solid #e9ecef', justifyContent: 'center', gap: '3px' }}>
+                                {/* Fila 1: selector tipografía + A- tamaño A+ */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                                     <select
                                         className="form-select form-select-sm"
-                                        style={{ fontSize: '0.7rem', width: '108px', height: '26px', padding: '0 4px' }}
+                                        style={{ fontSize: '0.7rem', width: '108px', height: '24px', padding: '0 4px' }}
                                         value={formData[fontKey] || 'MoonRising'}
                                         onChange={(e) => set(fontKey, e.target.value)}
                                     >
@@ -1388,44 +1388,39 @@ const AdminAnnouncements = () => {
                                         <option value="Verdana">Verdana</option>
                                         <option value="Trebuchet MS">Trebuchet MS</option>
                                     </select>
-                                    {/* A- A+ tamaño */}
                                     <button onClick={() => set(fontSizeKey, Math.max(isLogo ? 10 : 0.1, (formData[fontSizeKey] || 1) - (isLogo ? 5 : 0.1)))}
-                                        style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: '#f8f9fa', width: '24px', height: '26px', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}
-                                        title="Reducir fuente">A<sup style={{ fontSize: '0.45rem' }}>-</sup></button>
-                                    <span style={{ minWidth: '32px', textAlign: 'center', fontSize: '0.75rem', fontWeight: 700, background: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '4px', padding: '2px 3px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: '#f8f9fa', width: '22px', height: '24px', fontSize: '0.7rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}
+                                        title="Reducir fuente">A<sup style={{ fontSize: '0.4rem' }}>-</sup></button>
+                                    <span style={{ minWidth: '28px', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, background: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '4px', padding: '2px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         {isLogo ? Math.round(formData[fontSizeKey] || 60) : (formData[fontSizeKey] || 1).toFixed(1)}
                                     </span>
                                     <button onClick={() => set(fontSizeKey, Math.min(600, (formData[fontSizeKey] || 1) + (isLogo ? 5 : 0.1)))}
-                                        style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: '#f8f9fa', width: '24px', height: '26px', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}
-                                        title="Agrandar fuente">A<sup style={{ fontSize: '0.45rem' }}>+</sup></button>
+                                        style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: '#f8f9fa', width: '22px', height: '24px', fontSize: '0.7rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}
+                                        title="Agrandar fuente">A<sup style={{ fontSize: '0.4rem' }}>+</sup></button>
                                 </div>
-                                <span style={{ fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px' }}>Fuente</span>
-                            </div>
-
-                            {/* ── Grupo: Formato de texto (N K S tachado sombra) ── */}
-                            {!isLogo && (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px', borderRight: '1px solid #e9ecef', justifyContent: 'space-between', gap: '3px' }}>
-                                    <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
+                                {/* Fila 2: estilos (N K S tachado sombra) */}
+                                {!isLogo && (
+                                    <div style={{ display: 'flex', gap: '2px' }}>
                                         {[
-                                            { key: 'Bold', label: 'N', title: 'Negrita', style: { fontWeight: 900, fontFamily: 'serif' } },
-                                            { key: 'Italic', label: 'K', title: 'Cursiva', style: { fontStyle: 'italic', fontFamily: 'serif' } },
-                                            { key: 'Underline', label: 'S', title: 'Subrayado', style: { textDecoration: 'underline' } },
-                                            { key: 'Strike', label: 'S', title: 'Tachado', style: { textDecoration: 'line-through', color: '#888' } },
-                                            { key: 'Shadow', label: 'A', title: 'Sombra de texto', style: { textShadow: '2px 2px 0 rgba(0,0,0,0.5)', fontWeight: 700 } },
+                                            { key: 'Bold', label: 'N', title: 'Negrita', extraStyle: { fontWeight: 900 } },
+                                            { key: 'Italic', label: 'K', title: 'Cursiva', extraStyle: { fontStyle: 'italic', fontFamily: 'serif' } },
+                                            { key: 'Underline', label: 'S', title: 'Subrayado', extraStyle: { textDecoration: 'underline' } },
+                                            { key: 'Strike', label: 'S̶', title: 'Tachado', extraStyle: {} },
+                                            { key: 'Shadow', label: 'A', title: 'Sombra', extraStyle: { textShadow: '1px 1px 2px rgba(0,0,0,0.6)' } },
                                         ].map(btn => {
-                                            const stateKey = `${target}${btn.key}`;
-                                            const isOn = !!formData[stateKey];
+                                            const sk = `${target}${btn.key}`;
+                                            const on = !!formData[sk];
                                             return (
-                                                <button key={btn.key} onClick={() => set(stateKey, !isOn)} title={btn.title}
-                                                    style={{ ...btn.style, width: '26px', height: '26px', border: `1px solid ${isOn ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '4px', background: isOn ? '#ede9fe' : '#f8f9fa', color: isOn ? '#5b2ea6' : '#333', cursor: 'pointer', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                <button key={btn.key} onClick={() => set(sk, !on)} title={btn.title}
+                                                    style={{ ...btn.extraStyle, width: '24px', height: '24px', border: `1px solid ${on ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '4px', background: on ? '#ede9fe' : '#f8f9fa', color: on ? '#5b2ea6' : '#444', cursor: 'pointer', fontSize: '0.78rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                                     {btn.label}
                                                 </button>
                                             );
                                         })}
                                     </div>
-                                    <span style={{ fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px' }}>Fuente</span>
-                                </div>
-                            )}
+                                )}
+                                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px', alignSelf: 'center' }}>Fuente</span>
+                            </div>
 
                             {/* ── Grupo: Color ── */}
                             {!isLogo && (
@@ -1448,9 +1443,10 @@ const AdminAnnouncements = () => {
                                 </div>
                             )}
 
-                            {/* ── Grupo: Alineación ── */}
+                            {/* ── Grupo: Párrafo + Espaciado (unificado) ── */}
                             {!isLogo && (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px', borderRight: '1px solid #e9ecef', justifyContent: 'space-between', gap: '3px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '2px 10px', borderRight: '1px solid #e9ecef', justifyContent: 'center', gap: '3px' }}>
+                                    {/* Fila 1: alineación */}
                                     <div style={{ display: 'flex', gap: '2px' }}>
                                         {[
                                             { val: 'left', icon: 'bi-text-left', title: 'Izquierda' },
@@ -1459,39 +1455,31 @@ const AdminAnnouncements = () => {
                                             { val: 'justify', icon: 'bi-justify', title: 'Justificado' },
                                         ].map(a => {
                                             const alignKey = `${target}Align`;
-                                            const isOn = (formData[alignKey] || 'center') === a.val;
+                                            const on = (formData[alignKey] || 'center') === a.val;
                                             return (
                                                 <button key={a.val} onClick={() => set(alignKey, a.val)} title={a.title}
-                                                    style={{ width: '26px', height: '26px', border: `1px solid ${isOn ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '4px', background: isOn ? '#ede9fe' : '#f8f9fa', color: isOn ? '#5b2ea6' : '#333', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    style={{ width: '24px', height: '24px', border: `1px solid ${on ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '4px', background: on ? '#ede9fe' : '#f8f9fa', color: on ? '#5b2ea6' : '#333', cursor: 'pointer', fontSize: '0.82rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                     <i className={`bi ${a.icon}`}></i>
                                                 </button>
                                             );
                                         })}
                                     </div>
-                                    <span style={{ fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px' }}>Párrafo</span>
-                                </div>
-                            )}
-
-                            {/* ── Grupo: Interlineado ── */}
-                            {!isLogo && (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px', borderRight: '1px solid #e9ecef', justifyContent: 'space-between', gap: '3px' }}>
-                                    <div style={{ display: 'flex', gap: '2px', flexDirection: 'column' }}>
-                                        {[
-                                            { val: 1.0, icon: 'bi-text-paragraph', label: '1.0' },
-                                            { val: 1.5, icon: 'bi-text-paragraph', label: '1.5' },
-                                            { val: 2.0, icon: 'bi-text-paragraph', label: '2.0' },
-                                        ].map(ls => {
-                                            const lsKey = `${target}LineHeight`;
-                                            const isOn = (formData[lsKey] || 1.2) === ls.val;
-                                            return (
-                                                <button key={ls.val} onClick={() => set(lsKey, ls.val)} title={`Interlineado ${ls.label}`}
-                                                    style={{ height: '17px', border: `1px solid ${isOn ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '3px', background: isOn ? '#ede9fe' : '#f8f9fa', color: isOn ? '#5b2ea6' : '#333', cursor: 'pointer', fontSize: '0.6rem', fontWeight: isOn ? 700 : 400, padding: '0 6px' }}>
-                                                    {ls.label}
-                                                </button>
-                                            );
-                                        })}
+                                    {/* Fila 2: interlineado dropdown */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <i className="bi bi-text-paragraph" style={{ fontSize: '0.75rem', color: '#666' }}></i>
+                                        <select
+                                            style={{ fontSize: '0.68rem', height: '22px', padding: '0 4px', border: '1px solid #dee2e6', borderRadius: '4px', background: '#f8f9fa' }}
+                                            value={formData[`${target}LineHeight`] || 1.2}
+                                            onChange={e => set(`${target}LineHeight`, parseFloat(e.target.value))}
+                                        >
+                                            <option value={1.0}>1.0 — Simple</option>
+                                            <option value={1.2}>1.2 — Compacto</option>
+                                            <option value={1.5}>1.5 — Normal</option>
+                                            <option value={2.0}>2.0 — Doble</option>
+                                            <option value={2.5}>2.5 — Amplio</option>
+                                        </select>
                                     </div>
-                                    <span style={{ fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px' }}>Espaciado</span>
+                                    <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px', alignSelf: 'center' }}>Párrafo</span>
                                 </div>
                             )}
 
@@ -1513,83 +1501,151 @@ const AdminAnnouncements = () => {
                     {/* ═══════ INSERTAR ═══════ */}
                     {activeRibbonTab === 'insertar' && (
                         <>
-                            {/* Grupo: TEXTO */}
-                            <div className="d-flex flex-column px-3 border-end">
-                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Texto</span>
-                                <div className="d-flex gap-1 flex-wrap" style={{ maxWidth: '280px' }}>
+                            {/* ── Grupo: TEXTO — Click = activar/mostrar ese elemento ── */}
+                            <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 10px', borderRight: '1px solid #e9ecef', gap: '2px' }}>
+                                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                                     {[
-                                        { id: 'title', icon: 'bi-type-h1', label: 'H1', title: 'Título' },
-                                        { id: 'title2', icon: 'bi-type-h2', label: 'H2', title: 'Sub 1' },
-                                        { id: 'title3', icon: 'bi-type-h3', label: 'H3', title: 'Sub 2' },
-                                        { id: 'speaker', icon: 'bi-person', label: '', title: 'Orador' },
-                                        { id: 'tag', icon: 'bi-tag', label: '', title: 'Etiqueta' },
-                                        { id: 'date', icon: 'bi-calendar3', label: '', title: 'Fecha' },
-                                        { id: 'time', icon: 'bi-clock', label: '', title: 'Hora' },
-                                        { id: 'location', icon: 'bi-geo-alt', label: '', title: 'Lugar' },
-                                    ].map(el => (
-                                        <button key={el.id}
-                                            className={`btn p-0 d-flex flex-column align-items-center justify-content-center ${selectedElementId === el.id ? 'btn-primary text-white' : 'btn-light'}`}
-                                            style={{ width: '32px', height: '32px', fontSize: '0.7rem' }}
-                                            onClick={() => { setSelectedElementId(el.id); setActiveRibbonTab('inicio'); }}
-                                            title={el.title}>
-                                            <i className={`bi ${el.icon}`} style={{ fontSize: '0.85rem' }}></i>
-                                            {el.label && <span style={{ fontSize: '0.5rem', lineHeight: 1 }}>{el.label}</span>}
-                                        </button>
-                                    ))}
+                                        { id: 'title', icon: 'bi-type-h1', label: 'H1', title: 'Título principal', color: '#5b2ea6', size: '1.1rem' },
+                                        { id: 'title2', icon: 'bi-type-h2', label: 'H2', title: 'Subtítulo', color: '#7c3aed', size: '0.9rem' },
+                                        { id: 'title3', icon: 'bi-type-h3', label: 'H3', title: 'Línea 3', color: '#9f67ff', size: '0.78rem' },
+                                        { id: 'speaker', icon: 'bi-person-fill', label: '', title: 'Orador', color: '#374151' },
+                                        { id: 'tag', icon: 'bi-tag-fill', label: '', title: 'Etiqueta', color: '#2563eb' },
+                                        { id: 'date', icon: 'bi-calendar3', label: '', title: 'Fecha', color: '#059669' },
+                                        { id: 'time', icon: 'bi-clock-fill', label: '', title: 'Hora', color: '#d97706' },
+                                        { id: 'location', icon: 'bi-geo-alt-fill', label: '', title: 'Lugar', color: '#dc2626' },
+                                    ].map(el => {
+                                        const active = selectedElementId === el.id;
+                                        return (
+                                            <button key={el.id}
+                                                onClick={() => { setSelectedElementId(el.id); setActiveRibbonTab('inicio'); }}
+                                                title={el.title}
+                                                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', border: `2px solid ${active ? '#5b2ea6' : '#e9ecef'}`, borderRadius: '8px', background: active ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', gap: '1px' }}>
+                                                <i className={`bi ${el.icon}`} style={{ fontSize: el.size || '1rem', color: active ? '#5b2ea6' : el.color }}></i>
+                                                {el.label && <span style={{ fontSize: '0.5rem', fontWeight: 700, color: active ? '#5b2ea6' : el.color, lineHeight: 1 }}>{el.label}</span>}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
+                                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', textAlign: 'center' }}>Texto</span>
                             </div>
 
-                            {/* Grupo: COLORES RÁPIDOS */}
-                            <div className="d-flex flex-column px-3 border-end">
-                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Colores Rápidos</span>
-                                <div className="d-flex gap-1 flex-wrap" style={{ maxWidth: '160px' }}>
-                                    {['#ffffff', '#000000', '#5b2ea6', '#ff6b35', '#f7c59f', '#2ec4b6', '#e71d36', '#011627', '#ffd700', '#00ff88'].map(c => (
-                                        <button key={c} className="btn p-0 border rounded-1"
-                                            style={{ width: '20px', height: '20px', background: c, border: selectedElementId && formData[`${selectedElementId}Color`] === c ? '2px solid #5b2ea6' : '1px solid #ddd' }}
-                                            onClick={() => selectedElementId && set(`${selectedElementId}Color`, c)}
-                                            title={c}></button>
-                                    ))}
+                            {/* ── Grupo: LOGOS ── */}
+                            <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 10px', borderRight: '1px solid #e9ecef', gap: '2px' }}>
+                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+
+                                    {/* IASD — icono dentro de rectángulo */}
+                                    <button
+                                        onClick={() => set('showLogoIasd', !formData.showLogoIasd)}
+                                        title="Logo Iglesia Adventista"
+                                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '48px', height: '40px', border: `2px solid ${formData.showLogoIasd ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '8px', background: formData.showLogoIasd ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', gap: '2px' }}>
+                                        <i className="bi bi-church" style={{ fontSize: '1.1rem', color: formData.showLogoIasd ? '#5b2ea6' : '#374151' }}></i>
+                                        <span style={{ fontSize: '0.45rem', fontWeight: 700, color: formData.showLogoIasd ? '#5b2ea6' : '#666', lineHeight: 1 }}>IASD</span>
+                                    </button>
+
+                                    {/* Logo Oasis */}
+                                    <button
+                                        onClick={() => set('showLogoOasis', !formData.showLogoOasis)}
+                                        title="Logo Oasis"
+                                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '48px', height: '40px', border: `2px solid ${formData.showLogoOasis ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '8px', background: formData.showLogoOasis ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', padding: '2px' }}>
+                                        <img src={logoOasis} style={{ height: '22px', objectFit: 'contain', filter: formData.showLogoOasis ? 'none' : 'grayscale(0.5)' }} alt="Oasis" />
+                                    </button>
+
+                                    {/* RRSS Oasis */}
+                                    <button
+                                        onClick={() => set('showRrss', !formData.showRrss)}
+                                        title="Redes Sociales Oasis"
+                                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '48px', height: '40px', border: `2px solid ${formData.showRrss ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '8px', background: formData.showRrss ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', padding: '2px' }}>
+                                        <img src={rrssImage} style={{ height: '22px', objectFit: 'contain', filter: formData.showRrss ? 'none' : 'grayscale(0.5)' }} alt="RRSS" />
+                                    </button>
                                 </div>
+                                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', textAlign: 'center' }}>Logos</span>
                             </div>
 
-                            {/* Grupo: IMAGEN */}
-                            <div className="d-flex flex-column px-3 border-end">
-                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Imagen</span>
-                                <div className="d-flex gap-1 align-items-center">
-                                    <label className="btn btn-light p-2" style={{ cursor: 'pointer' }} title="Subir imagen">
-                                        <i className="bi bi-cloud-upload" style={{ fontSize: '1rem' }}></i>
+                            {/* ── Grupo: IMAGEN ── */}
+                            <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 10px', borderRight: '1px solid #e9ecef', gap: '2px' }}>
+                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                    <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', border: '2px dashed #dee2e6', borderRadius: '8px', background: '#f8f9fa', cursor: 'pointer', gap: '1px' }} title="Subir imagen de fondo">
+                                        <i className="bi bi-cloud-upload" style={{ fontSize: '1rem', color: '#555' }}></i>
+                                        <span style={{ fontSize: '0.45rem', fontWeight: 700, color: '#888' }}>Subir</span>
                                         <input type="file" ref={fileInputRef} hidden onChange={handleFileChange} accept="image/*" />
                                     </label>
                                     {formData.bgImage && (
-                                        <>
-                                            <img src={formData.bgImage} style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '4px' }} alt="bg" />
-                                            <button className="btn btn-light p-1" onClick={() => setMany({ bgImage: null, bgMode: 'gradient' })} title="Quitar">
-                                                <i className="bi bi-x text-danger"></i>
-                                            </button>
-                                        </>
+                                        <div style={{ position: 'relative' }}>
+                                            <img src={formData.bgImage} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '8px', border: '2px solid #5b2ea6' }} alt="bg" />
+                                            <button onClick={() => setMany({ bgImage: null, bgMode: 'gradient' })} title="Quitar"
+                                                style={{ position: 'absolute', top: '-6px', right: '-6px', width: '16px', height: '16px', background: '#ef4444', border: 'none', borderRadius: '50%', color: '#fff', fontSize: '0.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                                        </div>
                                     )}
                                 </div>
+                                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', textAlign: 'center' }}>Imagen</span>
                             </div>
 
-                            {/* Grupo: LOGOS - Modo icono */}
-                            <div className="d-flex flex-column align-items-center px-3">
-                                <span className="small text-muted mb-1" style={{ fontSize: '0.55rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Logos</span>
-                                <div className="d-flex gap-1">
-                                    <button
-                                        className={`btn p-1 ${formData.showLogoOasis ? 'btn-primary' : 'btn-light'}`}
-                                        style={{ width: '36px', height: '36px' }}
-                                        onClick={() => set('showLogoOasis', !formData.showLogoOasis)}
-                                        title="Logo Oasis">
-                                        <img src={logoOasis} style={{ height: '22px', filter: formData.showLogoOasis ? 'brightness(10)' : 'none' }} alt="" />
-                                    </button>
-                                    <button
-                                        className={`btn p-1 ${formData.showLogoIasd ? 'btn-primary' : 'btn-light'}`}
-                                        style={{ width: '36px', height: '36px' }}
-                                        onClick={() => set('showLogoIasd', !formData.showLogoIasd)}
-                                        title="Logo IASD">
-                                        <img src={logoAdventista} style={{ height: '22px', filter: formData.showLogoIasd ? 'brightness(10)' : 'none' }} alt="" />
-                                    </button>
+                            {/* ── Grupo: FORMAS con degradado ── */}
+                            <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 10px', gap: '2px' }}>
+                                <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-start' }}>
+                                    {/* Selector de forma */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                        <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', width: '106px' }}>
+                                            {[
+                                                { shape: 'rect', icon: 'bi-square', title: 'Rectángulo' },
+                                                { shape: 'rounded', icon: 'bi-app', title: 'Rect. redondeado' },
+                                                { shape: 'circle', icon: 'bi-circle', title: 'Círculo' },
+                                                { shape: 'triangle', icon: 'bi-triangle', title: 'Triángulo' },
+                                                { shape: 'diamond', icon: 'bi-diamond', title: 'Rombo' },
+                                                { shape: 'star', icon: 'bi-star', title: 'Estrella' },
+                                                { shape: 'arrow', icon: 'bi-arrow-right-square', title: 'Flecha' },
+                                                { shape: 'line', icon: 'bi-dash-lg', title: 'Línea' },
+                                            ].map(s => {
+                                                const sel = (formData.shapeType || 'rect') === s.shape;
+                                                return (
+                                                    <button key={s.shape}
+                                                        onClick={() => set('shapeType', s.shape)}
+                                                        title={s.title}
+                                                        style={{ width: '24px', height: '24px', border: `1px solid ${sel ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '4px', background: sel ? '#ede9fe' : '#f8f9fa', color: sel ? '#5b2ea6' : '#555', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        <i className={`bi ${s.icon}`}></i>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                    {/* Controles de degradado */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', borderLeft: '1px solid #e9ecef', paddingLeft: '8px' }}>
+                                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                            <input type="color" value={formData.shapeGradFrom || '#5b2ea6'} onChange={e => set('shapeGradFrom', e.target.value)}
+                                                style={{ width: '22px', height: '22px', padding: '0', border: '1px solid #dee2e6', borderRadius: '4px', cursor: 'pointer' }} title="Color inicio" />
+                                            <span style={{ fontSize: '0.55rem', color: '#888' }}>→</span>
+                                            <input type="color" value={formData.shapeGradTo || '#a78bfa'} onChange={e => set('shapeGradTo', e.target.value)}
+                                                style={{ width: '22px', height: '22px', padding: '0', border: '1px solid #dee2e6', borderRadius: '4px', cursor: 'pointer' }} title="Color final" />
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '0.55rem', color: '#888', width: '16px' }}>⬛</span>
+                                            <input type="range" min="0" max="360" value={formData.shapeGradAngle || 135} onChange={e => set('shapeGradAngle', parseInt(e.target.value))}
+                                                style={{ width: '56px', height: '4px' }} title="Ángulo" />
+                                            <span style={{ fontSize: '0.55rem', color: '#888', width: '24px' }}>{formData.shapeGradAngle || 135}°</span>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '0.55rem', color: '#888', width: '16px' }}>↔</span>
+                                            <input type="range" min="20" max="300" value={formData.shapeSize || 80} onChange={e => set('shapeSize', parseInt(e.target.value))}
+                                                style={{ width: '56px', height: '4px' }} title="Tamaño" />
+                                            <span style={{ fontSize: '0.55rem', color: '#888', width: '28px' }}>{formData.shapeSize || 80}px</span>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                const shapes = [...(formData.shapes || []), {
+                                                    id: Date.now(), type: formData.shapeType || 'rect',
+                                                    gradFrom: formData.shapeGradFrom || '#5b2ea6',
+                                                    gradTo: formData.shapeGradTo || '#a78bfa',
+                                                    angle: formData.shapeGradAngle || 135,
+                                                    size: formData.shapeSize || 80, x: 50, y: 50,
+                                                }];
+                                                set('shapes', shapes);
+                                            }}
+                                            style={{ height: '20px', fontSize: '0.6rem', fontWeight: 700, border: 'none', borderRadius: '4px', background: '#5b2ea6', color: '#fff', cursor: 'pointer', padding: '0 8px' }}>
+                                            + Agregar
+                                        </button>
+                                    </div>
                                 </div>
+                                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', textAlign: 'center' }}>Formas</span>
                             </div>
                         </>
                     )}
