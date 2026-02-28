@@ -1282,7 +1282,7 @@ const AdminAnnouncements = () => {
         const fontKey = `${target}Font`;
 
         return (
-            <div className="ribbon-container bg-white border-bottom shadow-sm" style={{ borderRadius: '0' }}>
+            <div className="ribbon-container bg-white border-bottom shadow-sm flex-shrink-0" style={{ borderRadius: '0' }}>
                 {/* Ribbon Tabs */}
                 <div className="d-flex border-bottom bg-light px-2" style={{ gap: '2px' }}>
                     {['Inicio', 'Insertar', 'Diseño', 'Formato'].map(tab => (
@@ -1323,7 +1323,7 @@ const AdminAnnouncements = () => {
                 </div>
 
                 {/* Ribbon Content */}
-                <div className="p-3 bg-white d-flex align-items-center gap-4 flex-wrap" style={{ minHeight: '80px' }}>
+                <div className="px-3 py-2 bg-white d-flex align-items-center gap-4 flex-wrap" style={{ minHeight: '60px' }}>
                     
                     {/* ═══════ INICIO ═══════ */}
                     {activeRibbonTab === 'inicio' && (
@@ -1648,11 +1648,11 @@ const AdminAnnouncements = () => {
     };
 
     return (
-        <div className="canva-container d-flex flex-column" style={{ height: '100vh', width: '100vw', background: '#f4f7f8', overflow: 'hidden' }}>
+        <div className="canva-container d-flex flex-column" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, height: '100vh', width: '100vw', background: '#f4f7f8', overflow: 'hidden', zIndex: 1100 }}>
             <FontPreloader />
 
             {/* Header with Logo and Mode Switcher */}
-            <header className="d-flex align-items-center px-3 bg-white border-bottom" style={{ height: '42px', minHeight: '42px' }}>
+            <header className="d-flex align-items-center px-3 bg-white border-bottom flex-shrink-0" style={{ height: '40px', minHeight: '40px' }}>
                 <img src={logoOasis} style={{ height: '26px', cursor: 'pointer' }} alt="Oasis" onClick={() => navigate('/admin')} title="Volver al inicio" />
                 <div style={{ width: '1px', height: '20px', background: '#ddd', margin: '0 12px' }} />
                 <span className="fw-bold" style={{ fontSize: '0.9rem', color: '#333' }}>EDITOR</span>
@@ -1675,14 +1675,16 @@ const AdminAnnouncements = () => {
             {activeMode === 'anuncios' && renderRibbon()}
 
             {/* Main Workspace */}
-            <div className="canva-workspace flex-grow-1" style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
+            <div className="canva-workspace" style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: '1 1 0%', minHeight: 0, overflow: 'hidden' }}>
                 <main
-                    className="workspace-body flex-grow-1"
+                    className="workspace-body"
                     style={{ 
+                        flex: '1 1 0%',
+                        minHeight: 0,
                         overflowY: 'auto', 
                         background: '#e9ecef', 
                         position: 'relative', 
-                        padding: '1.5rem',
+                        padding: '1rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
@@ -1704,6 +1706,7 @@ const AdminAnnouncements = () => {
                                     justifyContent: 'center',
                                     width: '100%',
                                     height: '100%',
+                                    minHeight: 0,
                                     perspective: '1000px' 
                                 }}
                             >
@@ -1713,8 +1716,9 @@ const AdminAnnouncements = () => {
                                     ref={previewRef}
                                     id="preview-container"
                                     style={{
-                                        width: formData.format === 'whatsapp' ? '280px' : (formData.format === 'youtube' ? '600px' : '380px'),
-                                        maxWidth: isMobile ? '85%' : '500px',
+                                        width: formData.format === 'whatsapp' ? '260px' : (formData.format === 'youtube' ? '560px' : '340px'),
+                                        maxWidth: isMobile ? '85vw' : '45vw',
+                                        maxHeight: '78vh',
                                         aspectRatio: currentFmt.aspect,
                                         position: 'relative',
                                         overflow: 'hidden',
@@ -1954,11 +1958,11 @@ const AdminAnnouncements = () => {
                             className="announcements-list-drawer bg-white border-start shadow-lg"
                             style={{ 
                                 position: 'fixed', 
-                                top: activeMode === 'anuncios' ? '164px' : '42px',
+                                top: activeMode === 'anuncios' ? '140px' : '40px',
                                 right: 0, 
                                 bottom: 0,
                                 width: isMobile ? '100%' : '280px', 
-                                zIndex: 105, 
+                                zIndex: 1150, 
                                 overflowY: 'auto',
                                 borderRadius: '0'
                             }}
@@ -2080,6 +2084,9 @@ const AdminAnnouncements = () => {
                     
                     /* Mobile responsive adjustments */
                     @media (max-width: 991px) {
+                        .canva-container {
+                            z-index: 1100 !important;
+                        }
                         .canva-sidebar {
                             position: fixed !important;
                             bottom: 0;
@@ -2118,50 +2125,23 @@ const AdminAnnouncements = () => {
                         .canva-workspace {
                             padding-bottom: 56px !important;
                         }
-                        .workspace-header {
-                            padding: 0.4rem 0.5rem !important;
-                            min-height: 48px;
-                        }
-                        .workspace-header .btn-sm {
-                            padding: 0.2rem 0.4rem !important;
-                            font-size: 0.65rem !important;
-                        }
-                        .workspace-header .nav-pills {
-                            font-size: 0.6rem !important;
-                        }
                         .workspace-body {
                             padding: 0.5rem !important;
                             padding-bottom: 60px !important;
                         }
                         #preview-container {
-                            width: 90% !important;
+                            width: 85vw !important;
                             max-width: 320px !important;
+                            max-height: 65vh !important;
                             margin: 0 auto !important;
                         }
                         .announcements-list-drawer {
-                            max-height: 35vh !important;
+                            top: 40px !important;
+                            max-height: none !important;
                         }
-                        .announcements-list-drawer .list-group-item {
-                            padding: 0.5rem 0.75rem !important;
-                        }
-                        .left-tools-panel {
-                            left: 4px !important;
-                            padding: 6px !important;
-                            min-width: 44px !important;
-                        }
-                        .left-tools-panel .btn {
-                            width: 32px !important;
-                            height: 32px !important;
-                            font-size: 0.85rem !important;
-                        }
-                        .quick-access-bar {
-                            gap: 6px !important;
-                            padding: 6px 10px !important;
-                        }
-                        .quick-access-bar .btn {
-                            width: 32px !important;
-                            height: 32px !important;
-                            font-size: 0.8rem !important;
+                        .ribbon-container .d-flex.flex-wrap {
+                            overflow-x: auto !important;
+                            flex-wrap: nowrap !important;
                         }
                     }
                     
@@ -2171,14 +2151,16 @@ const AdminAnnouncements = () => {
                             width: 280px !important;
                         }
                         #preview-container {
-                            max-width: 400px !important;
+                            max-width: 380px !important;
+                            max-height: 72vh !important;
                         }
                     }
                     
                     /* Small desktop */
                     @media (min-width: 1200px) and (max-width: 1399px) {
                         #preview-container {
-                            max-width: 450px !important;
+                            max-width: 420px !important;
+                            max-height: 75vh !important;
                         }
                     }
 
