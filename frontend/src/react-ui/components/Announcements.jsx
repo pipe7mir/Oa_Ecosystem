@@ -20,11 +20,16 @@ const buildUrl = (image_url) => {
    - Landscape image  → fills stage completely (object-fit: cover)
    - Portrait image   → centered with blurred background fill
    Transitions: fade+scale on open/close, slide on next/prev
+   
+   Projector Mode: True fullscreen with image filling width
 ──────────────────────────────────────────────────────────────── */
 const FullscreenModal = ({ announcement, onClose, onNext, onPrev, hasNext, hasPrev, transitionDir }) => {
     const [visible, setVisible] = useState(false);
     const [imgVisible, setImgVisible] = useState(false);
+    const [isProjectorMode, setIsProjectorMode] = useState(false);
+    const [controlsVisible, setControlsVisible] = useState(true);
     const stageRef = useRef(null);
+    const hideControlsTimeout = useRef(null);
     const imageUrl = buildUrl(announcement?.imageUrl || announcement?.image_url);
 
     // Bloqueo de scroll y animación de entrada
@@ -46,18 +51,60 @@ const FullscreenModal = ({ announcement, onClose, onNext, onPrev, hasNext, hasPr
         return () => clearTimeout(t);
     }, [announcement?.id]);
 
+    // Auto-hide controls in projector mode
+    useEffect(() => {
+        if (isProjectorMode) {
+            const showControls = () => {
+                setControlsVisible(true);
+                clearTimeout(hideControlsTimeout.current);
+                hideControlsTimeout.current = setTimeout(() => setControlsVisible(false), 2500);
+            };
+            window.addEventListener('mousemove', showControls);
+            window.addEventListener('touchstart', showControls);
+            showControls();
+            return () => {
+                window.removeEventListener('mousemove', showControls);
+                window.removeEventListener('touchstart', showControls);
+                clearTimeout(hideControlsTimeout.current);
+            };
+        } else {
+            setControlsVisible(true);
+        }
+    }, [isProjectorMode]);
+
+    // Listen for fullscreen exit
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                setIsProjectorMode(false);
+            }
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+        };
+    }, []);
+
     const handleClose = () => {
+        if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+        }
         setVisible(false);
         setTimeout(onClose, 320);
     };
 
-    const handleFullscreen = (e) => {
+    const handleProjectorMode = async (e) => {
         e.stopPropagation();
-        if (stageRef.current) {
-            const el = stageRef.current;
-            if (el.requestFullscreen) el.requestFullscreen();
-            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-            else if (el.msRequestFullscreen) el.msRequestFullscreen();
+        const el = document.documentElement; // True fullscreen on the entire page
+        try {
+            if (el.requestFullscreen) await el.requestFullscreen();
+            else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+            else if (el.msRequestFullscreen) await el.msRequestFullscreen();
+            setIsProjectorMode(true);
+        } catch (err) {
+            console.error('Fullscreen error:', err);
         }
     };
 
@@ -89,8 +136,10 @@ const FullscreenModal = ({ announcement, onClose, onNext, onPrev, hasNext, hasPr
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        transition: 'all 0.2s ease',
+        transition: 'all 0.3s ease',
         backdropFilter: 'blur(8px)',
+        opacity: controlsVisible ? 1 : 0,
+        pointerEvents: controlsVisible ? 'auto' : 'none',
     };
 
     return createPortal(
@@ -98,24 +147,30 @@ const FullscreenModal = ({ announcement, onClose, onNext, onPrev, hasNext, hasPr
             style={{
                 position: 'fixed', inset: 0, zIndex: 9999,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: 'rgba(0,0,0,0.97)',
-                transition: 'opacity 0.32s cubic-bezier(.4,0,.2,1), backdrop-filter 0.32s',
+                background: 'black',
+                transition: 'opacity 0.32s cubic-bezier(.4,0,.2,1)',
                 opacity: visible ? 1 : 0,
-                backdropFilter: visible ? 'blur(20px)' : 'blur(0px)',
             }}
-            onClick={handleClose}
+            onClick={isProjectorMode ? undefined : handleClose}
         >
             {/* Botones de Control */}
-            <div style={{ position: 'absolute', top: '20px', right: '24px', zIndex: 10020, display: 'flex', gap: '12px' }}>
+            <div style={{ 
+                position: 'absolute', top: '20px', right: '24px', zIndex: 10020, 
+                display: 'flex', gap: '12px',
+                transition: 'opacity 0.3s ease',
+                opacity: controlsVisible ? 1 : 0,
+                pointerEvents: controlsVisible ? 'auto' : 'none',
+            }}>
                 <button
-                    onClick={handleFullscreen}
+                    onClick={handleProjectorMode}
                     style={{
-                        background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: '50%',
+                        background: isProjectorMode ? 'rgba(91, 46, 166, 0.9)' : 'rgba(255,255,255,0.12)', 
+                        border: 'none', borderRadius: '50%',
                         width: '48px', height: '48px', color: 'white', fontSize: '1.3rem',
                         cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         transition: 'all 0.2s', backdropFilter: 'blur(8px)',
                     }}
-                    title="Modo Proyectar"
+                    title="Modo Proyector (Pantalla Completa)"
                 >
                     <i className="bi bi-display"></i>
                 </button>
@@ -155,24 +210,27 @@ const FullscreenModal = ({ announcement, onClose, onNext, onPrev, hasNext, hasPr
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: 'black'
+                    background: 'black',
+                    overflow: 'hidden',
                 }}
             >
                 {imageUrl ? (
                     <>
-                        {/* Relleno de fondo con desenfoque */}
-                        <div
-                            style={{
-                                position: 'absolute', inset: 0, zIndex: 0,
-                                backgroundImage: `url(${imageUrl})`,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                                filter: 'blur(40px) brightness(0.3)',
-                                transform: 'scale(1.1)',
-                            }}
-                        />
+                        {/* Relleno de fondo con desenfoque (solo en modo normal) */}
+                        {!isProjectorMode && (
+                            <div
+                                style={{
+                                    position: 'absolute', inset: 0, zIndex: 0,
+                                    backgroundImage: `url(${imageUrl})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    filter: 'blur(40px) brightness(0.3)',
+                                    transform: 'scale(1.1)',
+                                }}
+                            />
+                        )}
 
-                        {/* Imagen Principal - Ajustes de Tamaño y Posición */}
+                        {/* Imagen Principal - Alta Calidad para Proyector */}
                         <img
                             key={announcement.id}
                             src={imageUrl}
@@ -180,14 +238,22 @@ const FullscreenModal = ({ announcement, onClose, onNext, onPrev, hasNext, hasPr
                             style={{
                                 position: 'relative',
                                 zIndex: 1,
-                                // Tamaño máximo para llenar la pantalla
-                                maxWidth: '100vw',
-                                maxHeight: '100vh',
-                                width: 'auto',
-                                height: 'auto',
-                                objectFit: 'contain',
+                                // En modo proyector: llenar todo el ancho disponible
+                                // En modo normal: contener dentro de la pantalla
+                                ...(isProjectorMode ? {
+                                    width: '100%',
+                                    height: 'auto',
+                                    maxWidth: '100vw',
+                                    objectFit: 'fill',
+                                } : {
+                                    maxWidth: '100vw',
+                                    maxHeight: '100vh',
+                                    width: 'auto',
+                                    height: 'auto',
+                                    objectFit: 'contain',
+                                    boxShadow: '0 0 100px rgba(0,0,0,0.8)',
+                                }),
                                 borderRadius: '0',
-                                boxShadow: '0 0 100px rgba(0,0,0,0.8)',
                                 ...slideStyle,
                             }}
                         />
