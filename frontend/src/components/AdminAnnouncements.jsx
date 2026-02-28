@@ -1263,7 +1263,7 @@ const AdminAnnouncements = () => {
         </AnimatePresence>
     );
 
-    // Left Side Tools Panel
+    // Left Side Tools Panel - Combined with Quick Access and Format Selector
     const renderLeftTools = () => {
         const target = selectedElementId || 'title';
         const isLogo = target.toLowerCase().includes('logo') || target.toLowerCase().includes('rrss') || target.toLowerCase().includes('customlogo');
@@ -1271,8 +1271,8 @@ const AdminAnnouncements = () => {
         const fontColorKey = `${target}Color`;
 
         const squareBtnStyle = {
-            width: '40px',
-            height: '40px',
+            width: '38px',
+            height: '38px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -1280,10 +1280,25 @@ const AdminAnnouncements = () => {
             background: 'white',
             color: '#5b2ea6',
             borderRadius: '10px',
-            fontSize: '1rem',
+            fontSize: '0.95rem',
             transition: 'all 0.2s',
             cursor: 'pointer',
         };
+
+        const formatBtnStyle = (isActive) => ({
+            width: '38px',
+            height: '38px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: isActive ? '2px solid #5b2ea6' : '1px solid rgba(91, 46, 166, 0.2)',
+            background: isActive ? 'rgba(91, 46, 166, 0.15)' : 'white',
+            color: isActive ? '#5b2ea6' : '#666',
+            borderRadius: '10px',
+            fontSize: '0.95rem',
+            transition: 'all 0.2s',
+            cursor: 'pointer',
+        });
 
         return (
             <div 
@@ -1294,9 +1309,55 @@ const AdminAnnouncements = () => {
                     top: '50%', 
                     transform: 'translateY(-50%)',
                     zIndex: 50,
-                    minWidth: '52px'
+                    minWidth: '54px'
                 }}
             >
+                {/* Quick Access Section */}
+                <button 
+                    style={squareBtnStyle}
+                    className="btn"
+                    onClick={() => { setActiveSidebar('design'); setIsSidebarCollapsed(false); setShowForm(false); }}
+                    title="Plantillas"
+                >
+                    <i className="bi bi-grid-3x3-gap"></i>
+                </button>
+                <button 
+                    style={squareBtnStyle}
+                    className="btn"
+                    onClick={() => { setActiveSidebar('media'); setIsSidebarCollapsed(false); setShowForm(false); }}
+                    title="Agregar imagen"
+                >
+                    <i className="bi bi-image"></i>
+                </button>
+                <button 
+                    style={squareBtnStyle}
+                    className="btn"
+                    onClick={() => { setActiveSidebar('text'); setIsSidebarCollapsed(false); setShowForm(false); }}
+                    title="Editar textos"
+                >
+                    <i className="bi bi-fonts"></i>
+                </button>
+                <button 
+                    style={squareBtnStyle}
+                    className="btn"
+                    onClick={() => { setActiveSidebar('brand'); setIsSidebarCollapsed(false); setShowForm(false); }}
+                    title="Logos y marca"
+                >
+                    <i className="bi bi-shield-check"></i>
+                </button>
+                <button 
+                    style={{ ...squareBtnStyle, background: '#5b2ea6', color: 'white' }}
+                    className="btn"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    title="Guardar anuncio"
+                >
+                    <i className={`bi ${isSubmitting ? 'bi-hourglass-split' : 'bi-cloud-arrow-up'}`}></i>
+                </button>
+
+                {/* Divider */}
+                <div style={{ height: '1px', background: 'rgba(91, 46, 166, 0.2)', margin: '4px 0' }} />
+
                 {/* Size Controls */}
                 <button 
                     style={squareBtnStyle}
@@ -1325,9 +1386,6 @@ const AdminAnnouncements = () => {
                 >
                     <i className="bi bi-plus-lg"></i>
                 </button>
-
-                {/* Divider */}
-                <div style={{ height: '1px', background: 'rgba(91, 46, 166, 0.2)', margin: '4px 0' }} />
 
                 {/* Color Picker (solo para texto) */}
                 {!isLogo && (
@@ -1359,74 +1417,22 @@ const AdminAnnouncements = () => {
                         <i className="bi bi-x-lg"></i>
                     </button>
                 )}
-            </div>
-        );
-    };
 
-    // Quick Access Bar (top of canvas)
-    const renderQuickAccess = () => {
-        const quickBtnStyle = {
-            width: '36px',
-            height: '36px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '1px solid rgba(91, 46, 166, 0.15)',
-            background: 'white',
-            color: '#5b2ea6',
-            borderRadius: '10px',
-            fontSize: '0.9rem',
-            transition: 'all 0.2s',
-            cursor: 'pointer',
-        };
+                {/* Divider */}
+                <div style={{ height: '1px', background: 'rgba(91, 46, 166, 0.2)', margin: '4px 0' }} />
 
-        return (
-            <div 
-                className="quick-access-bar d-flex align-items-center gap-2 p-2 bg-white shadow-sm rounded-3 mb-3"
-                style={{ width: 'fit-content' }}
-            >
-                <button 
-                    style={quickBtnStyle}
-                    className="btn"
-                    onClick={() => { setActiveSidebar('design'); setIsSidebarCollapsed(false); setShowForm(false); }}
-                    title="Plantillas"
-                >
-                    <i className="bi bi-grid-3x3-gap"></i>
-                </button>
-                <button 
-                    style={quickBtnStyle}
-                    className="btn"
-                    onClick={() => { setActiveSidebar('media'); setIsSidebarCollapsed(false); setShowForm(false); }}
-                    title="Agregar imagen"
-                >
-                    <i className="bi bi-image"></i>
-                </button>
-                <button 
-                    style={quickBtnStyle}
-                    className="btn"
-                    onClick={() => { setActiveSidebar('text'); setIsSidebarCollapsed(false); setShowForm(false); }}
-                    title="Editar textos"
-                >
-                    <i className="bi bi-fonts"></i>
-                </button>
-                <button 
-                    style={quickBtnStyle}
-                    className="btn"
-                    onClick={() => { setActiveSidebar('brand'); setIsSidebarCollapsed(false); setShowForm(false); }}
-                    title="Logos y marca"
-                >
-                    <i className="bi bi-shield-check"></i>
-                </button>
-                <div style={{ width: '1px', height: '24px', background: 'rgba(91, 46, 166, 0.15)' }} />
-                <button 
-                    style={{ ...quickBtnStyle, background: '#5b2ea6', color: 'white' }}
-                    className="btn"
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    title="Guardar anuncio"
-                >
-                    <i className={`bi ${isSubmitting ? 'bi-hourglass-split' : 'bi-cloud-arrow-up'}`}></i>
-                </button>
+                {/* Format Selector */}
+                {Object.keys(FORMATS).map(k => (
+                    <button 
+                        key={k}
+                        style={formatBtnStyle(formData.format === k)}
+                        className="btn"
+                        onClick={() => set('format', k)}
+                        title={FORMATS[k].label}
+                    >
+                        <i className={`bi ${FORMATS[k].icon}`}></i>
+                    </button>
+                ))}
             </div>
         );
     };
@@ -1496,10 +1502,6 @@ const AdminAnnouncements = () => {
                         <div className="w-100 h-100"><OasisPress /></div>
                     ) : (
                         <>
-
-                            {/* Quick Access Bar (top) */}
-                            {renderQuickAccess()}
-
                             {/* Canvas Area with Left Tools */}
                             <div className="canvas-wrapper d-flex align-items-center justify-content-center w-100" style={{ perspective: '1000px', position: 'relative' }}>
                                 
@@ -1737,14 +1739,6 @@ const AdminAnnouncements = () => {
                                         </div>
                                     </div>
                                 </motion.div>
-                            </div>
-
-                            <div className="mt-4 d-flex gap-2">
-                                {Object.keys(FORMATS).map(k => (
-                                    <button key={k} className={`btn btn-sm rounded-pill px-3 fw-bold ${formData.format === k ? 'btn-dark' : 'btn-outline-dark'}`} onClick={() => set('format', k)}>
-                                        <i className={`bi ${FORMATS[k].icon} me-2`}></i>{FORMATS[k].label}
-                                    </button>
-                                ))}
                             </div>
                         </>
                     )}
