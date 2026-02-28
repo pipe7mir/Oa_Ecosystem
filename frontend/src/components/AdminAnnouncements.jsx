@@ -332,7 +332,6 @@ const AdminAnnouncements = () => {
         dateOpacity: 100,
         timeOpacity: 100,
         locationOpacity: 100,
-        showAdvanced: false,
     };
 
     const [formData, setFormData] = useState(DEFAULTS);
@@ -1265,39 +1264,94 @@ const AdminAnnouncements = () => {
 
     const renderToolbar = () => {
         const target = selectedElementId || 'title';
-        const isLogo = target.toLowerCase().includes('logo') || target.toLowerCase().includes('rrss');
+        const isLogo = target.toLowerCase().includes('logo') || target.toLowerCase().includes('rrss') || target.toLowerCase().includes('customlogo');
         const fontSizeKey = `${target}Size`;
         const fontColorKey = `${target}Color`;
-        const fontFamKey = `${target}Font`;
+
+        // Estilos del tema Oasis
+        const btnStyle = {
+            width: '36px',
+            height: '36px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid rgba(91, 46, 166, 0.2)',
+            background: 'white',
+            color: '#5b2ea6',
+            borderRadius: '50%',
+            fontSize: '1rem',
+            transition: 'all 0.2s',
+        };
 
         return (
-            <div className="canva-toolbar bg-white shadow rounded-pill p-1 px-3 mb-3 d-flex align-items-center gap-3 border shadow-sm mx-auto animate-fade-in" style={{ width: 'fit-content' }}>
-                <div className="d-flex align-items-center gap-2 border-end pe-3">
-                    <span className="x-small text-muted fw-bold text-uppercase">{target === 'title' ? 'Título' : target === 'title2' ? 'Sub' : target}:</span>
-                    {!isLogo && (
-                        <select className="form-select form-select-sm border-0 bg-transparent fw-bold" style={{ width: '120px' }} value={formData[fontFamKey] || 'Arial'} onChange={e => set(fontFamKey, e.target.value)}>
-                            {FONTS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-                        </select>
-                    )}
-                </div>
-                <div className="d-flex align-items-center gap-2 border-end pe-3">
-                    <button className="btn btn-sm btn-light rounded-circle" onClick={() => set(fontSizeKey, Math.max(isLogo ? 10 : 0.1, (formData[fontSizeKey] || 1) - (isLogo ? 5 : 0.1)))}><i className="bi bi-dash"></i></button>
-                    <span className="fw-bold x-small" style={{ width: '40px', textAlign: 'center' }}>{isLogo ? Math.round(formData[fontSizeKey]) : Math.round((formData[fontSizeKey] || 1) * 10) / 10}</span>
-                    <button className="btn btn-sm btn-light rounded-circle" onClick={() => set(fontSizeKey, Math.min(600, (formData[fontSizeKey] || 1) + (isLogo ? 5 : 0.1)))}><i className="bi bi-plus"></i></button>
-                </div>
-                <div className="d-flex align-items-center gap-2">
-                    {!isLogo && (
-                        <input type="color" className="form-control form-control-color border-0 p-0 bg-transparent w-auto" style={{ height: '24px' }} value={formData[fontColorKey] || '#ffffff'} onChange={e => set(fontColorKey, e.target.value)} />
-                    )}
-                    <button className="btn btn-sm btn-light rounded-pill px-3 x-small fw-bold" onClick={() => set('showAdvanced', !formData.showAdvanced)}>
-                        {formData.showAdvanced ? 'Simple' : 'Oasis UI'}
+            <div className="canva-toolbar bg-white shadow-sm rounded-pill py-2 px-3 mb-3 d-flex align-items-center gap-2 border mx-auto" style={{ width: 'fit-content' }}>
+                {/* Botón Reducir Tamaño */}
+                <button 
+                    style={btnStyle}
+                    className="btn"
+                    onClick={() => set(fontSizeKey, Math.max(isLogo ? 10 : 0.1, (formData[fontSizeKey] || 1) - (isLogo ? 5 : 0.1)))}
+                    title="Reducir tamaño"
+                >
+                    <i className="bi bi-dash-lg"></i>
+                </button>
+
+                {/* Indicador de Tamaño */}
+                <span className="fw-bold" style={{ 
+                    minWidth: '32px', 
+                    textAlign: 'center', 
+                    fontSize: '0.8rem',
+                    color: '#5b2ea6',
+                    background: 'rgba(91, 46, 166, 0.1)',
+                    padding: '4px 8px',
+                    borderRadius: '20px'
+                }}>
+                    {isLogo ? Math.round(formData[fontSizeKey]) : (formData[fontSizeKey] || 1).toFixed(1)}
+                </span>
+
+                {/* Botón Aumentar Tamaño */}
+                <button 
+                    style={btnStyle}
+                    className="btn"
+                    onClick={() => set(fontSizeKey, Math.min(600, (formData[fontSizeKey] || 1) + (isLogo ? 5 : 0.1)))}
+                    title="Aumentar tamaño"
+                >
+                    <i className="bi bi-plus-lg"></i>
+                </button>
+
+                {/* Separador */}
+                <div style={{ width: '1px', height: '24px', background: 'rgba(91, 46, 166, 0.2)', margin: '0 4px' }} />
+
+                {/* Color Picker (solo para texto, no logos) */}
+                {!isLogo && (
+                    <label style={{ 
+                        ...btnStyle, 
+                        cursor: 'pointer',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        background: formData[fontColorKey] || '#ffffff',
+                        border: '2px solid #5b2ea6'
+                    }} title="Color">
+                        <input 
+                            type="color" 
+                            style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                            value={formData[fontColorKey] || '#ffffff'} 
+                            onChange={e => set(fontColorKey, e.target.value)} 
+                        />
+                        <i className="bi bi-palette" style={{ color: formData[fontColorKey]?.toLowerCase() === '#ffffff' || formData[fontColorKey]?.toLowerCase() === '#fff' ? '#333' : 'white', mixBlendMode: 'difference' }}></i>
+                    </label>
+                )}
+
+                {/* Botón Deseleccionar (solo visible si hay algo seleccionado) */}
+                {selectedElementId && (
+                    <button 
+                        style={{ ...btnStyle, background: 'rgba(220, 53, 69, 0.1)', color: '#dc3545', border: '1px solid rgba(220, 53, 69, 0.3)' }}
+                        className="btn"
+                        onClick={() => setSelectedElementId(null)} 
+                        title="Deseleccionar"
+                    >
+                        <i className="bi bi-x-lg"></i>
                     </button>
-                    {selectedElementId && (
-                        <button className="btn btn-sm btn-light rounded-circle text-danger" onClick={() => setSelectedElementId(null)} title="Deseleccionar">
-                            <i className="bi bi-x-lg"></i>
-                        </button>
-                    )}
-                </div>
+                )}
             </div>
         );
     };
@@ -1789,14 +1843,13 @@ const AdminAnnouncements = () => {
                             padding: 0.5rem 0.75rem !important;
                         }
                         .canva-toolbar {
-                            flex-wrap: wrap !important;
-                            gap: 4px !important;
-                            padding: 8px !important;
+                            gap: 6px !important;
+                            padding: 6px 12px !important;
                         }
-                        .canva-toolbar select,
-                        .canva-toolbar input {
-                            font-size: 0.65rem !important;
-                            padding: 0.2rem 0.3rem !important;
+                        .canva-toolbar .btn {
+                            width: 32px !important;
+                            height: 32px !important;
+                            font-size: 0.85rem !important;
                         }
                     }
                     
@@ -1825,7 +1878,8 @@ const AdminAnnouncements = () => {
                     @media (max-width: 991px) {
                         .active-sidebar-btn { border-left: none !important; border-top: 3px solid #00d3df !important; }
                     }
-                    .canva-toolbar { border-bottom: 2px solid #00d3df !important; }
+                    .canva-toolbar { border: 1px solid rgba(91, 46, 166, 0.15) !important; }
+                    .canva-toolbar .btn:hover { background: rgba(91, 46, 166, 0.1) !important; transform: scale(1.05); }
 
                     /* Patterns for Biblical Styles */
                     .content-box.pattern-dots::after {
