@@ -1,7 +1,50 @@
+/* ──────────────────────────────────────────────────────
+   TAILWIND CSS — Base, Components, Utilities
+   (coexiste con Bootstrap; orden importa: TW antes)
+   ────────────────────────────────────────────────────── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ──────────────────────────────────────────────────────
+   LIQUID GLASS — Utilidades PWA Adaptive
+   ────────────────────────────────────────────────────── */
+@layer components {
+  .glass {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(255, 255, 255, 0.70);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 8px 32px rgba(91, 46, 166, 0.08);
+  }
+
+  .glass-dark {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(31, 31, 46, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  }
+
+  .glass-purple {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: linear-gradient(135deg, rgba(91,46,166,0.15), rgba(0,211,223,0.08));
+    border: 1px solid rgba(91, 46, 166, 0.18);
+    box-shadow: 0 8px 32px rgba(91, 46, 166, 0.12);
+  }
+
+  /* Padding seguro para el notch iOS en bottom-nav */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
 /* ==========================================================
    NÚCLEO OASIS: VARIABLES Y ADN DE MARCA (VIVID NIGHTFALL)
    ========================================================== */
 @font-face {
+
     font-family: 'ModernAge';
     src: url('../fonts/Modern Age.ttf') format('truetype');
 }

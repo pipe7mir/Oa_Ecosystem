@@ -1,53 +1,53 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { theme } from './styles/theme';
+
+// ── Layouts ──────────────────────────────────────────
+import LayoutMaestro from './components/LayoutMaestro';  // nuevo: sidebar / bottom-nav
+import AdminLayout from '../components/AdminLayout';    // admin: sin cambios
+
+// ── Gateway inteligente PWA/Web ───────────────────────
+import PWAGateway from './components/PWAGateway';
+
+// ── Módulos Públicos ──────────────────────────────────
 import Home from './modules/Home';
 import Live from './modules/Live';
 import About from './modules/About';
 import Inscripciones from './modules/Inscripciones';
 import Peticiones from '../components/Peticiones';
-import Solicitudes from '../components/Solicitudes';
 import Recursos from '../components/Recursos';
+import Login from '../components/Login';
+
+// ── Módulos Admin ─────────────────────────────────────
+import Solicitudes from '../components/Solicitudes';
 import AdminRecursos from '../components/AdminRecursos';
 import AdminAnnouncements from '../components/AdminAnnouncements';
 import AdminUsers from '../components/AdminUsers';
 import AdminAjustes from '../components/AdminAjustes';
 import AdminForms from '../components/AdminForms';
 import AdminBillboard from '../components/AdminBillboard';
-import AdminLayout from '../components/AdminLayout';
 import AdminLive from '../components/AdminLive';
 import AdminAbout from '../components/AdminAbout';
-import Login from '../components/Login';
 import ProtectedRoute from '../components/ProtectedRoute';
-import Footer from './components/Footer';
-import Navbar from './components/Navbar';
 
-// Public Layout Component
-const PublicLayout = () => {
-    return (
-        <div className="app-container d-flex flex-column" style={{
-            minHeight: '100vh',
-            background: `radial-gradient(circle at 10% 20%, rgb(239, 246, 255) 0%, rgb(226, 226, 226) 90%)`,
-            fontFamily: theme.fonts.body,
-            color: theme.colors.text.primary,
-            animation: 'oasisFadeIn 0.8s cubic-bezier(0.65, 0, 0.35, 1) forwards'
-        }}>
-            <Navbar />
-            <div className="flex-grow-1">
-                <Outlet />
-            </div>
-            <Footer />
-        </div>
-    );
-};
+// ──────────────────────────────────────────────────────
 
 const App = () => {
     return (
         <Router>
             <Routes>
-                {/* Public Routes */}
-                <Route element={<PublicLayout />}>
-                    <Route path="/" element={<Home />} />
+
+                {/* ╔══════════════════════════════════╗
+                    ║  RUTAS PÚBLICAS — LayoutMaestro  ║
+                    ╚══════════════════════════════════╝
+                    En Desktop → sidebar lateral fija
+                    En Mobile  → header sticky + BottomNav */}
+                <Route element={<LayoutMaestro />}>
+
+                    {/* ── Raíz inteligente: Landing (web) o redirect (PWA) ── */}
+                    <Route path="/" element={<PWAGateway />} />
+
+                    {/* ── Páginas públicas ── */}
                     <Route path="/live" element={<Live />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/peticiones" element={<Peticiones />} />
@@ -56,9 +56,13 @@ const App = () => {
                     <Route path="/login" element={<Login />} />
                 </Route>
 
-                {/* Admin Routes */}
+                {/* ╔══════════════════════════════════╗
+                    ║  RUTAS ADMIN — AdminLayout       ║
+                    ╚══════════════════════════════════╝
+                    Sin cambios respecto al layout anterior */}
                 <Route element={<ProtectedRoute adminOnly={true} />}>
                     <Route element={<AdminLayout />}>
+                        <Route path="/admin" element={<AdminAnnouncements />} />
                         <Route path="/admin/solicitudes" element={<Solicitudes />} />
                         <Route path="/admin/recursos" element={<AdminRecursos />} />
                         <Route path="/admin/announcements" element={<AdminAnnouncements />} />
@@ -71,6 +75,7 @@ const App = () => {
                         <Route path="/admin/creator" element={<AdminAnnouncements />} />
                     </Route>
                 </Route>
+
             </Routes>
         </Router>
     );
