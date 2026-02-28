@@ -860,7 +860,6 @@ const AdminAnnouncements = () => {
             speaker: prev.speaker || 'Invitado',
         }));
         setShowTemplatePicker(false);
-        setShowForm(true);
     };
     const glass = { background: theme.glass.background, backdropFilter: theme.glass.backdropFilter, border: theme.glass.border, borderRadius: theme.glass.borderRadius, boxShadow: theme.glass.boxShadow };
     const currentFmt = FORMATS[formData.format] || FORMATS.instagram;
@@ -1320,13 +1319,6 @@ const AdminAnnouncements = () => {
                         >
                             <i className={`bi ${isSubmitting ? 'bi-hourglass-split' : 'bi-save'} me-1`}></i> Guardar
                         </button>
-                        <button 
-                            onClick={handleDownload} 
-                            className="btn btn-sm btn-primary px-4" 
-                            style={{ borderRadius: '6px' }}
-                        >
-                            <i className="bi bi-download me-1"></i> Descargar
-                        </button>
                     </div>
                 </div>
 
@@ -1484,25 +1476,23 @@ const AdminAnnouncements = () => {
                                 </div>
                             </div>
 
-                            {/* Grupo: LOGOS - Format vertical apilado */}
-                            <div className="d-flex align-items-start px-3">
-                                <div className="d-flex flex-column gap-1">
-                                    <span className="small text-muted" style={{ fontSize: '0.55rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Logos</span>
+                            {/* Grupo: LOGOS - Modo icono */}
+                            <div className="d-flex flex-column align-items-center px-3">
+                                <span className="small text-muted mb-1" style={{ fontSize: '0.55rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Logos</span>
+                                <div className="d-flex gap-1">
                                     <button 
-                                        className={`btn p-1 d-flex align-items-center gap-2 ${formData.showLogoOasis ? 'btn-primary' : 'btn-light'}`}
-                                        style={{ width: '85px', height: '28px', fontSize: '0.6rem' }}
+                                        className={`btn p-1 ${formData.showLogoOasis ? 'btn-primary' : 'btn-light'}`}
+                                        style={{ width: '36px', height: '36px' }}
                                         onClick={() => set('showLogoOasis', !formData.showLogoOasis)}
                                         title="Logo Oasis">
-                                        <img src={logoOasis} style={{ height: '16px', filter: formData.showLogoOasis ? 'brightness(10)' : 'none' }} alt="" />
-                                        <span className={formData.showLogoOasis ? 'text-white' : ''}>Oasis</span>
+                                        <img src={logoOasis} style={{ height: '22px', filter: formData.showLogoOasis ? 'brightness(10)' : 'none' }} alt="" />
                                     </button>
                                     <button 
-                                        className={`btn p-1 d-flex align-items-center gap-2 ${formData.showLogoIasd ? 'btn-primary' : 'btn-light'}`}
-                                        style={{ width: '85px', height: '28px', fontSize: '0.6rem' }}
+                                        className={`btn p-1 ${formData.showLogoIasd ? 'btn-primary' : 'btn-light'}`}
+                                        style={{ width: '36px', height: '36px' }}
                                         onClick={() => set('showLogoIasd', !formData.showLogoIasd)}
                                         title="Logo IASD">
-                                        <img src={logoAdventista} style={{ height: '16px', filter: formData.showLogoIasd ? 'brightness(10)' : 'none' }} alt="" />
-                                        <span className={formData.showLogoIasd ? 'text-white' : ''}>IASD</span>
+                                        <img src={logoAdventista} style={{ height: '22px', filter: formData.showLogoIasd ? 'brightness(10)' : 'none' }} alt="" />
                                     </button>
                                 </div>
                             </div>
