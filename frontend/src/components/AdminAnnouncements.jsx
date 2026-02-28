@@ -786,15 +786,15 @@ const AdminAnnouncements = () => {
 
         try {
             const canvas = await composeCanvas();
-            
+
             // Upload to Cloudinary (returns {success, imageUrl, error})
             console.log('📤 Uploading to Cloudinary...');
             const uploadResult = await uploadCanvasToCloudinary(canvas);
-            
+
             if (!uploadResult.success) {
                 throw new Error(uploadResult.error || 'Cloudinary upload failed');
             }
-            
+
             console.log('✅ Cloudinary URL:', uploadResult.imageUrl);
 
             const announcementData = {
@@ -861,6 +861,21 @@ const AdminAnnouncements = () => {
         }));
         setShowTemplatePicker(false);
     };
+
+    // Descargar PNG directamente
+    const handleDownloadPNG = async () => {
+        try {
+            const canvas = await composeCanvas();
+            const link = document.createElement('a');
+            link.download = `${formData.title || 'anuncio'}-oasispress.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } catch (err) {
+            console.error('Download PNG error:', err);
+            alert('Error al descargar: ' + err.message);
+        }
+    };
+
     const glass = { background: theme.glass.background, backdropFilter: theme.glass.backdropFilter, border: theme.glass.border, borderRadius: theme.glass.borderRadius, boxShadow: theme.glass.boxShadow };
     const currentFmt = FORMATS[formData.format] || FORMATS.instagram;
 
@@ -913,13 +928,13 @@ const AdminAnnouncements = () => {
                     exit={{ x: -300, opacity: 0 }}
                     transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                     className="canva-panel bg-white shadow-lg scrollbar-custom"
-                    style={{ 
-                        position: 'fixed', 
+                    style={{
+                        position: 'fixed',
                         top: activeMode === 'anuncios' ? '164px' : '42px', // 42px header + 122px ribbon
-                        left: 0, 
+                        left: 0,
                         bottom: 0,
-                        width: '300px', 
-                        zIndex: 200, 
+                        width: '300px',
+                        zIndex: 200,
                         overflowY: 'auto',
                         borderRight: '1px solid #e9ecef'
                     }}
@@ -1057,8 +1072,8 @@ const AdminAnnouncements = () => {
                                                 value={formData.time || ''} onChange={e => set('time', e.target.value)} />
                                         ) : (
                                             <input type="text" className="form-control form-control-sm mb-2"
-                                                value={formData[selectedElementId] || ''} 
-                                                onChange={e => set(selectedElementId, e.target.value)} 
+                                                value={formData[selectedElementId] || ''}
+                                                onChange={e => set(selectedElementId, e.target.value)}
                                                 placeholder={`Texto de ${selectedElementId}...`} />
                                         )}
 
@@ -1130,9 +1145,9 @@ const AdminAnnouncements = () => {
                                     <label className="x-small text-muted fw-bold mb-1 d-block">COLORES RÁPIDOS</label>
                                     <div className="d-flex gap-1 flex-wrap">
                                         {['#ffffff', '#000000', '#5b2ea6', '#ff6b35', '#f7c59f', '#2ec4b6', '#e71d36', '#011627', '#ffd700', '#00ff88'].map(c => (
-                                            <button key={c} className="btn p-0 border rounded-1" 
+                                            <button key={c} className="btn p-0 border rounded-1"
                                                 style={{ width: '24px', height: '24px', background: c }}
-                                                onClick={() => selectedElementId && set(`${selectedElementId}Color`, c)} 
+                                                onClick={() => selectedElementId && set(`${selectedElementId}Color`, c)}
                                                 title={c}></button>
                                         ))}
                                     </div>
@@ -1178,7 +1193,7 @@ const AdminAnnouncements = () => {
                                             )}
                                         </div>
                                     ))}
-                                    
+
                                     {/* Custom logos from storage */}
                                     {(formData.customLogos || []).map((logo, idx) => (
                                         <div key={`custom-${idx}`} className="position-relative">
@@ -1190,15 +1205,15 @@ const AdminAnnouncements = () => {
                                                 <img src={logo.url} alt={logo.name} style={{ height: '28px', maxWidth: '50px', objectFit: 'contain', filter: formData[`showCustomLogo${idx}`] ? 'brightness(10)' : 'none' }} />
                                                 <span style={{ fontSize: '0.55rem', marginTop: '4px' }}>{logo.name?.slice(0, 6) || `#${idx + 1}`}</span>
                                             </button>
-                                            <button 
-                                                className="position-absolute top-0 end-0 btn btn-sm btn-danger rounded-circle p-0" 
+                                            <button
+                                                className="position-absolute top-0 end-0 btn btn-sm btn-danger rounded-circle p-0"
                                                 style={{ width: '16px', height: '16px', fontSize: '0.5rem', lineHeight: 1 }}
                                                 onClick={e => { e.stopPropagation(); set('customLogos', (formData.customLogos || []).filter((_, i) => i !== idx)); }}>
                                                 <i className="bi bi-x"></i>
                                             </button>
                                         </div>
                                     ))}
-                                    
+
                                     {/* Add custom logo button */}
                                     <label className="btn btn-outline-secondary p-2 rounded-3 border-dashed d-flex flex-column align-items-center justify-content-center" style={{ width: '64px', height: '64px', cursor: 'pointer' }}>
                                         <i className="bi bi-plus-lg fs-4"></i>
@@ -1224,7 +1239,7 @@ const AdminAnnouncements = () => {
                                         {formData.showLogoOasis && (
                                             <div className="d-flex align-items-center gap-2 mb-2">
                                                 <img src={logoOasis} alt="Oasis" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
-                                                <input type="range" className="form-range flex-grow-1" min="15" max="80" 
+                                                <input type="range" className="form-range flex-grow-1" min="15" max="80"
                                                     value={formData.logoOasisSize} onChange={e => set('logoOasisSize', parseInt(e.target.value))} />
                                                 <span className="text-muted" style={{ width: '35px' }}>{formData.logoOasisSize}px</span>
                                             </div>
@@ -1232,7 +1247,7 @@ const AdminAnnouncements = () => {
                                         {formData.showLogoIasd && (
                                             <div className="d-flex align-items-center gap-2 mb-2">
                                                 <img src={logoAdventista} alt="IASD" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
-                                                <input type="range" className="form-range flex-grow-1" min="15" max="80" 
+                                                <input type="range" className="form-range flex-grow-1" min="15" max="80"
                                                     value={formData.logoIasdSize} onChange={e => set('logoIasdSize', parseInt(e.target.value))} />
                                                 <span className="text-muted" style={{ width: '35px' }}>{formData.logoIasdSize}px</span>
                                             </div>
@@ -1240,7 +1255,7 @@ const AdminAnnouncements = () => {
                                         {formData.showRrss && (
                                             <div className="d-flex align-items-center gap-2 mb-2">
                                                 <i className="bi bi-share" style={{ width: '24px', textAlign: 'center' }}></i>
-                                                <input type="range" className="form-range flex-grow-1" min="15" max="80" 
+                                                <input type="range" className="form-range flex-grow-1" min="15" max="80"
                                                     value={formData.rrssSize} onChange={e => set('rrssSize', parseInt(e.target.value))} />
                                                 <span className="text-muted" style={{ width: '35px' }}>{formData.rrssSize}px</span>
                                             </div>
@@ -1248,7 +1263,7 @@ const AdminAnnouncements = () => {
                                         {(formData.customLogos || []).map((logo, idx) => formData[`showCustomLogo${idx}`] && (
                                             <div key={idx} className="d-flex align-items-center gap-2 mb-2">
                                                 <img src={logo.url} alt={logo.name} style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
-                                                <input type="range" className="form-range flex-grow-1" min="15" max="80" 
+                                                <input type="range" className="form-range flex-grow-1" min="15" max="80"
                                                     value={formData[`customLogoSize${idx}`] || 30} onChange={e => set(`customLogoSize${idx}`, parseInt(e.target.value))} />
                                                 <span className="text-muted" style={{ width: '35px' }}>{formData[`customLogoSize${idx}`] || 30}px</span>
                                             </div>
@@ -1283,48 +1298,110 @@ const AdminAnnouncements = () => {
 
         return (
             <div className="ribbon-container bg-white border-bottom shadow-sm flex-shrink-0" style={{ borderRadius: '0' }}>
-                {/* Ribbon Tabs */}
-                <div className="d-flex border-bottom bg-light px-2" style={{ gap: '2px' }}>
+
+                {/* ── Fila 1: Barra de título estilo PowerPoint ── */}
+                <div style={{
+                    background: '#1f1f2e',
+                    display: 'flex', alignItems: 'center',
+                    padding: '4px 10px', gap: '10px', minHeight: '36px',
+                }}>
+                    <img src={logoOasis} style={{ height: '22px', cursor: 'pointer', flexShrink: 0 }} alt="Oasis" onClick={() => navigate('/admin')} />
+                    <span style={{ color: '#a78bfa', fontWeight: 800, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '1.2px', flexShrink: 0 }}>
+                        OasisPress
+                    </span>
+                    <div style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
+
+                    <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto', flexShrink: 0 }}>
+                        <button
+                            onClick={() => setShowForm(!showForm)}
+                            title="Mis Anuncios"
+                            style={{
+                                background: showForm ? 'rgba(139,92,246,0.3)' : 'rgba(255,255,255,0.08)',
+                                border: '1px solid rgba(255,255,255,0.15)',
+                                borderRadius: '6px', color: '#e2e2ff',
+                                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                padding: '3px 10px', cursor: 'pointer', transition: 'background 0.15s',
+                                gap: '1px', minWidth: '52px',
+                            }}
+                        >
+                            <i className="bi bi-folder2-open" style={{ fontSize: '1rem' }}></i>
+                            <span style={{ fontSize: '0.55rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Mis Anuncios</span>
+                        </button>
+
+                        <button
+                            onClick={handleDownloadPNG}
+                            title="Descargar PNG"
+                            style={{
+                                background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                                borderRadius: '6px', color: '#e2e2ff',
+                                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                padding: '3px 10px', cursor: 'pointer', transition: 'background 0.15s',
+                                gap: '1px', minWidth: '52px',
+                            }}
+                        >
+                            <i className="bi bi-image" style={{ fontSize: '1rem' }}></i>
+                            <span style={{ fontSize: '0.55rem', fontWeight: 600 }}>PNG</span>
+                        </button>
+
+                        <button
+                            onClick={handleSubmit}
+                            disabled={isSubmitting}
+                            title="Guardar y Publicar"
+                            style={{
+                                background: isSubmitting ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.85)',
+                                border: '1px solid rgba(16,185,129,0.5)',
+                                borderRadius: '6px', color: '#fff',
+                                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                padding: '3px 14px', cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                                transition: 'background 0.15s', gap: '1px', minWidth: '60px', fontWeight: 700,
+                            }}
+                        >
+                            <i className={`bi ${isSubmitting ? 'bi-hourglass-split' : 'bi-cloud-arrow-up'}`} style={{ fontSize: '1rem' }}></i>
+                            <span style={{ fontSize: '0.55rem', fontWeight: 700 }}>{isSubmitting ? 'Guardando…' : 'Guardar'}</span>
+                        </button>
+
+                        <button
+                            onClick={handleFullscreen}
+                            title="Pantalla completa"
+                            style={{
+                                background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+                                borderRadius: '6px', color: '#e2e2ff',
+                                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                padding: '3px 10px', cursor: 'pointer', transition: 'background 0.15s',
+                                gap: '1px', minWidth: '52px',
+                            }}
+                        >
+                            <i className="bi bi-arrows-fullscreen" style={{ fontSize: '1rem' }}></i>
+                            <span style={{ fontSize: '0.55rem', fontWeight: 600 }}>Compartir</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* ── Fila 2: Tabs de pestañas ── */}
+                <div className="d-flex border-bottom px-2" style={{ gap: '0', background: '#f8f9fa' }}>
                     {['Inicio', 'Insertar', 'Diseño', 'Formato'].map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveRibbonTab(tab.toLowerCase())}
                             style={{
                                 border: 'none',
-                                background: activeRibbonTab === tab.toLowerCase() ? '#fff' : 'transparent',
-                                borderBottom: activeRibbonTab === tab.toLowerCase() ? '3px solid #5b2ea6' : 'none',
-                                padding: '6px 20px',
-                                fontSize: '0.85rem',
-                                fontWeight: activeRibbonTab === tab.toLowerCase() ? 'bold' : 'normal',
-                                color: activeRibbonTab === tab.toLowerCase() ? '#5b2ea6' : '#666',
-                                transition: 'all 0.2s'
+                                borderBottom: activeRibbonTab === tab.toLowerCase() ? '3px solid #5b2ea6' : '3px solid transparent',
+                                background: 'transparent',
+                                padding: '5px 18px',
+                                fontSize: '0.82rem',
+                                fontWeight: activeRibbonTab === tab.toLowerCase() ? 700 : 400,
+                                color: activeRibbonTab === tab.toLowerCase() ? '#5b2ea6' : '#555',
+                                cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap',
                             }}
                         >
                             {tab}
                         </button>
                     ))}
-                    <div className="ms-auto d-flex align-items-center gap-2 px-3">
-                        <button 
-                            onClick={() => setShowForm(!showForm)} 
-                            className="btn btn-sm btn-outline-secondary" 
-                            style={{ fontSize: '0.75rem' }}
-                        >
-                            <i className="bi bi-folder2-open me-1"></i> Mis Anuncios
-                        </button>
-                        <button 
-                            onClick={handleSubmit} 
-                            disabled={isSubmitting} 
-                            className="btn btn-sm btn-success px-4" 
-                            style={{ borderRadius: '6px' }}
-                        >
-                            <i className={`bi ${isSubmitting ? 'bi-hourglass-split' : 'bi-save'} me-1`}></i> Guardar
-                        </button>
-                    </div>
                 </div>
 
                 {/* Ribbon Content */}
                 <div className="px-3 py-2 bg-white d-flex align-items-center gap-4 flex-wrap" style={{ minHeight: '60px' }}>
-                    
+
                     {/* ═══════ INICIO ═══════ */}
                     {activeRibbonTab === 'inicio' && (
                         <>
@@ -1353,7 +1430,7 @@ const AdminAnnouncements = () => {
                             {/* Grupo: Tamaño */}
                             <div className="d-flex flex-column align-items-center px-3 border-end">
                                 <div className="d-flex gap-1 mb-1 align-items-center">
-                                    <button 
+                                    <button
                                         onClick={() => set(fontSizeKey, Math.max(isLogo ? 10 : 0.1, (formData[fontSizeKey] || 1) - (isLogo ? 5 : 0.1)))}
                                         className="btn btn-sm btn-light py-0 px-2"
                                     >
@@ -1362,7 +1439,7 @@ const AdminAnnouncements = () => {
                                     <span className="fw-bold px-2" style={{ fontSize: '0.8rem', minWidth: '40px', textAlign: 'center', background: '#f8f9fa', borderRadius: '4px', padding: '2px' }}>
                                         {isLogo ? Math.round(formData[fontSizeKey] || 60) : (formData[fontSizeKey] || 1).toFixed(1)}
                                     </span>
-                                    <button 
+                                    <button
                                         onClick={() => set(fontSizeKey, Math.min(600, (formData[fontSizeKey] || 1) + (isLogo ? 5 : 0.1)))}
                                         className="btn btn-sm btn-light py-0 px-2"
                                     >
@@ -1384,10 +1461,10 @@ const AdminAnnouncements = () => {
                                             onChange={(e) => set(fontColorKey, e.target.value)}
                                         />
                                         {['#ffffff', '#000000', '#5b2ea6', '#f59e0b', '#ef4444'].map(c => (
-                                            <button 
-                                                key={c} 
-                                                onClick={() => set(fontColorKey, c)} 
-                                                style={{ width: 22, height: 22, background: c, border: formData[fontColorKey] === c ? '2px solid #5b2ea6' : '1px solid #ddd', borderRadius: '3px' }} 
+                                            <button
+                                                key={c}
+                                                onClick={() => set(fontColorKey, c)}
+                                                style={{ width: 22, height: 22, background: c, border: formData[fontColorKey] === c ? '2px solid #5b2ea6' : '1px solid #ddd', borderRadius: '3px' }}
                                             />
                                         ))}
                                     </div>
@@ -1399,7 +1476,7 @@ const AdminAnnouncements = () => {
                             <div className="d-flex flex-column align-items-center px-3">
                                 <div className="d-flex gap-1 mb-1">
                                     {Object.keys(FORMATS).map(k => (
-                                        <button 
+                                        <button
                                             key={k}
                                             onClick={() => set('format', k)}
                                             className={`btn btn-sm ${formData.format === k ? 'btn-primary' : 'btn-light'}`}
@@ -1449,9 +1526,9 @@ const AdminAnnouncements = () => {
                                 <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Colores Rápidos</span>
                                 <div className="d-flex gap-1 flex-wrap" style={{ maxWidth: '160px' }}>
                                     {['#ffffff', '#000000', '#5b2ea6', '#ff6b35', '#f7c59f', '#2ec4b6', '#e71d36', '#011627', '#ffd700', '#00ff88'].map(c => (
-                                        <button key={c} className="btn p-0 border rounded-1" 
+                                        <button key={c} className="btn p-0 border rounded-1"
                                             style={{ width: '20px', height: '20px', background: c, border: selectedElementId && formData[`${selectedElementId}Color`] === c ? '2px solid #5b2ea6' : '1px solid #ddd' }}
-                                            onClick={() => selectedElementId && set(`${selectedElementId}Color`, c)} 
+                                            onClick={() => selectedElementId && set(`${selectedElementId}Color`, c)}
                                             title={c}></button>
                                     ))}
                                 </div>
@@ -1480,14 +1557,14 @@ const AdminAnnouncements = () => {
                             <div className="d-flex flex-column align-items-center px-3">
                                 <span className="small text-muted mb-1" style={{ fontSize: '0.55rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Logos</span>
                                 <div className="d-flex gap-1">
-                                    <button 
+                                    <button
                                         className={`btn p-1 ${formData.showLogoOasis ? 'btn-primary' : 'btn-light'}`}
                                         style={{ width: '36px', height: '36px' }}
                                         onClick={() => set('showLogoOasis', !formData.showLogoOasis)}
                                         title="Logo Oasis">
                                         <img src={logoOasis} style={{ height: '22px', filter: formData.showLogoOasis ? 'brightness(10)' : 'none' }} alt="" />
                                     </button>
-                                    <button 
+                                    <button
                                         className={`btn p-1 ${formData.showLogoIasd ? 'btn-primary' : 'btn-light'}`}
                                         style={{ width: '36px', height: '36px' }}
                                         onClick={() => set('showLogoIasd', !formData.showLogoIasd)}
@@ -1541,13 +1618,13 @@ const AdminAnnouncements = () => {
                                 <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Imágenes Stock</span>
                                 <div className="d-flex gap-1 overflow-auto" style={{ maxWidth: '200px' }}>
                                     {['https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=400&q=80',
-                                      'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=400&q=80',
-                                      'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&q=80',
-                                      'https://images.unsplash.com/photo-1514632595-4944383f2737?w=400&q=80'
+                                        'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=400&q=80',
+                                        'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&q=80',
+                                        'https://images.unsplash.com/photo-1514632595-4944383f2737?w=400&q=80'
                                     ].map((img, i) => (
-                                        <img key={i} src={img} onClick={() => handleSelectStock(img)} 
-                                            className="flex-shrink-0" 
-                                            style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', cursor: 'pointer', border: '2px solid #ddd' }} 
+                                        <img key={i} src={img} onClick={() => handleSelectStock(img)}
+                                            className="flex-shrink-0"
+                                            style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', cursor: 'pointer', border: '2px solid #ddd' }}
                                             alt="stock" />
                                     ))}
                                     <button className="btn btn-light flex-shrink-0" onClick={() => setShowLibrary(true)} style={{ width: '40px', height: '40px' }} title="Ver más">
@@ -1562,8 +1639,8 @@ const AdminAnnouncements = () => {
                                     <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Mezcla</span>
                                     <div className="d-flex gap-1 align-items-center">
                                         <input type="checkbox" checked={formData.blendGradient} onChange={e => set('blendGradient', e.target.checked)} id="ribbonBlend" />
-                                        <input type="range" className="form-range" style={{ width: '60px' }} min="0" max="1" step="0.05" 
-                                            value={formData.blendOpacity} onChange={e => set('blendOpacity', parseFloat(e.target.value))} 
+                                        <input type="range" className="form-range" style={{ width: '60px' }} min="0" max="1" step="0.05"
+                                            value={formData.blendOpacity} onChange={e => set('blendOpacity', parseFloat(e.target.value))}
                                             disabled={!formData.blendGradient} />
                                         <span className="small">{Math.round(formData.blendOpacity * 100)}%</span>
                                     </div>
@@ -1580,24 +1657,24 @@ const AdminAnnouncements = () => {
                                 <div className="d-flex flex-column gap-1 mb-1">
                                     <div className="d-flex gap-1">
                                         <span className="small me-1" style={{ width: '20px' }}>X:</span>
-                                        <input 
-                                            type="range" 
-                                            className="form-range" 
+                                        <input
+                                            type="range"
+                                            className="form-range"
                                             style={{ width: '80px' }}
-                                            min="-50" max="50" 
-                                            value={formData[`${target}Pos`]?.x || 0} 
-                                            onChange={e => set(`${target}Pos`, { ...formData[`${target}Pos`], x: parseFloat(e.target.value) })} 
+                                            min="-50" max="50"
+                                            value={formData[`${target}Pos`]?.x || 0}
+                                            onChange={e => set(`${target}Pos`, { ...formData[`${target}Pos`], x: parseFloat(e.target.value) })}
                                         />
                                     </div>
                                     <div className="d-flex gap-1">
                                         <span className="small me-1" style={{ width: '20px' }}>Y:</span>
-                                        <input 
-                                            type="range" 
-                                            className="form-range" 
+                                        <input
+                                            type="range"
+                                            className="form-range"
                                             style={{ width: '80px' }}
-                                            min="-50" max="50" 
-                                            value={formData[`${target}Pos`]?.y || 0} 
-                                            onChange={e => set(`${target}Pos`, { ...formData[`${target}Pos`], y: parseFloat(e.target.value) })} 
+                                            min="-50" max="50"
+                                            value={formData[`${target}Pos`]?.y || 0}
+                                            onChange={e => set(`${target}Pos`, { ...formData[`${target}Pos`], y: parseFloat(e.target.value) })}
                                         />
                                     </div>
                                 </div>
@@ -1607,13 +1684,13 @@ const AdminAnnouncements = () => {
                             {/* Grupo: Opacidad */}
                             <div className="d-flex flex-column align-items-center px-3 border-end">
                                 <div className="d-flex gap-1 align-items-center mb-1">
-                                    <input 
-                                        type="range" 
-                                        className="form-range" 
+                                    <input
+                                        type="range"
+                                        className="form-range"
                                         style={{ width: '80px' }}
-                                        min="0" max="100" 
-                                        value={formData[`${target}Opacity`] || 100} 
-                                        onChange={e => set(`${target}Opacity`, parseInt(e.target.value))} 
+                                        min="0" max="100"
+                                        value={formData[`${target}Opacity`] || 100}
+                                        onChange={e => set(`${target}Opacity`, parseInt(e.target.value))}
                                     />
                                     <span className="small" style={{ minWidth: '30px' }}>{formData[`${target}Opacity`] || 100}%</span>
                                 </div>
@@ -1651,21 +1728,19 @@ const AdminAnnouncements = () => {
         <div className="canva-container d-flex flex-column" style={{ position: 'relative', minHeight: '80vh', width: '100%', background: '#f4f7f8', overflow: 'hidden' }}>
             <FontPreloader />
 
-            {/* Header with Logo and Mode Switcher */}
-            <header className="d-flex align-items-center px-3 bg-white border-bottom flex-shrink-0" style={{ height: '40px', minHeight: '40px' }}>
-                <img src={logoOasis} style={{ height: '26px', cursor: 'pointer' }} alt="Oasis" onClick={() => navigate('/admin')} title="Volver al inicio" />
-                <div style={{ width: '1px', height: '20px', background: '#ddd', margin: '0 12px' }} />
-                <span className="fw-bold" style={{ fontSize: '0.9rem', color: '#333' }}>EDITOR</span>
-                <div style={{ width: '1px', height: '20px', background: '#ddd', margin: '0 12px' }} />
-                <div className="nav nav-pills p-1 rounded-pill" style={{ background: '#f8f9fa', fontSize: '0.7rem' }}>
-                    <button 
-                        className={`nav-link rounded-pill px-3 py-1 fw-semibold`}
-                        style={{ fontSize: '0.7rem', background: activeMode === 'anuncios' ? '#5b2ea6' : 'transparent', color: activeMode === 'anuncios' ? 'white' : '#666' }}
+            {/* ── Header: solo el selector de modo ── */}
+            <header className="d-flex align-items-center px-3 bg-white border-bottom flex-shrink-0" style={{ height: '36px', minHeight: '36px', gap: '8px' }}>
+                <img src={logoOasis} style={{ height: '22px', cursor: 'pointer' }} alt="Oasis" onClick={() => navigate('/admin')} title="Volver al inicio" />
+                <div style={{ width: '1px', height: '16px', background: '#ddd' }} />
+                <div className="nav nav-pills p-0" style={{ background: '#f8f9fa', borderRadius: '20px', padding: '2px', fontSize: '0.7rem' }}>
+                    <button
+                        className="nav-link rounded-pill px-3 py-1 fw-semibold"
+                        style={{ fontSize: '0.7rem', background: activeMode === 'anuncios' ? '#5b2ea6' : 'transparent', color: activeMode === 'anuncios' ? 'white' : '#666', border: 'none', cursor: 'pointer' }}
                         onClick={() => setActiveMode('anuncios')}
                     >Anuncios</button>
-                    <button 
-                        className={`nav-link rounded-pill px-3 py-1 fw-semibold`}
-                        style={{ fontSize: '0.7rem', background: activeMode === 'presentaciones' ? '#5b2ea6' : 'transparent', color: activeMode === 'presentaciones' ? 'white' : '#666' }}
+                    <button
+                        className="nav-link rounded-pill px-3 py-1 fw-semibold"
+                        style={{ fontSize: '0.7rem', background: activeMode === 'presentaciones' ? '#5b2ea6' : 'transparent', color: activeMode === 'presentaciones' ? 'white' : '#666', border: 'none', cursor: 'pointer' }}
                         onClick={() => setActiveMode('presentaciones')}
                     >Presentaciones</button>
                 </div>
@@ -1678,12 +1753,12 @@ const AdminAnnouncements = () => {
             <div className="canva-workspace" style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: '1 1 0%', minHeight: 0, overflow: 'hidden' }}>
                 <main
                     className="workspace-body"
-                    style={{ 
+                    style={{
                         flex: '1 1 0%',
                         minHeight: 0,
-                        overflowY: 'auto', 
-                        background: '#e9ecef', 
-                        position: 'relative', 
+                        overflowY: 'auto',
+                        background: '#e9ecef',
+                        position: 'relative',
                         padding: '1rem',
                         display: 'flex',
                         alignItems: 'center',
@@ -1698,19 +1773,19 @@ const AdminAnnouncements = () => {
                     ) : (
                         <>
                             {/* Canvas Area - Perfectly Centered */}
-                            <div 
-                                className="canvas-wrapper" 
-                                style={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
+                            <div
+                                className="canvas-wrapper"
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
                                     justifyContent: 'center',
                                     width: '100%',
                                     height: '100%',
                                     minHeight: 0,
-                                    perspective: '1000px' 
+                                    perspective: '1000px'
                                 }}
                             >
-                                
+
                                 <motion.div
                                     layout
                                     ref={previewRef}
@@ -1908,7 +1983,7 @@ const AdminAnnouncements = () => {
                                                     drag dragMomentum={false}
                                                     onMouseDown={() => setSelectedElementId('date')}
                                                     onTouchStart={() => setSelectedElementId('date')}
-                                                    style={{ 
+                                                    style={{
                                                         x: formData.datePos.x, y: formData.datePos.y, cursor: 'move',
                                                         outline: selectedElementId === 'date' ? '2px dashed #00d2f3' : 'none',
                                                         outlineOffset: '4px', borderRadius: '30px'
@@ -1926,7 +2001,7 @@ const AdminAnnouncements = () => {
                                                     drag dragMomentum={false}
                                                     onMouseDown={() => setSelectedElementId('location')}
                                                     onTouchStart={() => setSelectedElementId('location')}
-                                                    style={{ 
+                                                    style={{
                                                         x: formData.locationPos.x, y: formData.locationPos.y, cursor: 'move',
                                                         outline: selectedElementId === 'location' ? '2px dashed #00d2f3' : 'none',
                                                         outlineOffset: '4px', borderRadius: '30px'
@@ -1956,13 +2031,13 @@ const AdminAnnouncements = () => {
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                             className="announcements-list-drawer bg-white border-start shadow-lg"
-                            style={{ 
-                                position: 'fixed', 
+                            style={{
+                                position: 'fixed',
                                 top: activeMode === 'anuncios' ? '140px' : '40px',
-                                right: 0, 
+                                right: 0,
                                 bottom: 0,
-                                width: isMobile ? '100%' : '280px', 
-                                zIndex: 1150, 
+                                width: isMobile ? '100%' : '280px',
+                                zIndex: 1150,
                                 overflowY: 'auto',
                                 borderRadius: '0'
                             }}
@@ -1977,18 +2052,18 @@ const AdminAnnouncements = () => {
                                 ) : (
                                     <div className="list-group list-group-flush">
                                         {announcements.map(ann => {
-                                            const imgUrl = (ann.imageUrl || ann.image_url) 
-                                                ? ((ann.imageUrl || ann.image_url).startsWith('http') 
-                                                    ? (ann.imageUrl || ann.image_url) 
-                                                    : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${ann.imageUrl || ann.image_url}`) 
+                                            const imgUrl = (ann.imageUrl || ann.image_url)
+                                                ? ((ann.imageUrl || ann.image_url).startsWith('http')
+                                                    ? (ann.imageUrl || ann.image_url)
+                                                    : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${ann.imageUrl || ann.image_url}`)
                                                 : null;
                                             return (
                                                 <div key={ann.id} className="list-group-item d-flex align-items-center justify-content-between py-2 px-2 border-bottom">
                                                     <div className="d-flex align-items-center gap-2" style={{ minWidth: 0, flex: 1 }}>
-                                                        <img 
-                                                            src={imgUrl || logoOasis} 
-                                                            className="rounded shadow-sm flex-shrink-0" 
-                                                            style={{ width: '40px', height: '50px', objectFit: 'cover', border: '1px solid #e9ecef', borderRadius: '4px' }} 
+                                                        <img
+                                                            src={imgUrl || logoOasis}
+                                                            className="rounded shadow-sm flex-shrink-0"
+                                                            style={{ width: '40px', height: '50px', objectFit: 'cover', border: '1px solid #e9ecef', borderRadius: '4px' }}
                                                             alt={ann.title}
                                                         />
                                                         <div style={{ minWidth: 0, flex: 1 }}>
@@ -1997,16 +2072,16 @@ const AdminAnnouncements = () => {
                                                         </div>
                                                     </div>
                                                     <div className="d-flex gap-1 flex-shrink-0">
-                                                        <button 
-                                                            className="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center" 
+                                                        <button
+                                                            className="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center"
                                                             style={{ width: '26px', height: '26px', borderRadius: '4px', fontSize: '0.65rem' }}
                                                             onClick={(e) => { e.stopPropagation(); handleEdit(ann); }}
                                                             title="Editar anuncio"
                                                         >
                                                             <i className="bi bi-pencil"></i>
                                                         </button>
-                                                        <button 
-                                                            className="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center" 
+                                                        <button
+                                                            className="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center"
                                                             style={{ width: '26px', height: '26px', borderRadius: '4px', fontSize: '0.65rem' }}
                                                             onClick={(e) => { e.stopPropagation(); handleDelete(ann.id); }}
                                                             title="Eliminar anuncio"
