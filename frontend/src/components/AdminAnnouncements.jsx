@@ -1648,7 +1648,7 @@ const AdminAnnouncements = () => {
     };
 
     return (
-        <div className="canva-container d-flex flex-column" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, height: '100vh', width: '100vw', background: '#f4f7f8', overflow: 'hidden', zIndex: 1100 }}>
+        <div className="canva-container d-flex flex-column" style={{ position: 'relative', minHeight: '80vh', width: '100%', background: '#f4f7f8', overflow: 'hidden' }}>
             <FontPreloader />
 
             {/* Header with Logo and Mode Switcher */}
