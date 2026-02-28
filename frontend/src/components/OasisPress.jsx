@@ -314,8 +314,20 @@ const OasisPress = () => {
         return (
             <div className="ribbon-container" style={{ flexShrink: 0, background: '#fff', borderBottom: '1px solid #dee2e6' }}>
 
-                {/* ── Tab bar ── */}
-                <div style={{ display: 'flex', borderBottom: '1px solid #e9ecef', background: '#f8f9fa', padding: '0 12px', alignItems: 'center' }}>
+                {/* ── Tab bar: Logo + Título + Tabs + Modo switch + Acciones ── */}
+                <div style={{ display: 'flex', borderBottom: '1px solid #e9ecef', background: '#f8f9fa', padding: '0 6px', alignItems: 'center', gap: 0 }}>
+                    {/* Branding + título editable */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 10px 4px 4px', borderRight: '1px solid #dee2e6', marginRight: '4px', flexShrink: 0 }}>
+                        <img src={logoOasis} style={{ height: '22px' }} alt="Oasis" />
+                        <input
+                            value={presTitle}
+                            onChange={e => setPresTitle(e.target.value)}
+                            style={{ border: 'none', outline: 'none', fontSize: '0.82rem', fontWeight: 700, color: '#3b3b3b', background: 'transparent', width: '150px' }}
+                            placeholder="Sin título…"
+                        />
+                    </div>
+
+                    {/* Tabs */}
                     {['Inicio', 'Insertar', 'Diseño', 'Transición'].map(t => (
                         <button key={t}
                             onClick={() => setTab(t.toLowerCase())}
@@ -323,27 +335,35 @@ const OasisPress = () => {
                                 border: 'none',
                                 borderBottom: tab === t.toLowerCase() ? '3px solid #5b2ea6' : '3px solid transparent',
                                 background: 'transparent',
-                                padding: '7px 18px',
-                                fontSize: '0.85rem',
+                                padding: '7px 14px',
+                                fontSize: '0.82rem',
                                 fontWeight: tab === t.toLowerCase() ? 700 : 400,
                                 color: tab === t.toLowerCase() ? '#5b2ea6' : '#555',
                                 cursor: 'pointer',
                                 transition: 'all 0.15s',
+                                whiteSpace: 'nowrap',
                             }}
                         >{t}</button>
                     ))}
 
                     {/* Acciones derecha */}
-                    <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <button className="btn btn-sm btn-outline-secondary" style={{ fontSize: '0.75rem' }} onClick={exportPDF}>
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: '5px', alignItems: 'center', paddingRight: '6px', flexShrink: 0 }}>
+                        <button className="btn btn-sm btn-outline-secondary" style={{ fontSize: '0.72rem' }} onClick={exportPDF}>
                             <i className="bi bi-file-earmark-pdf me-1"></i>PDF
                         </button>
-                        <button className="btn btn-sm btn-outline-secondary" style={{ fontSize: '0.75rem' }} onClick={exportPPTX}>
+                        <button className="btn btn-sm btn-outline-secondary" style={{ fontSize: '0.72rem' }} onClick={exportPPTX}>
                             <i className="bi bi-file-earmark-slides me-1"></i>PPTX
                         </button>
-                        <button className="btn btn-sm" style={{ fontSize: '0.75rem', background: '#5b2ea6', color: '#fff', borderRadius: '6px', border: 'none', padding: '5px 18px', fontWeight: 600 }} onClick={fullscreen}>
-                            <i className="bi bi-arrows-fullscreen me-1"></i>Pantalla
-                        </button>
+                        {/* Switch Clásico / Infinito */}
+                        {[{ id: 'classic', label: 'Clásico' }, { id: 'infinite', label: '∞ Infinito' }].map(m => (
+                            <button key={m.id} onClick={() => setMode(m.id)}
+                                style={{
+                                    border: 'none', borderRadius: '6px', padding: '4px 11px', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0,
+                                    background: mode === m.id ? '#5b2ea6' : '#e9ecef', color: mode === m.id ? '#fff' : '#555', transition: 'all 0.15s'
+                                }}>
+                                {m.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
@@ -768,18 +788,27 @@ const OasisPress = () => {
     // ─────────────────────────────────────────────────────────────────────────
     if (mode === 'infinite') {
         return (
-            <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ background: '#1e1e2e', color: '#fff', display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 16px', flexShrink: 0 }}>
-                    <img src={logoOasis} style={{ height: '28px', filter: 'brightness(10)' }} alt="Oasis" />
-                    <span style={{ color: '#a78bfa', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>OasisPress</span>
+            <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, system-ui, sans-serif' }}>
+                {/* Mini ribbon para modo infinito — sin barra oscura */}
+                <div style={{ background: '#f8f9fa', borderBottom: '1px solid #dee2e6', display: 'flex', alignItems: 'center', padding: '4px 10px', gap: '8px', flexShrink: 0 }}>
+                    <img src={logoOasis} style={{ height: '24px' }} alt="Oasis" />
+                    <span style={{ fontWeight: 800, fontSize: '0.75rem', color: '#5b2ea6', textTransform: 'uppercase', letterSpacing: '1.5px', flexShrink: 0 }}>OasisPress</span>
+                    <div style={{ width: '1px', height: '16px', background: '#dee2e6', flexShrink: 0 }} />
                     <input value={presTitle} onChange={e => setPresTitle(e.target.value)}
-                        style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', fontWeight: 600, fontSize: '0.9rem', outline: 'none' }} />
-                    <button className="btn btn-sm btn-outline-light" onClick={() => setMode('classic')}>
-                        <i className="bi bi-grid-3x3-gap me-1"></i>Modo Clásico
-                    </button>
+                        style={{ flex: 1, border: 'none', outline: 'none', fontSize: '0.85rem', fontWeight: 600, color: '#333', background: 'transparent', minWidth: 0 }}
+                        placeholder="Sin título…" />
+                    {[{ id: 'classic', label: 'Clásico' }, { id: 'infinite', label: '∞ Infinito' }].map(m => (
+                        <button key={m.id} onClick={() => setMode(m.id)}
+                            style={{
+                                border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0,
+                                background: mode === m.id ? '#5b2ea6' : '#e9ecef', color: mode === m.id ? '#fff' : '#555', transition: 'all 0.15s'
+                            }}>
+                            {m.label}
+                        </button>
+                    ))}
                 </div>
                 <div style={{ flex: 1, overflow: 'hidden' }}>
-                    <OasisInfiniteEngine initialSlides={slides} />
+                    <OasisInfiniteEngine onExitToClassic={() => setMode('classic')} />
                 </div>
             </div>
         );
@@ -791,34 +820,7 @@ const OasisPress = () => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', fontFamily: 'Inter, system-ui, sans-serif' }}>
 
-            {/* ── HEADER ── */}
-            <div style={{ background: '#1e1e2e', color: '#fff', display: 'flex', alignItems: 'center', gap: '14px', padding: '7px 16px', flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.4)', zIndex: 100 }}>
-                <img src={logoOasis} style={{ height: '28px', filter: 'brightness(10)' }} alt="Oasis" />
-                <span style={{ fontWeight: 800, fontSize: '0.8rem', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '1.5px' }}>OasisPress</span>
-                <div style={{ width: '1px', height: '18px', background: 'rgba(255,255,255,0.2)' }} />
-                <input
-                    value={presTitle}
-                    onChange={e => setPresTitle(e.target.value)}
-                    style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', fontWeight: 600, fontSize: '0.9rem', outline: 'none' }}
-                    placeholder="Título de la presentación…"
-                />
-                {/* Modo toggle */}
-                <div style={{ display: 'flex', gap: '4px' }}>
-                    {[{ id: 'classic', label: 'Clásico' }, { id: 'infinite', label: 'Infinito' }].map(m => (
-                        <button key={m.id}
-                            onClick={() => setMode(m.id)}
-                            style={{
-                                border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer',
-                                background: mode === m.id ? '#5b2ea6' : 'rgba(255,255,255,0.1)',
-                                color: '#fff',
-                            }}>
-                            {m.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* ── RIBBON ── */}
+            {/* ── RIBBON (incluye logo + título + switch de modo) ── */}
             {renderRibbon()}
 
             {/* ── BODY: thumbnail panel + canvas ── */}
