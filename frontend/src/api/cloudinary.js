@@ -73,27 +73,33 @@ export async function uploadToCloudinary(base64Image, folder = 'oasis-announceme
 
 /**
  * Convert a canvas to base64 and upload to Cloudinary
+ * Optimized for quality with reasonable file size
  * @param {HTMLCanvasElement} canvas 
- * @param {number} maxWidth - Max width to scale down to
- * @param {number} maxKB - Max file size in KB
+ * @param {number} maxWidth - Max width to scale down to (default: 1920 for HD quality)
+ * @param {number} maxKB - Max file size in KB (default: 600 for good quality/size balance)
  * @returns {Promise<{success: boolean, imageUrl?: string, error?: string}>}
  */
-export async function uploadCanvasToCloudinary(canvas, maxWidth = 600, maxKB = 200) {
+export async function uploadCanvasToCloudinary(canvas, maxWidth = 1920, maxKB = 600) {
     try {
-        // Scale canvas down if needed
+        // Scale canvas down only if larger than maxWidth
         const scale = Math.min(1, maxWidth / canvas.width);
         const compCanvas = document.createElement('canvas');
         compCanvas.width = Math.round(canvas.width * scale);
         compCanvas.height = Math.round(canvas.height * scale);
         const ctx = compCanvas.getContext('2d');
+        
+        // High quality image scaling
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(canvas, 0, 0, compCanvas.width, compCanvas.height);
 
-        // Compress to target size
-        let quality = 0.85;
+        // Compress with better quality starting point
+        let quality = 0.92;
         let base64 = compCanvas.toDataURL('image/jpeg', quality);
         
-        while (base64.length > maxKB * 1024 * 1.37 && quality > 0.3) {
-            quality = Math.max(0.3, quality - 0.1);
+        // Gradually reduce quality only if file is too large
+        while (base64.length > maxKB * 1024 * 1.37 && quality > 0.5) {
+            quality = Math.max(0.5, quality - 0.05);
             base64 = compCanvas.toDataURL('image/jpeg', quality);
         }
 

@@ -1591,30 +1591,53 @@ const AdminAnnouncements = () => {
                                 <button className="btn-close" onClick={() => setShowForm(false)}></button>
                             </div>
                             <div className="p-0">
-                                <table className="table table-hover align-middle mb-0">
-                                    <tbody className="x-small">
+                                {announcements.length === 0 ? (
+                                    <div className="text-center text-muted py-5">No hay anuncios guardados</div>
+                                ) : (
+                                    <div className="list-group list-group-flush">
                                         {announcements.map(ann => {
-                                            const imgUrl = ann.image_url ? (ann.image_url.startsWith('http') ? ann.image_url : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${ann.image_url}`) : null;
+                                            const imgUrl = (ann.imageUrl || ann.image_url) 
+                                                ? ((ann.imageUrl || ann.image_url).startsWith('http') 
+                                                    ? (ann.imageUrl || ann.image_url) 
+                                                    : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${ann.imageUrl || ann.image_url}`) 
+                                                : null;
                                             return (
-                                                <tr key={ann.id}>
-                                                    <td className="ps-4">
-                                                        <div className="d-flex align-items-center gap-3 py-2">
-                                                            <img src={imgUrl || logoOasis} className="rounded-2 shadow-sm" style={{ width: '40px', height: '40px', objectFit: 'cover' }} />
-                                                            <div>
-                                                                <div className="fw-bold text-dark">{ann.title}</div>
-                                                                <div className="text-muted">{ann.tag}</div>
-                                                            </div>
+                                                <div key={ann.id} className="list-group-item d-flex align-items-center justify-content-between py-3 px-4 border-bottom">
+                                                    <div className="d-flex align-items-center gap-3">
+                                                        <img 
+                                                            src={imgUrl || logoOasis} 
+                                                            className="rounded-circle shadow-sm" 
+                                                            style={{ width: '44px', height: '44px', objectFit: 'cover', border: '2px solid #e9ecef' }} 
+                                                            alt={ann.title}
+                                                        />
+                                                        <div>
+                                                            <div className="fw-semibold" style={{ fontSize: '0.9rem' }}>{ann.title}</div>
+                                                            <span className="badge" style={{ fontSize: '0.65rem', background: theme.colors.primary, color: 'white' }}>{ann.tag}</span>
                                                         </div>
-                                                    </td>
-                                                    <td className="text-end pe-4">
-                                                        <button className="btn btn-sm btn-light border me-1" onClick={() => handleEdit(ann)}><i className="bi bi-pencil-fill text-primary"></i></button>
-                                                        <button className="btn btn-sm btn-light border text-danger" onClick={() => handleDelete(ann.id)}><i className="bi bi-trash-fill"></i></button>
-                                                    </td>
-                                                </tr>
+                                                    </div>
+                                                    <div className="d-flex gap-2">
+                                                        <button 
+                                                            className="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center" 
+                                                            style={{ width: '36px', height: '36px', borderRadius: '8px' }}
+                                                            onClick={(e) => { e.stopPropagation(); handleEdit(ann); }}
+                                                            title="Editar anuncio"
+                                                        >
+                                                            <i className="bi bi-pencil"></i>
+                                                        </button>
+                                                        <button 
+                                                            className="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center" 
+                                                            style={{ width: '36px', height: '36px', borderRadius: '8px' }}
+                                                            onClick={(e) => { e.stopPropagation(); handleDelete(ann.id); }}
+                                                            title="Eliminar anuncio"
+                                                        >
+                                                            <i className="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             );
                                         })}
-                                    </tbody>
-                                </table>
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     )}
