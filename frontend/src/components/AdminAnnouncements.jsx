@@ -1421,7 +1421,7 @@ const AdminAnnouncements = () => {
                 <button 
                     style={{ ...quickBtnStyle, background: '#5b2ea6', color: 'white' }}
                     className="btn"
-                    onClick={handleSave}
+                    onClick={handleSubmit}
                     disabled={isSubmitting}
                     title="Guardar anuncio"
                 >
