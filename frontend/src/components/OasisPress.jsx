@@ -1,875 +1,760 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas';
 import OasisInfiniteEngine from './OasisInfiniteEngine';
-import SlideWrapper from './SlideWrapper';
 
-// ─── Logo assets ────────────────────────────────────────────────────────────
+// ─── Assets locales ─────────────────────────────────────────────────────────
 import logoOasis from '../img/logos/LOGO1.png';
 import logoIasd from '../img/logos/IASD1.png';
+import rrssImg from '../img/logos/RRSS1.png';
 
-// ─── Biblioteca de imágenes y logos ─────────────────────────────────────────
-const IMAGE_LIBRARY = {
-    logos: [
-        { id: 'logo-oasis-main', name: 'Oasis Principal', url: '/src/img/logos/LOGO1.png' },
-        { id: 'logo-oasis-church', name: 'Iglesia Oasis', url: '/src/img/logos/LOGO2.png' },
-        { id: 'logo-oasis-icon', name: 'Oasis Icono', url: '/src/img/logos/T1.png' },
-        { id: 'logo-iasd', name: 'IASD Logo', url: '/src/img/logos/IASD1.png' },
-    ],
-    social: [
-        { id: 'social-ig', name: 'Instagram', url: '/src/img/logos/RRSSINS.png' },
-        { id: 'social-fb', name: 'Facebook', url: '/src/img/logos/RRSSFB.png' },
-        { id: 'social-yt', name: 'YouTube', url: '/src/img/logos/RRSSYT.png' },
-        { id: 'social-x', name: 'X/Twitter', url: '/src/img/logos/RRSSX.png' },
-        { id: 'social-wa', name: 'WhatsApp', url: '/src/img/logos/RRSS.png' },
-    ],
-    backgrounds: [
-        { id: 'bg-1', name: 'Worship Lights', url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1920&q=80' },
-        { id: 'bg-2', name: 'Church Interior', url: 'https://images.unsplash.com/photo-1438032005730-c779502df39b?w=1920&q=80' },
-        { id: 'bg-3', name: 'Sunset Sky', url: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=1920&q=80' },
-        { id: 'bg-4', name: 'Mountains', url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80' },
-        { id: 'bg-5', name: 'Ocean Waves', url: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1920&q=80' },
-    ],
-};
-
+// ─── Configuración de fuentes ─────────────────────────────────────────────
 const FONTS = [
-    { name: 'Arial', label: 'Arial' },
-    { name: 'Georgia', label: 'Georgia' },
-    { name: 'Verdana', label: 'Verdana' },
-    { name: 'Courier New', label: 'Courier New' },
-    { name: 'Impact', label: 'Impact' },
     { name: 'MoonRising', label: 'Moon Rising' },
     { name: 'ModernAge', label: 'Modern Age' },
     { name: 'AdventSans', label: 'Advent Sans' },
+    { name: 'above-the-beyond-script', label: 'Script' },
+    { name: 'Arial', label: 'Arial' },
+    { name: 'Georgia', label: 'Georgia' },
+    { name: 'Impact', label: 'Impact' },
 ];
 
-const COLORS = [
-    '#5b2ea6', '#8b5cf6', '#3b82f6', '#10b981',
-    '#f59e0b', '#ef4444', '#ec4899', '#000000', '#ffffff', '#6b7280',
-];
+// ─── Colores rápidos ─────────────────────────────────────────────────────────
+const QUICK_COLORS = ['#ffffff', '#f3f3f3', '#000000', '#5b2ea6', '#8b5cf6', '#f59e0b', '#ef4444'];
 
+// ─── Degradados ──────────────────────────────────────────────────────────────
 const GRADIENTS = [
-    { label: 'Oasis Morado', value: 'linear-gradient(135deg, #5b2ea6 0%, #8b5cf6 100%)' },
-    { label: 'Rosa Pasión', value: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
-    { label: 'Esmeralda', value: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' },
-    { label: 'Carbón', value: 'linear-gradient(135deg, #232526 0%, #414345 100%)' },
-    { label: 'Cielo Azul', value: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)' },
-    { label: 'Oro Gala', value: 'linear-gradient(135deg, #111111 0%, #2c2c2c 100%)' },
-    { label: 'Atardecer', value: 'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)' },
-    { label: 'Menta', value: 'linear-gradient(135deg, #56ab2f 0%, #a8e063 100%)' },
+    { label: 'Oasis', value: 'linear-gradient(135deg,#5b2ea6,#8b5cf6)' },
+    { label: 'Noche', value: 'linear-gradient(135deg,#1a1a2e,#16213e)' },
+    { label: 'Fuego', value: 'linear-gradient(135deg,#f093fb,#f5576c)' },
+    { label: 'Bosque', value: 'linear-gradient(135deg,#11998e,#38ef7d)' },
+    { label: 'Carbón', value: 'linear-gradient(135deg,#232526,#414345)' },
+    { label: 'Cielo', value: 'linear-gradient(135deg,#00c6ff,#0072ff)' },
+    { label: 'Oro', value: 'linear-gradient(135deg,#111111,#2c2c2c)' },
+    { label: 'Atardecer', value: 'linear-gradient(135deg,#f7971e,#ffd200)' },
 ];
 
-const TRANSITIONS = [
+// ─── Stock backgrounds Unsplash ──────────────────────────────────────────────
+const BG_IMAGES = [
+    'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=70',
+    'https://images.unsplash.com/photo-1438032005730-c779502df39b?w=800&q=70',
+    'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=800&q=70',
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=70',
+    'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=70',
+    'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=70',
+];
+
+// ─── Logos inseribles ────────────────────────────────────────────────────────
+const LOGO_ASSETS = [
+    { id: 'oasis', label: 'Oasis', url: '/src/img/logos/LOGO1.png' },
+    { id: 'iasd', label: 'IASD', url: '/src/img/logos/IASD1.png' },
+    { id: 'icon', label: 'Icono', url: '/src/img/logos/T1.png' },
+    { id: 'rrss', label: 'Redes', url: '/src/img/logos/RRSS1.png' },
+];
+
+// ─── Transiciones ────────────────────────────────────────────────────────────
+const TRANSITION_OPTS = [
     { value: 'fade', label: 'Desvanecer' },
-    { value: 'morph', label: 'Transformar' },
-    { value: 'infinite', label: 'Infinito' },
     { value: 'slide', label: 'Deslizar' },
     { value: 'zoom', label: 'Zoom' },
+    { value: 'morph', label: 'Transformar' },
 ];
 
-const SIDEBAR_ITEMS = [
-    { id: 'slides', label: 'Slides', icon: 'bi-collection' },
-    { id: 'fondos', label: 'Fondos', icon: 'bi-image' },
-    { id: 'elementos', label: 'Elementos', icon: 'bi-fonts' },
-    { id: 'estilos', label: 'Estilos', icon: 'bi-palette2' },
-];
-
-const RIBBON_TABS = ['Inicio', 'Insertar', 'Diseño', 'Transición'];
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-const createDefaultSlide = () => ({
-    id: `slide-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    order: 0,
-    background: '#ffffff',
-    backgroundImage: '',
-    gradient: 'linear-gradient(135deg, #5b2ea6 0%, #8b5cf6 100%)',
-    overlayColor: '',
-    overlayOpacity: 0.3,
-    elements: [],
-    transitionType: 'fade',
-});
-
-const transitionProps = {
+const TRANS_PROPS = {
     fade: { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } },
-    morph: { initial: { scale: 0.8, opacity: 0 }, animate: { scale: 1, opacity: 1 }, exit: { scale: 0.8, opacity: 0 } },
-    infinite: { initial: { x: -800 }, animate: { x: 0 }, exit: { x: 800 } },
-    slide: { initial: { x: 800 }, animate: { x: 0 }, exit: { x: -800 } },
-    zoom: { initial: { scale: 0.5, opacity: 0 }, animate: { scale: 1, opacity: 1 }, exit: { scale: 0.5, opacity: 0 } },
+    slide: { initial: { x: 600 }, animate: { x: 0 }, exit: { x: -600 } },
+    zoom: { initial: { scale: 0.6, opacity: 0 }, animate: { scale: 1, opacity: 1 }, exit: { scale: 0.6, opacity: 0 } },
+    morph: { initial: { scale: 0.85, opacity: 0 }, animate: { scale: 1, opacity: 1 }, exit: { scale: 0.85, opacity: 0 } },
 };
 
-// ─── OasisPress Component ────────────────────────────────────────────────────
-const OasisPress = () => {
-    const [slides, setSlides] = useState([createDefaultSlide()]);
-    const [selectedSlide, setSelectedSlide] = useState(0);
-    const [title, setTitle] = useState('Presentación sin título');
-    const [selectedElement, setSelectedElement] = useState(null);
-    const [mode, setMode] = useState('classic'); // 'classic' | 'infinite'
-    const [activeSidebar, setActiveSidebar] = useState('slides');
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
-    const [activeRibbonTab, setActiveRibbonTab] = useState('inicio');
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
+// ─── Slide factory ────────────────────────────────────────────────────────────
+let _sid = 0;
+const mkSlide = () => ({
+    id: `sl-${Date.now()}-${++_sid}`,
+    gradient: GRADIENTS[0].value,
+    bgColor: '#1a1a2e',
+    bgImage: '',
+    overlayColor: '#000000',
+    overlayOp: 0.35,
+    elements: [],
+    transition: 'fade',
+});
 
+// ─── Element factory ──────────────────────────────────────────────────────────
+const mkEl = (type, extra = {}) => ({
+    id: `el-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    type,
+    x: 80, y: 80,
+    width: type === 'image' ? 110 : 260,
+    height: type === 'image' ? 80 : 60,
+    content: type === 'image' ? (extra.url || '') : 'Texto',
+    style: {
+        fontFamily: 'MoonRising',
+        fontSize: 28,
+        color: '#ffffff',
+        bgColor: 'transparent',
+        bold: false,
+        italic: false,
+        underline: false,
+        ...extra,
+    },
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+const OasisPress = () => {
+    const [slides, setSlides] = useState([mkSlide()]);
+    const [curIdx, setCurIdx] = useState(0);
+    const [tab, setTab] = useState('inicio');        // ribbon tab
+    const [selEl, setSelEl] = useState(null);            // selected element id
+    const [mode, setMode] = useState('classic');        // classic | infinite
+    const [presTitle, setPresTitle] = useState('Presentación sin título');
+    const [showPanel, setShowPanel] = useState('');              // '' | 'bg-images' | 'gradients'
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const canvasRef = useRef(null);
 
-    // ── Responsive ───────────────────────────────────────────────────────────
-    React.useEffect(() => {
-        const onResize = () => {
-            const mobile = window.innerWidth < 992;
-            setIsMobile(mobile);
-            if (mobile) setIsSidebarCollapsed(true);
-        };
-        window.addEventListener('resize', onResize);
-        return () => window.removeEventListener('resize', onResize);
+    useEffect(() => {
+        const h = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', h);
+        return () => window.removeEventListener('resize', h);
     }, []);
 
-    // ── Slide helpers ─────────────────────────────────────────────────────────
+    // ── Shortcuts ─────────────────────────────────────────────────────────────
+    const slide = slides[curIdx] ?? slides[0];
+    const el = slide?.elements.find(e => e.id === selEl) ?? null;
+
+    const setSlide = (changes) => setSlides(s => s.map((sl, i) => i === curIdx ? { ...sl, ...changes } : sl));
+    const setEl = (changes) => {
+        setSlides(s => s.map((sl, i) => i !== curIdx ? sl : {
+            ...sl,
+            elements: sl.elements.map(e => e.id === selEl ? { ...e, ...changes } : e),
+        }));
+    };
+    const setElStyle = (changes) => setEl({ style: { ...el.style, ...changes } });
+
+    // ── Slide ops ─────────────────────────────────────────────────────────────
     const addSlide = () => {
-        const newSlide = createDefaultSlide();
-        setSlides([...slides, newSlide]);
-        setSelectedSlide(slides.length);
+        const ns = mkSlide();
+        setSlides(s => [...s, ns]);
+        setCurIdx(slides.length);
+        setSelEl(null);
+    };
+
+    const duplicateSlide = (idx) => {
+        const copy = {
+            ...slides[idx],
+            id: `sl-${Date.now()}-${++_sid}`,
+            elements: slides[idx].elements.map(e => ({ ...e, id: `el-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` })),
+        };
+        const ns = [...slides.slice(0, idx + 1), copy, ...slides.slice(idx + 1)];
+        setSlides(ns);
+        setCurIdx(idx + 1);
     };
 
     const deleteSlide = (idx) => {
         if (slides.length === 1) return;
-        const newSlides = slides.filter((_, i) => i !== idx);
-        setSlides(newSlides);
-        setSelectedSlide(Math.max(0, idx - 1));
+        const ns = slides.filter((_, i) => i !== idx);
+        setSlides(ns);
+        setCurIdx(Math.max(0, idx - 1));
+        setSelEl(null);
     };
 
-    const duplicateSlide = (idx) => {
-        const copy = { ...slides[idx], id: `slide-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` };
-        setSlides([...slides.slice(0, idx + 1), copy, ...slides.slice(idx + 1)]);
-        setSelectedSlide(idx + 1);
+    // ── Element ops ────────────────────────────────────────────────────────────
+    const addEl = (type, extra = {}) => {
+        const e = mkEl(type, extra);
+        setSlides(s => s.map((sl, i) => i !== curIdx ? sl : { ...sl, elements: [...sl.elements, e] }));
+        setSelEl(e.id);
     };
 
-    const updateSlide = (idx, changes) => {
-        setSlides(slides.map((s, i) => i === idx ? { ...s, ...changes } : s));
+    const deleteEl = (id) => {
+        setSlides(s => s.map((sl, i) => i !== curIdx ? sl : { ...sl, elements: sl.elements.filter(e => e.id !== id) }));
+        setSelEl(null);
     };
 
-    // ── Element helpers ───────────────────────────────────────────────────────
-    const addElement = (type, props = {}) => {
-        const newEl = {
-            id: `el-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            type,
-            x: 100, y: 100, width: type === 'image' ? 120 : 240, height: type === 'image' ? 80 : 60,
-            style: { fontFamily: 'Arial', fontSize: 24, color: '#ffffff', backgroundColor: 'transparent', bold: false, italic: false, underline: false, ...props },
-            content: type === 'image' ? (props.url || '') : 'Texto',
-        };
-        setSlides(slides.map((s, i) => i === selectedSlide
-            ? { ...s, elements: [...s.elements, newEl] }
-            : s
-        ));
-        setSelectedElement(newEl.id);
-    };
-
-    const updateElement = (elId, changes) => {
-        setSlides(slides.map((s, i) => {
-            if (i !== selectedSlide) return s;
-            return { ...s, elements: s.elements.map(el => el.id === elId ? { ...el, ...changes } : el) };
-        }));
-    };
-
-    const deleteElement = (elId) => {
-        setSlides(slides.map((s, i) => {
-            if (i !== selectedSlide) return s;
-            return { ...s, elements: s.elements.filter(el => el.id !== elId) };
-        }));
-        setSelectedElement(null);
-    };
-
-    // ── Export ────────────────────────────────────────────────────────────────
-    const handleExportPDF = async () => {
+    // ── Export ─────────────────────────────────────────────────────────────────
+    const exportPDF = async () => {
         const { jsPDF } = await import('jspdf');
         const doc = new jsPDF();
         if (canvasRef.current) {
-            for (let i = 0; i < slides.length; i++) {
-                await html2canvas(canvasRef.current).then((canvas) => {
-                    const imgData = canvas.toDataURL('image/png');
-                    doc.addImage(imgData, 'PNG', 10, 10, 190, 100);
-                    if (i < slides.length - 1) doc.addPage();
-                });
-            }
+            const c = await html2canvas(canvasRef.current);
+            doc.addImage(c.toDataURL('image/png'), 'PNG', 10, 10, 190, 107);
         }
-        doc.save(`${title}.pdf`);
+        doc.save(`${presTitle}.pdf`);
     };
 
-    const handleExportPPTX = async () => {
+    const exportPPTX = async () => {
         const pptxgen = (await import('pptxgenjs')).default;
         const pptx = new pptxgen();
-        slides.forEach(() => {
-            const slide = pptx.addSlide();
-            slide.addText(title, { x: 1, y: 1, fontSize: 24 });
-        });
-        pptx.writeFile({ fileName: `${title}.pptx` });
+        slides.forEach(() => { const s = pptx.addSlide(); s.addText(presTitle, { x: 1, y: 1, fontSize: 24 }); });
+        pptx.writeFile({ fileName: `${presTitle}.pptx` });
     };
 
-    const handleFullscreen = () => {
-        if (canvasRef.current) {
-            const el = canvasRef.current;
-            if (el.requestFullscreen) el.requestFullscreen();
-            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-            else if (el.msRequestFullscreen) el.msRequestFullscreen();
-        }
+    const fullscreen = () => {
+        const el = canvasRef.current;
+        if (!el) return;
+        (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen)?.call(el);
     };
 
-    // ── Sidebar toggle ────────────────────────────────────────────────────────
-    const openSidebar = (id) => {
-        if (activeSidebar === id && !isSidebarCollapsed) {
-            setIsSidebarCollapsed(true);
-        } else {
-            setActiveSidebar(id);
-            setIsSidebarCollapsed(false);
-        }
-    };
-
-    // ── Current slide ─────────────────────────────────────────────────────────
-    const slide = slides[selectedSlide] || slides[0];
-    const selectedEl = slide?.elements.find(e => e.id === selectedElement) || null;
+    // ── Slide background style ─────────────────────────────────────────────────
+    const slideBg = (sl) => sl.bgImage
+        ? { backgroundImage: `url(${sl.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+        : sl.gradient
+            ? { background: sl.gradient }
+            : { background: sl.bgColor || '#1a1a2e' };
 
     // ─────────────────────────────────────────────────────────────────────────
-    // RENDER HELPERS
+    // RENDER: LEFT THUMBNAIL PANEL
     // ─────────────────────────────────────────────────────────────────────────
+    const renderThumbnails = () => (
+        <div style={{
+            width: isMobile ? '100%' : '200px',
+            flexShrink: 0,
+            background: '#f1f3f5',
+            borderRight: '1px solid #dee2e6',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '10px 8px',
+            gap: '8px',
+        }} className="scrollbar-custom">
 
-    // Sidebar icon column
-    const renderSidebar = () => (
-        <div className="canva-sidebar d-flex flex-column align-items-center bg-dark text-white py-3 shadow-lg"
-            style={{ width: '72px', zIndex: 100, flexShrink: 0 }}>
-            {/* Logo */}
-            <div className="mb-4 px-2">
-                <img src={logoOasis} style={{ height: '30px', filter: 'brightness(10)' }} alt="Oasis" />
-            </div>
+            {/* Botón nueva diapositiva */}
+            <button
+                onClick={addSlide}
+                className="btn btn-sm w-100 d-flex align-items-center justify-content-center gap-1 fw-semibold"
+                style={{ background: '#5b2ea6', color: '#fff', borderRadius: '8px', border: 'none', fontSize: '0.75rem', padding: '7px 0' }}
+            >
+                <i className="bi bi-plus-lg"></i> Nueva diapositiva
+            </button>
 
-            {/* Nav items */}
-            {SIDEBAR_ITEMS.map(item => (
-                <button
-                    key={item.id}
-                    onClick={() => openSidebar(item.id)}
-                    title={item.label}
-                    className={`nav-btn d-flex flex-column align-items-center justify-content-center border-0 mb-1 py-2 w-100 transition-all
-                        ${activeSidebar === item.id && !isSidebarCollapsed ? 'active-sidebar-btn' : 'text-white-50'}`}
-                    style={{ background: 'transparent', fontSize: '0.6rem' }}
+            {/* Miniaturas */}
+            {slides.map((sl, idx) => (
+                <div
+                    key={sl.id}
+                    onClick={() => { setCurIdx(idx); setSelEl(null); }}
+                    style={{
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        outline: curIdx === idx ? '2px solid #5b2ea6' : '2px solid transparent',
+                        boxShadow: curIdx === idx ? '0 0 0 1px #5b2ea6' : '0 1px 4px rgba(0,0,0,0.15)',
+                        position: 'relative',
+                        flexShrink: 0,
+                    }}
                 >
-                    <i className={`bi ${item.icon} fs-5 mb-1`}></i>
-                    <span>{item.label}</span>
-                </button>
-            ))}
+                    {/* Mini canvas */}
+                    <div style={{
+                        height: '112px',
+                        ...slideBg(sl),
+                        position: 'relative',
+                    }}>
+                        {sl.overlayColor && (
+                            <div style={{ position: 'absolute', inset: 0, background: sl.overlayColor, opacity: sl.overlayOp, pointerEvents: 'none' }} />
+                        )}
+                        {/* Texto preview de elementos */}
+                        {sl.elements.filter(e => e.type === 'text').slice(0, 2).map((e, i) => (
+                            <div key={e.id} style={{
+                                position: 'absolute', left: '5%', right: '5%',
+                                top: i === 0 ? '30%' : '55%',
+                                textAlign: 'center', overflow: 'hidden',
+                                color: e.style.color,
+                                fontFamily: e.style.fontFamily,
+                                fontSize: '8px',
+                                fontWeight: e.style.bold ? 'bold' : 'normal',
+                                textShadow: '0 1px 2px rgba(0,0,0,0.6)',
+                                whiteSpace: 'nowrap', textOverflow: 'ellipsis',
+                            }}>
+                                {e.content}
+                            </div>
+                        ))}
+                        {/* Imágenes preview */}
+                        {sl.elements.filter(e => e.type === 'image').slice(0, 2).map(e => (
+                            <img key={e.id} src={e.content} alt="" style={{
+                                position: 'absolute', right: '4px', top: '4px',
+                                height: '18px', objectFit: 'contain',
+                                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))',
+                            }} />
+                        ))}
+                    </div>
 
-            <div className="mt-auto">
-                <button className="nav-btn border-0 py-2 w-100 text-white-50"
-                    onClick={handleFullscreen} title="Pantalla completa"
-                    style={{ background: 'transparent', fontSize: '0.55rem' }}>
-                    <i className="bi bi-arrows-fullscreen fs-5"></i>
-                </button>
-            </div>
+                    {/* Footer de la miniatura */}
+                    <div style={{ background: '#fff', padding: '3px 6px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '0.6rem', color: '#666', fontWeight: 600 }}>Slide {idx + 1}</span>
+                        <div style={{ display: 'flex', gap: '2px' }}>
+                            <button
+                                title="Duplicar"
+                                onClick={e => { e.stopPropagation(); duplicateSlide(idx); }}
+                                style={{ border: 'none', background: 'transparent', padding: '1px 4px', cursor: 'pointer', color: '#5b2ea6', fontSize: '0.7rem' }}
+                            >
+                                <i className="bi bi-copy"></i>
+                            </button>
+                            {slides.length > 1 && (
+                                <button
+                                    title="Eliminar"
+                                    onClick={e => { e.stopPropagation(); deleteSlide(idx); }}
+                                    style={{ border: 'none', background: 'transparent', padding: '1px 4px', cursor: 'pointer', color: '#dc3545', fontSize: '0.7rem' }}
+                                >
+                                    <i className="bi bi-trash"></i>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            ))}
         </div>
     );
 
-    // Collapsible side panel
-    const renderPanel = () => (
-        <AnimatePresence>
-            {!isSidebarCollapsed && (
-                <motion.div
-                    initial={{ x: -300, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -300, opacity: 0 }}
-                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                    className="canva-panel bg-white shadow-lg scrollbar-custom"
-                    style={{
-                        position: 'fixed',
-                        top: isMobile ? 'auto' : '100px',
-                        left: isMobile ? 0 : '72px',
-                        bottom: isMobile ? '56px' : 0,
-                        width: isMobile ? '100%' : '280px',
-                        zIndex: 200,
-                        overflowY: 'auto',
-                        borderRight: '1px solid #e9ecef',
-                    }}
-                >
-                    {/* Panel header */}
-                    <div className="p-3 d-flex justify-content-between align-items-center border-bottom sticky-top bg-white">
-                        <h6 className="fw-bold mb-0 text-uppercase" style={{ fontSize: '0.75rem', color: '#5b2ea6' }}>
-                            {SIDEBAR_ITEMS.find(i => i.id === activeSidebar)?.label}
-                        </h6>
-                        <button className="btn-close" style={{ fontSize: '0.6rem' }} onClick={() => setIsSidebarCollapsed(true)} />
+    // ─────────────────────────────────────────────────────────────────────────
+    // RENDER: RIBBON
+    // ─────────────────────────────────────────────────────────────────────────
+    const renderRibbon = () => {
+        // Helpers para el elemento seleccionado
+        const fontSizeUp = () => el && setElStyle({ fontSize: Math.min(200, (el.style.fontSize || 24) + 2) });
+        const fontSizeDown = () => el && setElStyle({ fontSize: Math.max(8, (el.style.fontSize || 24) - 2) });
+
+        return (
+            <div className="ribbon-container" style={{ flexShrink: 0, background: '#fff', borderBottom: '1px solid #dee2e6' }}>
+
+                {/* ── Tab bar ── */}
+                <div style={{ display: 'flex', borderBottom: '1px solid #e9ecef', background: '#f8f9fa', padding: '0 12px', alignItems: 'center' }}>
+                    {['Inicio', 'Insertar', 'Diseño', 'Transición'].map(t => (
+                        <button key={t}
+                            onClick={() => setTab(t.toLowerCase())}
+                            style={{
+                                border: 'none',
+                                borderBottom: tab === t.toLowerCase() ? '3px solid #5b2ea6' : '3px solid transparent',
+                                background: 'transparent',
+                                padding: '7px 18px',
+                                fontSize: '0.85rem',
+                                fontWeight: tab === t.toLowerCase() ? 700 : 400,
+                                color: tab === t.toLowerCase() ? '#5b2ea6' : '#555',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s',
+                            }}
+                        >{t}</button>
+                    ))}
+
+                    {/* Acciones derecha */}
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button className="btn btn-sm btn-outline-secondary" style={{ fontSize: '0.75rem' }} onClick={exportPDF}>
+                            <i className="bi bi-file-earmark-pdf me-1"></i>PDF
+                        </button>
+                        <button className="btn btn-sm btn-outline-secondary" style={{ fontSize: '0.75rem' }} onClick={exportPPTX}>
+                            <i className="bi bi-file-earmark-slides me-1"></i>PPTX
+                        </button>
+                        <button className="btn btn-sm" style={{ fontSize: '0.75rem', background: '#5b2ea6', color: '#fff', borderRadius: '6px', border: 'none', padding: '5px 18px', fontWeight: 600 }} onClick={fullscreen}>
+                            <i className="bi bi-arrows-fullscreen me-1"></i>Pantalla
+                        </button>
                     </div>
+                </div>
 
-                    <div className="p-3">
+                {/* ── Controls row ── */}
+                <div style={{ display: 'flex', alignItems: 'center', padding: '6px 12px', minHeight: '58px', gap: '0', overflowX: 'auto', flexWrap: 'nowrap' }}>
 
-                        {/* ══ SLIDES ══ */}
-                        {activeSidebar === 'slides' && (
-                            <div>
-                                <button className="btn btn-sm btn-primary w-100 rounded-pill mb-3 fw-bold shadow-sm" onClick={addSlide}>
-                                    <i className="bi bi-plus-lg me-1"></i> Nueva Diapositiva
-                                </button>
-                                {slides.map((sl, idx) => (
-                                    <div key={sl.id}
-                                        className={`mb-2 rounded-3 border cursor-pointer overflow-hidden shadow-sm ${selectedSlide === idx ? 'border-primary' : 'border-light'}`}
-                                        onClick={() => setSelectedSlide(idx)}
-                                        style={{ outline: selectedSlide === idx ? '2px solid #5b2ea6' : 'none' }}
+                    {/* ══ INICIO ══ */}
+                    {tab === 'inicio' && (
+                        <>
+                            {/* Grupo: Elemento activo */}
+                            <div className="ribbon-group border-end">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <select
+                                        className="form-select form-select-sm"
+                                        style={{ width: '120px', fontSize: '0.78rem', height: '28px', padding: '0 6px' }}
+                                        value={selEl || ''}
+                                        onChange={e => setSelEl(e.target.value || null)}
                                     >
-                                        {/* Mini preview */}
-                                        <div style={{
-                                            height: '55px',
-                                            background: sl.gradient || sl.background || '#5b2ea6',
-                                            backgroundImage: sl.backgroundImage ? `url(${sl.backgroundImage})` : undefined,
-                                            backgroundSize: 'cover',
-                                            position: 'relative',
-                                        }}>
-                                            <span className="position-absolute top-50 start-50 translate-middle fw-bold"
-                                                style={{ color: 'white', fontSize: '0.65rem', textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
-                                                Slide {idx + 1}
-                                            </span>
-                                        </div>
-                                        <div className="d-flex gap-1 p-1 bg-light">
-                                            <button className="btn btn-light btn-sm py-0 px-2 flex-grow-1 hover-scale"
-                                                style={{ fontSize: '0.6rem' }}
-                                                onClick={e => { e.stopPropagation(); duplicateSlide(idx); }}>
-                                                <i className="bi bi-copy me-1"></i>Duplicar
-                                            </button>
-                                            {slides.length > 1 && (
-                                                <button className="btn btn-outline-danger btn-sm py-0 px-2 hover-scale"
-                                                    style={{ fontSize: '0.6rem' }}
-                                                    onClick={e => { e.stopPropagation(); deleteSlide(idx); }}>
-                                                    <i className="bi bi-trash"></i>
-                                                </button>
-                                            )}
-                                        </div>
+                                        <option value="">— Elemento —</option>
+                                        {slide.elements.map(e => (
+                                            <option key={e.id} value={e.id}>
+                                                {e.type === 'text' ? `✏ ${(e.content || '').slice(0, 14)}…` : `🖼 Imagen`}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {el && (
+                                        <button className="btn btn-sm btn-outline-danger py-0 px-2"
+                                            style={{ height: '28px', fontSize: '0.7rem' }}
+                                            onClick={() => deleteEl(selEl)}>
+                                            <i className="bi bi-trash"></i>
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="ribbon-label">Elemento</div>
+                            </div>
+
+                            {/* Grupo: Tamaño de fuente */}
+                            {el?.type === 'text' && (
+                                <div className="ribbon-group border-end">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                        <button className="btn btn-sm btn-light py-0 px-2" style={{ height: '28px' }} onClick={fontSizeDown}>
+                                            <i className="bi bi-dash"></i>
+                                        </button>
+                                        <span style={{ minWidth: '38px', textAlign: 'center', fontSize: '0.85rem', fontWeight: 700, background: '#f8f9fa', borderRadius: '4px', padding: '3px 4px', border: '1px solid #dee2e6' }}>
+                                            {el.style.fontSize}
+                                        </span>
+                                        <button className="btn btn-sm btn-light py-0 px-2" style={{ height: '28px' }} onClick={fontSizeUp}>
+                                            <i className="bi bi-plus"></i>
+                                        </button>
                                     </div>
-                                ))}
-                            </div>
-                        )}
+                                    <div className="ribbon-label">Tamaño</div>
+                                </div>
+                            )}
 
-                        {/* ══ FONDOS ══ */}
-                        {activeSidebar === 'fondos' && (
-                            <div>
-                                {/* Gradientes */}
-                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Degradados</label>
-                                <div className="row g-2 mb-4">
-                                    {GRADIENTS.map(g => (
-                                        <div key={g.value} className="col-6">
-                                            <div className="rounded-3 cursor-pointer hover-scale border shadow-sm"
-                                                onClick={() => updateSlide(selectedSlide, { gradient: g.value, backgroundImage: '' })}
+                            {/* Grupo: Color */}
+                            {el?.type === 'text' && (
+                                <div className="ribbon-group border-end">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                        <input type="color"
+                                            className="form-control form-control-color p-0"
+                                            style={{ width: '28px', height: '28px', border: '2px solid #dee2e6', borderRadius: '4px', cursor: 'pointer' }}
+                                            value={el.style.color}
+                                            onChange={e => setElStyle({ color: e.target.value })}
+                                        />
+                                        {QUICK_COLORS.map(c => (
+                                            <button key={c}
+                                                onClick={() => setElStyle({ color: c })}
                                                 style={{
-                                                    height: '50px',
-                                                    background: g.value,
-                                                    outline: slide.gradient === g.value ? '2px solid #5b2ea6' : 'none',
-                                                }}>
-                                                <div className="d-flex h-100 align-items-end justify-content-start p-1">
-                                                    <span style={{ color: 'white', fontSize: '0.55rem', fontWeight: 'bold', textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{g.label}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
+                                                    width: '22px', height: '22px', background: c, borderRadius: '4px', cursor: 'pointer',
+                                                    border: el.style.color === c ? '2px solid #5b2ea6' : '1px solid #ccc',
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                    <div className="ribbon-label">Color</div>
                                 </div>
+                            )}
 
-                                {/* Color sólido */}
-                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Color de fondo</label>
-                                <input type="color" className="form-control form-control-color w-100 shadow-sm mb-3"
-                                    style={{ height: '36px' }}
-                                    value={slide.background || '#1a1a2e'}
-                                    onChange={e => updateSlide(selectedSlide, { background: e.target.value, gradient: '' })} />
-
-                                {/* Imágenes de fondo */}
-                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Fondos de imagen</label>
-                                <div className="row g-1 mb-3">
-                                    {IMAGE_LIBRARY.backgrounds.map(img => (
-                                        <div key={img.id} className="col-4">
-                                            <img src={img.url} alt={img.name}
-                                                onClick={() => updateSlide(selectedSlide, { backgroundImage: img.url, gradient: '' })}
-                                                className="img-fluid rounded-2 cursor-pointer hover-scale shadow-sm"
-                                                style={{ height: '48px', width: '100%', objectFit: 'cover' }} />
-                                        </div>
-                                    ))}
+                            {/* Grupo: Formato texto */}
+                            {el?.type === 'text' && (
+                                <div className="ribbon-group border-end">
+                                    <div style={{ display: 'flex', gap: '3px' }}>
+                                        {[
+                                            { key: 'bold', label: '<b>N</b>', icon: 'bi-type-bold' },
+                                            { key: 'italic', label: '<i>K</i>', icon: 'bi-type-italic' },
+                                            { key: 'underline', label: '<u>S</u>', icon: 'bi-type-underline' },
+                                        ].map(f => (
+                                            <button key={f.key}
+                                                className={`btn btn-sm py-0 px-2 ${el.style[f.key] ? 'btn-primary' : 'btn-light'}`}
+                                                style={{ height: '28px', fontSize: '0.8rem' }}
+                                                onClick={() => setElStyle({ [f.key]: !el.style[f.key] })}
+                                            >
+                                                <i className={`bi ${f.icon}`}></i>
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="ribbon-label">Formato</div>
                                 </div>
+                            )}
 
-                                {/* Overlay */}
-                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">
-                                    Color de máscara&nbsp;<span className="text-muted fw-normal">(overlay)</span>
-                                </label>
-                                <div className="d-flex gap-2 align-items-center mb-2">
-                                    <input type="color" className="form-control form-control-color border-0 rounded"
-                                        style={{ width: '32px', height: '32px' }}
-                                        value={slide.overlayColor || '#000000'}
-                                        onChange={e => updateSlide(selectedSlide, { overlayColor: e.target.value })} />
-                                    <input type="range" className="form-range flex-grow-1"
-                                        min="0" max="1" step="0.05"
-                                        value={slide.overlayOpacity ?? 0.3}
-                                        onChange={e => updateSlide(selectedSlide, { overlayOpacity: parseFloat(e.target.value) })} />
-                                    <span className="x-small text-muted" style={{ minWidth: '30px' }}>
-                                        {Math.round((slide.overlayOpacity ?? 0.3) * 100)}%
-                                    </span>
+                            {/* Grupo: Fuente */}
+                            {el?.type === 'text' && (
+                                <div className="ribbon-group border-end">
+                                    <select className="form-select form-select-sm"
+                                        style={{ width: '130px', fontSize: '0.72rem', height: '28px', padding: '0 6px' }}
+                                        value={el.style.fontFamily}
+                                        onChange={e => setElStyle({ fontFamily: e.target.value })}
+                                    >
+                                        {FONTS.map(f => <option key={f.name} value={f.name}>{f.label}</option>)}
+                                    </select>
+                                    <div className="ribbon-label">Fuente</div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {/* ══ ELEMENTOS ══ */}
-                        {activeSidebar === 'elementos' && (
-                            <div>
-                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Agregar Texto</label>
-                                <div className="d-flex flex-wrap gap-2 mb-4">
-                                    <button className="btn btn-outline-primary btn-sm hover-scale"
-                                        onClick={() => addElement('text', { fontFamily: 'MoonRising', fontSize: 32, color: '#ffffff' })}>
+                            {/* Grupo: Edit texto */}
+                            {el?.type === 'text' && (
+                                <div className="ribbon-group">
+                                    <input
+                                        className="form-control form-control-sm"
+                                        style={{ width: '180px', fontSize: '0.78rem', height: '28px' }}
+                                        value={el.content}
+                                        onChange={e => setEl({ content: e.target.value })}
+                                        placeholder="Texto del elemento…"
+                                    />
+                                    <div className="ribbon-label">Contenido</div>
+                                </div>
+                            )}
+
+                            {/* Si no hay elemento seleccionado */}
+                            {!el && (
+                                <div style={{ color: '#aaa', fontSize: '0.75rem', paddingLeft: '12px', fontStyle: 'italic' }}>
+                                    <i className="bi bi-hand-index me-1"></i>
+                                    Selecciona un elemento en el canvas o inserta uno desde la pestaña <strong>Insertar</strong>
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {/* ══ INSERTAR ══ */}
+                    {tab === 'insertar' && (
+                        <>
+                            <div className="ribbon-group border-end">
+                                <div style={{ display: 'flex', gap: '4px' }}>
+                                    <button className="btn btn-sm btn-outline-primary hover-scale"
+                                        style={{ fontSize: '0.72rem', height: '32px' }}
+                                        onClick={() => addEl('text', { fontFamily: 'MoonRising', fontSize: 34, color: '#ffffff' })}>
                                         <i className="bi bi-type-h1 me-1"></i>Título
                                     </button>
-                                    <button className="btn btn-outline-secondary btn-sm hover-scale"
-                                        onClick={() => addElement('text', { fontFamily: 'AdventSans', fontSize: 20, color: '#ffffff' })}>
+                                    <button className="btn btn-sm btn-outline-secondary hover-scale"
+                                        style={{ fontSize: '0.72rem', height: '32px' }}
+                                        onClick={() => addEl('text', { fontFamily: 'AdventSans', fontSize: 20, color: '#ffffff' })}>
                                         <i className="bi bi-type-h2 me-1"></i>Subtítulo
                                     </button>
-                                    <button className="btn btn-outline-secondary btn-sm hover-scale"
-                                        onClick={() => addElement('text', { fontFamily: 'Arial', fontSize: 16, color: '#ffffff' })}>
+                                    <button className="btn btn-sm btn-outline-secondary hover-scale"
+                                        style={{ fontSize: '0.72rem', height: '32px' }}
+                                        onClick={() => addEl('text', { fontFamily: 'Arial', fontSize: 14, color: '#ffffff' })}>
                                         <i className="bi bi-type me-1"></i>Párrafo
                                     </button>
                                 </div>
+                                <div className="ribbon-label">Texto</div>
+                            </div>
 
-                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Logos Institucionales</label>
-                                <div className="d-flex flex-wrap gap-2 mb-4">
-                                    {IMAGE_LIBRARY.logos.map(logo => (
+                            <div className="ribbon-group border-end">
+                                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                    {LOGO_ASSETS.map(logo => (
                                         <button key={logo.id}
-                                            className="btn btn-light border rounded-3 hover-scale d-flex flex-column align-items-center p-2"
-                                            style={{ width: '64px', height: '64px' }}
-                                            onClick={() => addElement('image', { url: logo.url })}
-                                            title={logo.name}>
-                                            <img src={logo.url} alt={logo.name} style={{ height: '28px', maxWidth: '50px', objectFit: 'contain' }} />
-                                            <span style={{ fontSize: '0.5rem', marginTop: '4px' }}>{logo.name.split(' ')[0]}</span>
+                                            title={logo.label}
+                                            className="btn btn-sm btn-light hover-scale d-flex flex-column align-items-center"
+                                            style={{ width: '50px', height: '50px', fontSize: '0.55rem', padding: '4px', gap: '2px', border: '1px solid #dee2e6' }}
+                                            onClick={() => addEl('image', { url: logo.url })}>
+                                            <img src={logo.url} alt={logo.label} style={{ height: '22px', objectFit: 'contain', maxWidth: '42px' }} />
+                                            {logo.label}
                                         </button>
                                     ))}
                                 </div>
+                                <div className="ribbon-label">Logos</div>
+                            </div>
 
-                                <label className="x-small fw-bold text-muted text-uppercase mb-2 d-block">Redes Sociales</label>
-                                <div className="d-flex flex-wrap gap-2 mb-3">
-                                    {IMAGE_LIBRARY.social.map(s => (
-                                        <button key={s.id}
-                                            className="btn btn-light border rounded-3 hover-scale d-flex flex-column align-items-center p-2"
-                                            style={{ width: '64px', height: '64px' }}
-                                            onClick={() => addElement('image', { url: s.url })}
-                                            title={s.name}>
-                                            <i className={`bi bi-${s.name.toLowerCase().replace('/', '-')} fs-4`}></i>
-                                            <span style={{ fontSize: '0.5rem', marginTop: '4px' }}>{s.name}</span>
+                            <div className="ribbon-group">
+                                <div style={{ display: 'flex', gap: '4px' }}>
+                                    {['bi-instagram', 'bi-facebook', 'bi-youtube', 'bi-whatsapp', 'bi-twitter-x'].map(ic => (
+                                        <button key={ic}
+                                            className="btn btn-sm btn-light hover-scale"
+                                            style={{ width: '32px', height: '32px', padding: 0 }}
+                                            onClick={() => addEl('text', { fontFamily: 'Arial', fontSize: 14, color: '#ffffff', content: ic.replace('bi-', '').toUpperCase() })}>
+                                            <i className={`bi ${ic}`}></i>
                                         </button>
                                     ))}
                                 </div>
+                                <div className="ribbon-label">Redes</div>
                             </div>
-                        )}
+                        </>
+                    )}
 
-                        {/* ══ ESTILOS (propiedades del elemento seleccionado) ══ */}
-                        {activeSidebar === 'estilos' && (
-                            <div>
-                                {!selectedEl ? (
-                                    <div className="text-center text-muted py-4">
-                                        <i className="bi bi-hand-index fs-1 opacity-25"></i>
-                                        <p className="x-small mt-2">Selecciona un elemento en el canvas para editarlo</p>
-                                    </div>
-                                ) : (
-                                    <div className="selected-element-panel">
-                                        <div className="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                                            <span className="small fw-bold text-primary text-uppercase">
-                                                {selectedEl.type === 'text' ? 'Texto' : 'Imagen'}
-                                            </span>
-                                            <button className="btn btn-sm p-0 text-muted" onClick={() => setSelectedElement(null)}>
-                                                <i className="bi bi-x-lg"></i>
-                                            </button>
-                                        </div>
+                    {/* ══ DISEÑO ══ */}
+                    {tab === 'diseño' && (
+                        <>
+                            {/* Degradados */}
+                            <div className="ribbon-group border-end">
+                                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', maxWidth: '220px' }}>
+                                    {GRADIENTS.map(g => (
+                                        <button key={g.value}
+                                            title={g.label}
+                                            onClick={() => setSlide({ gradient: g.value, bgImage: '' })}
+                                            style={{
+                                                width: '28px', height: '28px', background: g.value,
+                                                borderRadius: '4px', cursor: 'pointer',
+                                                border: slide.gradient === g.value ? '2px solid #5b2ea6' : '1px solid #ddd',
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                                <div className="ribbon-label">Degradado</div>
+                            </div>
 
-                                        {selectedEl.type === 'text' && (
-                                            <>
-                                                {/* Contenido */}
-                                                <label className="x-small text-muted mb-1">Texto</label>
-                                                <textarea className="form-control form-control-sm mb-3" rows={2}
-                                                    value={selectedEl.content}
-                                                    onChange={e => updateElement(selectedEl.id, { content: e.target.value })} />
+                            {/* Color sólido */}
+                            <div className="ribbon-group border-end">
+                                <input type="color"
+                                    className="form-control form-control-color p-0"
+                                    style={{ width: '32px', height: '32px', borderRadius: '4px', cursor: 'pointer' }}
+                                    value={slide.bgColor || '#1a1a2e'}
+                                    onChange={e => setSlide({ bgColor: e.target.value, gradient: '', bgImage: '' })}
+                                />
+                                <div className="ribbon-label">Color</div>
+                            </div>
 
-                                                {/* Fuente + Tamaño */}
-                                                <div className="d-flex gap-2 mb-2">
-                                                    <div className="flex-grow-1">
-                                                        <label className="x-small text-muted mb-1"><i className="bi bi-fonts me-1"></i>Fuente</label>
-                                                        <select className="form-select form-select-sm" style={{ fontSize: '0.7rem' }}
-                                                            value={selectedEl.style.fontFamily}
-                                                            onChange={e => updateElement(selectedEl.id, { style: { ...selectedEl.style, fontFamily: e.target.value } })}>
-                                                            {FONTS.map(f => <option key={f.name} value={f.name}>{f.label}</option>)}
-                                                        </select>
-                                                    </div>
-                                                    <div style={{ width: '68px' }}>
-                                                        <label className="x-small text-muted mb-1">Tam</label>
-                                                        <input type="number" className="form-control form-control-sm text-center"
-                                                            value={selectedEl.style.fontSize}
-                                                            onChange={e => updateElement(selectedEl.id, { style: { ...selectedEl.style, fontSize: Number(e.target.value) } })}
-                                                            min={8} max={200} />
-                                                    </div>
-                                                </div>
-
-                                                {/* Color */}
-                                                <label className="x-small text-muted mb-1"><i className="bi bi-palette me-1"></i>Color</label>
-                                                <div className="d-flex gap-1 mb-3 flex-wrap">
-                                                    <input type="color" className="form-control form-control-color border-0 rounded"
-                                                        style={{ width: '32px', height: '32px' }}
-                                                        value={selectedEl.style.color}
-                                                        onChange={e => updateElement(selectedEl.id, { style: { ...selectedEl.style, color: e.target.value } })} />
-                                                    {COLORS.map(c => (
-                                                        <button key={c} className="btn p-0 border rounded-1"
-                                                            style={{
-                                                                width: '22px', height: '22px', background: c,
-                                                                outline: selectedEl.style.color === c ? '2px solid #5b2ea6' : 'none'
-                                                            }}
-                                                            onClick={() => updateElement(selectedEl.id, { style: { ...selectedEl.style, color: c } })} />
-                                                    ))}
-                                                </div>
-
-                                                {/* Negrita / Itálica / Subrayado */}
-                                                <label className="x-small text-muted mb-1">Formato</label>
-                                                <div className="d-flex gap-2 mb-3">
-                                                    {[
-                                                        { key: 'bold', icon: 'bi-type-bold', label: 'N' },
-                                                        { key: 'italic', icon: 'bi-type-italic', label: 'K' },
-                                                        { key: 'underline', icon: 'bi-type-underline', label: 'S' },
-                                                    ].map(fmt => (
-                                                        <button key={fmt.key}
-                                                            className={`btn btn-sm fw-bold px-3 ${selectedEl.style[fmt.key] ? 'btn-primary' : 'btn-light'}`}
-                                                            onClick={() => updateElement(selectedEl.id, { style: { ...selectedEl.style, [fmt.key]: !selectedEl.style[fmt.key] } })}>
-                                                            {fmt.label}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </>
-                                        )}
-
-                                        {/* Eliminar elemento */}
-                                        <button className="btn btn-outline-danger btn-sm w-100 rounded-pill mt-2"
-                                            onClick={() => deleteElement(selectedEl.id)}>
-                                            <i className="bi bi-trash me-1"></i>Eliminar elemento
+                            {/* Imagen de fondo */}
+                            <div className="ribbon-group border-end">
+                                <div style={{ display: 'flex', gap: '3px' }}>
+                                    {BG_IMAGES.map((url, i) => (
+                                        <div key={i}
+                                            onClick={() => setSlide({ bgImage: url, gradient: '' })}
+                                            style={{
+                                                width: '40px', height: '32px', borderRadius: '4px', cursor: 'pointer',
+                                                backgroundImage: `url(${url})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                                                border: slide.bgImage === url ? '2px solid #5b2ea6' : '1px solid #ddd',
+                                                transition: 'transform 0.15s',
+                                            }}
+                                            className="hover-scale"
+                                        />
+                                    ))}
+                                    {slide.bgImage && (
+                                        <button className="btn btn-sm btn-outline-danger py-0 px-1"
+                                            style={{ height: '32px', fontSize: '0.65rem' }}
+                                            onClick={() => setSlide({ bgImage: '' })}>
+                                            <i className="bi bi-x-lg"></i>
                                         </button>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
+                                <div className="ribbon-label">Imagen de fondo</div>
                             </div>
-                        )}
 
-                    </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
-    );
+                            {/* Overlay */}
+                            <div className="ribbon-group">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <input type="color"
+                                        className="form-control form-control-color p-0"
+                                        style={{ width: '28px', height: '28px', borderRadius: '4px' }}
+                                        value={slide.overlayColor || '#000000'}
+                                        onChange={e => setSlide({ overlayColor: e.target.value })}
+                                    />
+                                    <input type="range"
+                                        style={{ width: '90px' }}
+                                        className="form-range"
+                                        min="0" max="1" step="0.05"
+                                        value={slide.overlayOp ?? 0.35}
+                                        onChange={e => setSlide({ overlayOp: parseFloat(e.target.value) })}
+                                    />
+                                    <span style={{ fontSize: '0.7rem', color: '#666', minWidth: '30px' }}>
+                                        {Math.round((slide.overlayOp ?? 0.35) * 100)}%
+                                    </span>
+                                </div>
+                                <div className="ribbon-label">Máscara</div>
+                            </div>
+                        </>
+                    )}
 
-    // Ribbon tabs
-    const renderRibbon = () => (
-        <div className="ribbon-container bg-white border-bottom shadow-sm flex-shrink-0" style={{ borderRadius: 0 }}>
-            {/* Tab labels */}
-            <div className="d-flex border-bottom bg-light px-2" style={{ gap: '2px' }}>
-                {RIBBON_TABS.map(tab => (
-                    <button key={tab}
-                        onClick={() => setActiveRibbonTab(tab.toLowerCase())}
-                        style={{
-                            border: 'none',
-                            background: activeRibbonTab === tab.toLowerCase() ? '#fff' : 'transparent',
-                            borderBottom: activeRibbonTab === tab.toLowerCase() ? '3px solid #5b2ea6' : 'none',
-                            padding: '6px 18px',
-                            fontSize: '0.85rem',
-                            fontWeight: activeRibbonTab === tab.toLowerCase() ? 'bold' : 'normal',
-                            color: activeRibbonTab === tab.toLowerCase() ? '#5b2ea6' : '#666',
-                            transition: 'all 0.2s',
-                            cursor: 'pointer',
-                        }}>
-                        {tab}
-                    </button>
-                ))}
-
-                {/* Acciones derechas */}
-                <div className="ms-auto d-flex align-items-center gap-2 px-3">
-                    <button className="btn btn-sm btn-outline-secondary" style={{ fontSize: '0.75rem' }}
-                        onClick={handleExportPDF}>
-                        <i className="bi bi-file-earmark-pdf me-1"></i>PDF
-                    </button>
-                    <button className="btn btn-sm btn-outline-secondary" style={{ fontSize: '0.75rem' }}
-                        onClick={handleExportPPTX}>
-                        <i className="bi bi-file-earmark-slides me-1"></i>PPTX
-                    </button>
+                    {/* ══ TRANSICIÓN ══ */}
+                    {tab === 'transición' && (
+                        <div className="ribbon-group">
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                                {TRANSITION_OPTS.map(t => (
+                                    <button key={t.value}
+                                        className={`btn btn-sm hover-scale ${slide.transition === t.value ? 'btn-primary' : 'btn-light'}`}
+                                        style={{ fontSize: '0.75rem', height: '32px' }}
+                                        onClick={() => setSlide({ transition: t.value })}>
+                                        {t.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="ribbon-label">Tipo de Transición</div>
+                        </div>
+                    )}
                 </div>
             </div>
+        );
+    };
 
-            {/* Ribbon content */}
-            <div className="px-3 py-2 bg-white d-flex align-items-center gap-4 flex-wrap" style={{ minHeight: '58px' }}>
-
-                {/* ── INICIO ── */}
-                {activeRibbonTab === 'inicio' && (
-                    <>
-                        {/* Modo */}
-                        <div className="d-flex flex-column align-items-center px-3 border-end">
-                            <div className="d-flex gap-1 mb-1">
-                                {[
-                                    { id: 'classic', label: 'Clásico', icon: 'bi-layout-text-window' },
-                                    { id: 'infinite', label: 'Infinito', icon: 'bi-infinity' },
-                                ].map(m => (
-                                    <button key={m.id}
-                                        onClick={() => setMode(m.id)}
-                                        className={`btn btn-sm d-flex flex-column align-items-center py-1 px-2 ${mode === m.id ? 'btn-primary' : 'btn-light'}`}
-                                        style={{ fontSize: '0.65rem' }}>
-                                        <i className={`bi ${m.icon} fs-5 mb-1`}></i>
-                                        {m.label}
-                                    </button>
-                                ))}
-                            </div>
-                            <span className="x-small text-muted fw-bold text-uppercase">Modo</span>
-                        </div>
-
-                        {/* Diapositivas */}
-                        <div className="d-flex flex-column align-items-center px-3 border-end">
-                            <div className="d-flex gap-1 mb-1">
-                                <button className="btn btn-sm btn-light py-1 px-2 hover-scale" onClick={addSlide}
-                                    style={{ fontSize: '0.7rem' }}>
-                                    <i className="bi bi-plus-lg me-1"></i>Nueva
-                                </button>
-                                <button className="btn btn-sm btn-light py-1 px-2 hover-scale" onClick={() => duplicateSlide(selectedSlide)}
-                                    style={{ fontSize: '0.7rem' }}>
-                                    <i className="bi bi-copy me-1"></i>Duplicar
-                                </button>
-                                {slides.length > 1 && (
-                                    <button className="btn btn-sm btn-outline-danger py-1 px-2 hover-scale" onClick={() => deleteSlide(selectedSlide)}
-                                        style={{ fontSize: '0.7rem' }}>
-                                        <i className="bi bi-trash"></i>
-                                    </button>
-                                )}
-                            </div>
-                            <span className="x-small text-muted fw-bold text-uppercase">Diapositiva {selectedSlide + 1} / {slides.length}</span>
-                        </div>
-
-                        {/* Navegación */}
-                        <div className="d-flex flex-column align-items-center px-3 border-end">
-                            <div className="d-flex gap-1 mb-1">
-                                <button className="btn btn-sm btn-light py-1 px-3 hover-scale"
-                                    disabled={selectedSlide === 0}
-                                    onClick={() => setSelectedSlide(s => Math.max(0, s - 1))}>
-                                    <i className="bi bi-chevron-left"></i>
-                                </button>
-                                <button className="btn btn-sm btn-light py-1 px-3 hover-scale"
-                                    disabled={selectedSlide === slides.length - 1}
-                                    onClick={() => setSelectedSlide(s => Math.min(slides.length - 1, s + 1))}>
-                                    <i className="bi bi-chevron-right"></i>
-                                </button>
-                            </div>
-                            <span className="x-small text-muted fw-bold text-uppercase">Navegar</span>
-                        </div>
-                    </>
-                )}
-
-                {/* ── INSERTAR ── */}
-                {activeRibbonTab === 'insertar' && (
-                    <>
-                        <div className="d-flex flex-column align-items-center px-3 border-end">
-                            <div className="d-flex gap-1 mb-1">
-                                <button className="btn btn-sm btn-light py-1 px-2 hover-scale"
-                                    onClick={() => addElement('text', { fontFamily: 'MoonRising', fontSize: 32, color: '#ffffff' })}
-                                    style={{ fontSize: '0.7rem' }}>
-                                    <i className="bi bi-type-h1 me-1"></i>Título
-                                </button>
-                                <button className="btn btn-sm btn-light py-1 px-2 hover-scale"
-                                    onClick={() => addElement('text', { fontFamily: 'Arial', fontSize: 18, color: '#ffffff' })}
-                                    style={{ fontSize: '0.7rem' }}>
-                                    <i className="bi bi-type me-1"></i>Texto
-                                </button>
-                                <button className="btn btn-sm btn-light py-1 px-2 hover-scale"
-                                    onClick={() => addElement('image', { url: IMAGE_LIBRARY.logos[0].url })}
-                                    style={{ fontSize: '0.7rem' }}>
-                                    <i className="bi bi-image me-1"></i>Logo Oasis
-                                </button>
-                                <button className="btn btn-sm btn-light py-1 px-2 hover-scale"
-                                    onClick={() => addElement('image', { url: IMAGE_LIBRARY.logos[3].url })}
-                                    style={{ fontSize: '0.7rem' }}>
-                                    <i className="bi bi-image me-1"></i>Logo IASD
-                                </button>
-                            </div>
-                            <span className="x-small text-muted fw-bold text-uppercase">Insertar</span>
-                        </div>
-
-                        <div className="d-flex flex-column align-items-center px-3">
-                            <div className="d-flex gap-1 mb-1">
-                                {IMAGE_LIBRARY.social.slice(0, 3).map(s => (
-                                    <button key={s.id} className="btn btn-sm btn-light py-1 px-2 hover-scale"
-                                        onClick={() => addElement('image', { url: s.url })}
-                                        title={s.name}
-                                        style={{ fontSize: '0.7rem' }}>
-                                        <i className={`bi bi-${s.name.toLowerCase().replace('/', '-')}`}></i>
-                                    </button>
-                                ))}
-                            </div>
-                            <span className="x-small text-muted fw-bold text-uppercase">Redes Sociales</span>
-                        </div>
-                    </>
-                )}
-
-                {/* ── DISEÑO ── */}
-                {activeRibbonTab === 'diseño' && (
-                    <>
-                        <div className="d-flex flex-column align-items-center px-3 border-end">
-                            <div className="d-flex gap-1 mb-1 flex-wrap">
-                                {GRADIENTS.slice(0, 5).map(g => (
-                                    <button key={g.value}
-                                        onClick={() => updateSlide(selectedSlide, { gradient: g.value, backgroundImage: '' })}
-                                        title={g.label}
-                                        style={{
-                                            width: 28, height: 28, background: g.value,
-                                            border: slide.gradient === g.value ? '2px solid #5b2ea6' : '1px solid #ddd',
-                                            borderRadius: '4px', cursor: 'pointer',
-                                        }} />
-                                ))}
-                            </div>
-                            <span className="x-small text-muted fw-bold text-uppercase">Degradado</span>
-                        </div>
-
-                        <div className="d-flex flex-column align-items-center px-3 border-end">
-                            <div className="mb-1">
-                                <input type="color" className="form-control form-control-color p-0"
-                                    style={{ width: 28, height: 28, border: '2px solid #ddd', borderRadius: '4px' }}
-                                    value={slide.background || '#1a1a2e'}
-                                    onChange={e => updateSlide(selectedSlide, { background: e.target.value, gradient: '' })} />
-                            </div>
-                            <span className="x-small text-muted fw-bold text-uppercase">Color</span>
-                        </div>
-
-                        <div className="d-flex flex-column align-items-center px-3">
-                            <div className="d-flex gap-1 mb-1 align-items-center">
-                                <input type="color" className="form-control form-control-color p-0"
-                                    style={{ width: 28, height: 28, border: '2px solid #ddd', borderRadius: '4px' }}
-                                    value={slide.overlayColor || '#000000'}
-                                    onChange={e => updateSlide(selectedSlide, { overlayColor: e.target.value })} />
-                                <input type="range" style={{ width: '80px' }}
-                                    className="form-range"
-                                    min="0" max="1" step="0.05"
-                                    value={slide.overlayOpacity ?? 0.3}
-                                    onChange={e => updateSlide(selectedSlide, { overlayOpacity: parseFloat(e.target.value) })} />
-                                <span style={{ fontSize: '0.65rem', color: '#666' }}>
-                                    {Math.round((slide.overlayOpacity ?? 0.3) * 100)}%
-                                </span>
-                            </div>
-                            <span className="x-small text-muted fw-bold text-uppercase">Máscara</span>
-                        </div>
-                    </>
-                )}
-
-                {/* ── TRANSICIÓN ── */}
-                {activeRibbonTab === 'transición' && (
-                    <div className="d-flex flex-column align-items-center px-3">
-                        <div className="d-flex gap-1 mb-1">
-                            {TRANSITIONS.map(t => (
-                                <button key={t.value}
-                                    className={`btn btn-sm py-1 px-2 hover-scale ${slide.transitionType === t.value ? 'btn-primary' : 'btn-light'}`}
-                                    style={{ fontSize: '0.7rem' }}
-                                    onClick={() => updateSlide(selectedSlide, { transitionType: t.value })}>
-                                    {t.label}
-                                </button>
-                            ))}
-                        </div>
-                        <span className="x-small text-muted fw-bold text-uppercase">Tipo de Transición</span>
-                    </div>
-                )}
-
-            </div>
-        </div>
-    );
-
-    // ── Canvas de la diapositiva ───────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // RENDER: CANVAS
+    // ─────────────────────────────────────────────────────────────────────────
     const renderCanvas = () => {
-        const bgStyle = slide.backgroundImage
-            ? { backgroundImage: `url(${slide.backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-            : slide.gradient
-                ? { background: slide.gradient }
-                : { background: slide.background || '#1a1a2e' };
+        const tp = TRANS_PROPS[slide.transition] || TRANS_PROPS.fade;
+        const bgStyle = slideBg(slide);
 
         return (
-            <div className="canva-workspace d-flex align-items-center justify-content-center flex-grow-1 overflow-hidden"
-                style={{ background: '#e5e5e5', backgroundImage: 'radial-gradient(rgba(0,0,0,0.08) 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+            <div style={{
+                flex: 1,
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: '#e2e2e2',
+                backgroundImage: 'radial-gradient(rgba(0,0,0,0.07) 1px, transparent 1px)',
+                backgroundSize: '20px 20px',
+            }}
+                onClick={() => setSelEl(null)}
+            >
                 <AnimatePresence mode="wait">
                     <motion.div
-                        key={slide.id + slide.transitionType}
+                        key={slide.id + slide.transition}
                         ref={canvasRef}
-                        initial={transitionProps[slide.transitionType]?.initial}
-                        animate={transitionProps[slide.transitionType]?.animate}
-                        exit={transitionProps[slide.transitionType]?.exit}
-                        transition={{ duration: 0.6 }}
-                        className="position-relative overflow-hidden"
+                        initial={tp.initial}
+                        animate={tp.animate}
+                        exit={tp.exit}
+                        transition={{ duration: 0.55 }}
                         style={{
                             width: '760px',
                             height: '427px',
-                            maxWidth: '90vw',
+                            maxWidth: '88vw',
                             maxHeight: '70vh',
+                            position: 'relative',
+                            overflow: 'hidden',
                             borderRadius: '4px',
-                            boxShadow: '0 30px 60px -12px rgba(0,0,0,0.4), 0 18px 36px -18px rgba(0,0,0,0.5)',
+                            boxShadow: '0 24px 60px rgba(0,0,0,0.35), 0 8px 20px rgba(0,0,0,0.2)',
                             ...bgStyle,
                         }}
-                        onClick={() => setSelectedElement(null)}
+                        onClick={e => e.stopPropagation()}
                     >
-                        {/* Overlay de color/máscara */}
+                        {/* Overlay */}
                         {slide.overlayColor && (
-                            <div style={{
-                                position: 'absolute', inset: 0, pointerEvents: 'none',
-                                background: slide.overlayColor,
-                                opacity: slide.overlayOpacity ?? 0.3,
-                            }} />
+                            <div style={{ position: 'absolute', inset: 0, background: slide.overlayColor, opacity: slide.overlayOp ?? 0.35, pointerEvents: 'none' }} />
                         )}
-
-                        {/* Gradient overlay para imagen */}
-                        {slide.backgroundImage && (
-                            <div style={{
-                                position: 'absolute', inset: 0, pointerEvents: 'none',
-                                background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.6) 100%)',
-                            }} />
+                        {/* Gradient-over-image subtlety */}
+                        {slide.bgImage && (
+                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.55) 100%)', pointerEvents: 'none' }} />
                         )}
 
                         {/* Elementos */}
-                        {slide.elements.map(el => (
-                            el.type === 'image' ? (
+                        {slide.elements.map(e => (
+                            e.type === 'image' ? (
                                 <img
-                                    key={el.id}
-                                    src={el.content}
+                                    key={e.id}
+                                    src={e.content}
                                     alt="img"
-                                    onClick={e => { e.stopPropagation(); setSelectedElement(el.id); openSidebar('estilos'); }}
+                                    onClick={ev => { ev.stopPropagation(); setSelEl(e.id); setTab('inicio'); }}
                                     style={{
-                                        position: 'absolute',
-                                        left: el.x, top: el.y,
-                                        width: el.width, height: el.height,
-                                        borderRadius: '6px',
-                                        cursor: 'pointer',
-                                        outline: selectedElement === el.id ? '2px dashed #00d3df' : 'none',
-                                        outlineOffset: '4px',
+                                        position: 'absolute', left: e.x, top: e.y,
+                                        width: e.width, height: e.height,
                                         objectFit: 'contain',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        outline: selEl === e.id ? '2px dashed #00d3df' : 'none',
+                                        outlineOffset: '3px',
                                         filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.4))',
                                     }}
                                 />
                             ) : (
                                 <div
-                                    key={el.id}
-                                    onClick={e => { e.stopPropagation(); setSelectedElement(el.id); openSidebar('estilos'); }}
+                                    key={e.id}
+                                    onClick={ev => { ev.stopPropagation(); setSelEl(e.id); setTab('inicio'); }}
                                     style={{
-                                        position: 'absolute',
-                                        left: el.x, top: el.y,
-                                        width: el.width,
+                                        position: 'absolute', left: e.x, top: e.y, width: e.width,
                                         cursor: 'pointer',
-                                        outline: selectedElement === el.id ? '2px dashed #00d3df' : 'none',
-                                        outlineOffset: '4px',
+                                        outline: selEl === e.id ? '2px dashed #00d3df' : 'none',
+                                        outlineOffset: '3px',
                                         borderRadius: '4px',
                                         padding: '2px 4px',
-                                        background: el.style.backgroundColor !== 'transparent' ? el.style.backgroundColor : undefined,
-                                    }}>
+                                    }}
+                                >
                                     <span style={{
-                                        fontFamily: el.style.fontFamily,
-                                        fontSize: el.style.fontSize,
-                                        color: el.style.color,
-                                        fontWeight: el.style.bold ? 'bold' : 'normal',
-                                        fontStyle: el.style.italic ? 'italic' : 'normal',
-                                        textDecoration: el.style.underline ? 'underline' : 'none',
-                                        textShadow: '0 2px 8px rgba(0,0,0,0.4)',
+                                        fontFamily: e.style.fontFamily,
+                                        fontSize: e.style.fontSize,
+                                        color: e.style.color,
+                                        fontWeight: e.style.bold ? 'bold' : 'normal',
+                                        fontStyle: e.style.italic ? 'italic' : 'normal',
+                                        textDecoration: e.style.underline ? 'underline' : 'none',
+                                        textShadow: '0 2px 8px rgba(0,0,0,0.45)',
                                         display: 'block',
                                         userSelect: 'none',
+                                        whiteSpace: 'pre-wrap',
                                     }}>
-                                        {el.content || 'Texto'}
+                                        {e.content || 'Texto'}
                                     </span>
                                 </div>
                             )
                         ))}
 
-                        {/* Hint cuando está vacío */}
+                        {/* Hint vacío */}
                         {slide.elements.length === 0 && (
-                            <div className="position-absolute top-50 start-50 translate-middle text-center"
-                                style={{ color: 'rgba(255,255,255,0.35)', pointerEvents: 'none' }}>
-                                <i className="bi bi-cursor-fill fs-1 d-block mb-2"></i>
-                                <span style={{ fontSize: '0.75rem' }}>Usa el Ribbon o el Panel lateral para agregar elementos</span>
+                            <div style={{
+                                position: 'absolute', inset: 0,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexDirection: 'column', gap: '8px',
+                                color: 'rgba(255,255,255,0.3)', pointerEvents: 'none',
+                                textAlign: 'center',
+                            }}>
+                                <i className="bi bi-cursor fs-1"></i>
+                                <span style={{ fontSize: '0.75rem' }}>
+                                    Usa <strong>Insertar</strong> en el ribbon para agregar elementos
+                                </span>
                             </div>
                         )}
                     </motion.div>
@@ -879,17 +764,16 @@ const OasisPress = () => {
     };
 
     // ─────────────────────────────────────────────────────────────────────────
-    // MAIN RETURN
+    // Modo Infinito
     // ─────────────────────────────────────────────────────────────────────────
     if (mode === 'infinite') {
         return (
             <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-                <div className="bg-dark text-white d-flex align-items-center gap-3 px-4 py-2 shadow-sm" style={{ flexShrink: 0 }}>
+                <div style={{ background: '#1e1e2e', color: '#fff', display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 16px', flexShrink: 0 }}>
                     <img src={logoOasis} style={{ height: '28px', filter: 'brightness(10)' }} alt="Oasis" />
-                    <span className="fw-bold" style={{ color: '#8b5cf6', fontSize: '0.9rem' }}>OasisPress</span>
-                    <input value={title} onChange={e => setTitle(e.target.value)}
-                        className="flex-grow-1 bg-transparent border-0 text-white fw-semibold"
-                        style={{ outline: 'none', fontSize: '0.9rem' }} />
+                    <span style={{ color: '#a78bfa', fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>OasisPress</span>
+                    <input value={presTitle} onChange={e => setPresTitle(e.target.value)}
+                        style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', fontWeight: 600, fontSize: '0.9rem', outline: 'none' }} />
                     <button className="btn btn-sm btn-outline-light" onClick={() => setMode('classic')}>
                         <i className="bi bi-grid-3x3-gap me-1"></i>Modo Clásico
                     </button>
@@ -901,103 +785,99 @@ const OasisPress = () => {
         );
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // LAYOUT PRINCIPAL
+    // ─────────────────────────────────────────────────────────────────────────
     return (
-        <div className="canva-container" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', fontFamily: 'Inter, system-ui, sans-serif' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', fontFamily: 'Inter, system-ui, sans-serif' }}>
 
-            {/* ── Header ── */}
-            <div className="bg-dark text-white d-flex align-items-center gap-3 px-4 py-2 shadow"
-                style={{ flexShrink: 0, zIndex: 300 }}>
+            {/* ── HEADER ── */}
+            <div style={{ background: '#1e1e2e', color: '#fff', display: 'flex', alignItems: 'center', gap: '14px', padding: '7px 16px', flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.4)', zIndex: 100 }}>
                 <img src={logoOasis} style={{ height: '28px', filter: 'brightness(10)' }} alt="Oasis" />
-                <span className="fw-bold" style={{ color: '#a78bfa', fontSize: '0.85rem', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                    OasisPress
-                </span>
-                <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.2)' }} />
+                <span style={{ fontWeight: 800, fontSize: '0.8rem', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '1.5px' }}>OasisPress</span>
+                <div style={{ width: '1px', height: '18px', background: 'rgba(255,255,255,0.2)' }} />
                 <input
-                    value={title}
-                    onChange={e => setTitle(e.target.value)}
-                    className="flex-grow-1 bg-transparent border-0 text-white"
-                    style={{ outline: 'none', fontSize: '0.9rem', fontWeight: 600 }}
-                    placeholder="Presentación sin título..."
+                    value={presTitle}
+                    onChange={e => setPresTitle(e.target.value)}
+                    style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', fontWeight: 600, fontSize: '0.9rem', outline: 'none' }}
+                    placeholder="Título de la presentación…"
                 />
-                <button className="btn btn-sm btn-outline-light" style={{ fontSize: '0.75rem' }} onClick={handleExportPDF}>
-                    <i className="bi bi-file-earmark-pdf me-1"></i>PDF
-                </button>
-                <button className="btn btn-sm btn-outline-light" style={{ fontSize: '0.75rem' }} onClick={handleExportPPTX}>
-                    <i className="bi bi-file-earmark-slides me-1"></i>PPTX
-                </button>
+                {/* Modo toggle */}
+                <div style={{ display: 'flex', gap: '4px' }}>
+                    {[{ id: 'classic', label: 'Clásico' }, { id: 'infinite', label: 'Infinito' }].map(m => (
+                        <button key={m.id}
+                            onClick={() => setMode(m.id)}
+                            style={{
+                                border: 'none', borderRadius: '6px', padding: '4px 12px', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer',
+                                background: mode === m.id ? '#5b2ea6' : 'rgba(255,255,255,0.1)',
+                                color: '#fff',
+                            }}>
+                            {m.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            {/* ── Ribbon ── */}
+            {/* ── RIBBON ── */}
             {renderRibbon()}
 
-            {/* ── Body: sidebar + panel + workspace ── */}
-            <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
-
-                {/* Sidebar icons */}
-                {renderSidebar()}
-
-                {/* Collapsible panel (fixed overlay) */}
-                {renderPanel()}
-
-                {/* Main workspace */}
+            {/* ── BODY: thumbnail panel + canvas ── */}
+            <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+                {!isMobile && renderThumbnails()}
                 {renderCanvas()}
-
             </div>
 
-            {/* ─── Inline styles ─── */}
+            {/* Mobile: thumbnail bar bottom */}
+            {isMobile && (
+                <div style={{ height: '90px', overflowX: 'auto', display: 'flex', gap: '6px', padding: '6px 8px', background: '#f1f3f5', borderTop: '1px solid #dee2e6', flexShrink: 0 }}>
+                    {slides.map((sl, idx) => (
+                        <div key={sl.id}
+                            onClick={() => { setCurIdx(idx); setSelEl(null); }}
+                            style={{
+                                minWidth: '80px', height: '75px', borderRadius: '6px', overflow: 'hidden',
+                                ...slideBg(sl),
+                                border: curIdx === idx ? '2px solid #5b2ea6' : '2px solid transparent',
+                                cursor: 'pointer', flexShrink: 0, position: 'relative',
+                            }}>
+                            <span style={{ position: 'absolute', bottom: 2, left: 0, right: 0, textAlign: 'center', fontSize: '0.55rem', color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
+                                {idx + 1}
+                            </span>
+                        </div>
+                    ))}
+                    <button onClick={addSlide}
+                        style={{ minWidth: '50px', height: '75px', borderRadius: '6px', border: '2px dashed #5b2ea6', background: 'transparent', color: '#5b2ea6', fontSize: '1.4rem', cursor: 'pointer', flexShrink: 0 }}>
+                        <i className="bi bi-plus-lg"></i>
+                    </button>
+                </div>
+            )}
+
+            {/* ── Inline styles ── */}
             <style>{`
-                .x-small { font-size: 0.7rem; }
-                .cursor-pointer { cursor: pointer; }
-                .hover-scale { transition: transform 0.15s ease, box-shadow 0.15s ease; }
-                .hover-scale:hover { transform: scale(1.05); }
-
+                .ribbon-group {
+                    display: flex; flex-direction: column; align-items: center;
+                    padding: 0 14px; gap: 3px;
+                }
+                .ribbon-label {
+                    font-size: 0.58rem; font-weight: 700; text-transform: uppercase;
+                    color: #888; letter-spacing: 0.5px; margin-top: 2px;
+                    white-space: nowrap;
+                }
+                .hover-scale { transition: transform 0.13s ease; }
+                .hover-scale:hover { transform: scale(1.06); }
                 .scrollbar-custom::-webkit-scrollbar { width: 5px; }
-                .scrollbar-custom::-webkit-scrollbar-track { background: #f1f1f1; }
+                .scrollbar-custom::-webkit-scrollbar-track { background: #f1f3f5; }
                 .scrollbar-custom::-webkit-scrollbar-thumb { background: #bbb; border-radius: 10px; }
-
-                .canva-sidebar .nav-btn { cursor: pointer; transition: background 0.2s, color 0.2s; }
-                .canva-sidebar .nav-btn:hover { background: rgba(255,255,255,0.08) !important; color: white !important; }
-
-                .active-sidebar-btn {
-                    background: rgba(0,211,223,0.18) !important;
-                    color: #00d3df !important;
-                    border-left: 3px solid #00d3df !important;
-                }
-
                 .btn-primary { background-color: #5b2ea6 !important; border-color: #5b2ea6 !important; }
-                .btn-primary:hover { background-color: #4a2487 !important; }
-                .text-primary { color: #5b2ea6 !important; }
-
-                /* Responsive — mobile: sidebar pasa a barra inferior */
-                @media (max-width: 991px) {
-                    .canva-sidebar {
-                        position: fixed !important;
-                        bottom: 0; left: 0;
-                        width: 100% !important;
-                        height: 56px !important;
-                        flex-direction: row !important;
-                        padding: 0 !important;
-                        justify-content: space-around !important;
-                        border-right: none !important;
-                        border-top: 1px solid rgba(255,255,255,0.12);
-                        z-index: 200 !important;
-                    }
-                    .canva-sidebar .nav-btn {
-                        height: 100% !important;
-                        margin: 0 !important;
-                        font-size: 0.5rem !important;
-                        padding: 4px 0 !important;
-                    }
-                    .canva-workspace { padding-bottom: 56px; }
-                    .active-sidebar-btn { border-left: none !important; border-top: 3px solid #00d3df !important; }
+                .btn-primary:hover { background-color: #4922a0 !important; }
+                #preview-container:fullscreen {
+                    width: 100vw !important; height: 100vh !important;
+                    max-width: none !important; border-radius: 0 !important;
+                    background: #000 !important;
+                    display: flex !important; align-items: center !important; justify-content: center !important;
                 }
-
-                /* Ribbon para mobile: scroll horizontal */
-                @media (max-width: 768px) {
-                    .ribbon-container .d-flex.flex-wrap {
-                        overflow-x: auto !important;
-                        flex-wrap: nowrap !important;
-                    }
+                @media (max-width: 767px) {
+                    .ribbon-group { padding: 0 8px; }
+                    .ribbon-container .d-flex { overflow-x: auto; flex-wrap: nowrap; }
                 }
             `}</style>
         </div>
