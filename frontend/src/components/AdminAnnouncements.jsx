@@ -887,6 +887,7 @@ const AdminAnnouncements = () => {
                     onClick={() => {
                         setActiveSidebar(item.id);
                         setIsSidebarCollapsed(false);
+                        setShowForm(false); // Close MIS ANUNCIOS to prevent overlap
                     }}
                     className={`nav-btn d-flex flex-column align-items-center justify-content-center border-0 mb-2 py-2 w-100 transition-all ${activeSidebar === item.id && !isSidebarCollapsed ? 'active-sidebar-btn' : 'text-white-50'}`}
                     style={{ background: 'transparent', fontSize: '0.65rem' }}
@@ -1262,32 +1263,43 @@ const AdminAnnouncements = () => {
         </AnimatePresence>
     );
 
-    const renderToolbar = () => {
+    // Left Side Tools Panel
+    const renderLeftTools = () => {
         const target = selectedElementId || 'title';
         const isLogo = target.toLowerCase().includes('logo') || target.toLowerCase().includes('rrss') || target.toLowerCase().includes('customlogo');
         const fontSizeKey = `${target}Size`;
         const fontColorKey = `${target}Color`;
 
-        // Estilos del tema Oasis
-        const btnStyle = {
-            width: '36px',
-            height: '36px',
+        const squareBtnStyle = {
+            width: '40px',
+            height: '40px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             border: '1px solid rgba(91, 46, 166, 0.2)',
             background: 'white',
             color: '#5b2ea6',
-            borderRadius: '50%',
+            borderRadius: '10px',
             fontSize: '1rem',
             transition: 'all 0.2s',
+            cursor: 'pointer',
         };
 
         return (
-            <div className="canva-toolbar bg-white shadow-sm rounded-pill py-2 px-3 mb-3 d-flex align-items-center gap-2 border mx-auto" style={{ width: 'fit-content' }}>
-                {/* Botón Reducir Tamaño */}
+            <div 
+                className="left-tools-panel d-flex flex-column gap-2 p-2 bg-white shadow rounded-3"
+                style={{ 
+                    position: 'absolute', 
+                    left: isMobile ? '8px' : '16px', 
+                    top: '50%', 
+                    transform: 'translateY(-50%)',
+                    zIndex: 50,
+                    minWidth: '52px'
+                }}
+            >
+                {/* Size Controls */}
                 <button 
-                    style={btnStyle}
+                    style={squareBtnStyle}
                     className="btn"
                     onClick={() => set(fontSizeKey, Math.max(isLogo ? 10 : 0.1, (formData[fontSizeKey] || 1) - (isLogo ? 5 : 0.1)))}
                     title="Reducir tamaño"
@@ -1295,22 +1307,18 @@ const AdminAnnouncements = () => {
                     <i className="bi bi-dash-lg"></i>
                 </button>
 
-                {/* Indicador de Tamaño */}
-                <span className="fw-bold" style={{ 
-                    minWidth: '32px', 
-                    textAlign: 'center', 
-                    fontSize: '0.8rem',
+                <div className="fw-bold text-center" style={{ 
+                    fontSize: '0.7rem',
                     color: '#5b2ea6',
                     background: 'rgba(91, 46, 166, 0.1)',
-                    padding: '4px 8px',
-                    borderRadius: '20px'
+                    padding: '6px 4px',
+                    borderRadius: '8px'
                 }}>
                     {isLogo ? Math.round(formData[fontSizeKey]) : (formData[fontSizeKey] || 1).toFixed(1)}
-                </span>
+                </div>
 
-                {/* Botón Aumentar Tamaño */}
                 <button 
-                    style={btnStyle}
+                    style={squareBtnStyle}
                     className="btn"
                     onClick={() => set(fontSizeKey, Math.min(600, (formData[fontSizeKey] || 1) + (isLogo ? 5 : 0.1)))}
                     title="Aumentar tamaño"
@@ -1318,14 +1326,13 @@ const AdminAnnouncements = () => {
                     <i className="bi bi-plus-lg"></i>
                 </button>
 
-                {/* Separador */}
-                <div style={{ width: '1px', height: '24px', background: 'rgba(91, 46, 166, 0.2)', margin: '0 4px' }} />
+                {/* Divider */}
+                <div style={{ height: '1px', background: 'rgba(91, 46, 166, 0.2)', margin: '4px 0' }} />
 
-                {/* Color Picker (solo para texto, no logos) */}
+                {/* Color Picker (solo para texto) */}
                 {!isLogo && (
                     <label style={{ 
-                        ...btnStyle, 
-                        cursor: 'pointer',
+                        ...squareBtnStyle, 
                         position: 'relative',
                         overflow: 'hidden',
                         background: formData[fontColorKey] || '#ffffff',
@@ -1341,10 +1348,10 @@ const AdminAnnouncements = () => {
                     </label>
                 )}
 
-                {/* Botón Deseleccionar (solo visible si hay algo seleccionado) */}
+                {/* Deselect */}
                 {selectedElementId && (
                     <button 
-                        style={{ ...btnStyle, background: 'rgba(220, 53, 69, 0.1)', color: '#dc3545', border: '1px solid rgba(220, 53, 69, 0.3)' }}
+                        style={{ ...squareBtnStyle, background: 'rgba(220, 53, 69, 0.1)', color: '#dc3545', border: '1px solid rgba(220, 53, 69, 0.3)' }}
                         className="btn"
                         onClick={() => setSelectedElementId(null)} 
                         title="Deseleccionar"
@@ -1354,6 +1361,88 @@ const AdminAnnouncements = () => {
                 )}
             </div>
         );
+    };
+
+    // Quick Access Bar (top of canvas)
+    const renderQuickAccess = () => {
+        const quickBtnStyle = {
+            width: '36px',
+            height: '36px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid rgba(91, 46, 166, 0.15)',
+            background: 'white',
+            color: '#5b2ea6',
+            borderRadius: '10px',
+            fontSize: '0.9rem',
+            transition: 'all 0.2s',
+            cursor: 'pointer',
+        };
+
+        return (
+            <div 
+                className="quick-access-bar d-flex align-items-center gap-2 p-2 bg-white shadow-sm rounded-3 mb-3"
+                style={{ width: 'fit-content' }}
+            >
+                <button 
+                    style={quickBtnStyle}
+                    className="btn"
+                    onClick={() => { setActiveSidebar('design'); setIsSidebarCollapsed(false); setShowForm(false); }}
+                    title="Plantillas"
+                >
+                    <i className="bi bi-grid-3x3-gap"></i>
+                </button>
+                <button 
+                    style={quickBtnStyle}
+                    className="btn"
+                    onClick={() => { setActiveSidebar('media'); setIsSidebarCollapsed(false); setShowForm(false); }}
+                    title="Agregar imagen"
+                >
+                    <i className="bi bi-image"></i>
+                </button>
+                <button 
+                    style={quickBtnStyle}
+                    className="btn"
+                    onClick={() => { setActiveSidebar('text'); setIsSidebarCollapsed(false); setShowForm(false); }}
+                    title="Editar textos"
+                >
+                    <i className="bi bi-fonts"></i>
+                </button>
+                <button 
+                    style={quickBtnStyle}
+                    className="btn"
+                    onClick={() => { setActiveSidebar('brand'); setIsSidebarCollapsed(false); setShowForm(false); }}
+                    title="Logos y marca"
+                >
+                    <i className="bi bi-shield-check"></i>
+                </button>
+                <div style={{ width: '1px', height: '24px', background: 'rgba(91, 46, 166, 0.15)' }} />
+                <button 
+                    style={{ ...quickBtnStyle, background: '#5b2ea6', color: 'white' }}
+                    className="btn"
+                    onClick={handleSave}
+                    disabled={isSubmitting}
+                    title="Guardar anuncio"
+                >
+                    <i className={`bi ${isSubmitting ? 'bi-hourglass-split' : 'bi-cloud-arrow-up'}`}></i>
+                </button>
+            </div>
+        );
+    };
+
+    // Handle double-click to select element for editing
+    const handleElementDoubleClick = (elementId) => {
+        setSelectedElementId(elementId);
+        setShowForm(false); // Close MIS ANUNCIOS to prevent overlap
+        // Open the text panel for editing
+        if (!elementId.toLowerCase().includes('logo') && !elementId.toLowerCase().includes('rrss')) {
+            setActiveSidebar('text');
+            setIsSidebarCollapsed(false);
+        } else {
+            setActiveSidebar('brand');
+            setIsSidebarCollapsed(false);
+        }
     };
 
     return (
@@ -1381,7 +1470,13 @@ const AdminAnnouncements = () => {
                     </div>
                     <div className="d-flex align-items-center gap-1 gap-md-2">
                         <span className="badge bg-secondary-subtle text-secondary rounded-pill px-2 border x-small d-none d-sm-inline">{formData.format.toUpperCase()} {currentFmt.W}x{currentFmt.H}</span>
-                        <button className="btn btn-outline-dark btn-sm rounded-pill px-2 px-md-3 fw-bold" style={{ fontSize: '0.7rem' }} onClick={() => setShowForm(!showForm)}>
+                        <button className="btn btn-outline-dark btn-sm rounded-pill px-2 px-md-3 fw-bold" style={{ fontSize: '0.7rem' }} onClick={() => {
+                            // Close panel when opening MIS ANUNCIOS to prevent overlap
+                            if (!showForm && !isMobile) {
+                                setIsSidebarCollapsed(true);
+                            }
+                            setShowForm(!showForm);
+                        }}>
                             {showForm ? 'Ocultar Lista' : <><i className="bi bi-list me-1"></i><span className="d-none d-md-inline">Mis Anuncios</span></>}
                         </button>
                         <button className="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" style={{ fontSize: '0.7rem' }} onClick={handleDownload}>
@@ -1402,11 +1497,15 @@ const AdminAnnouncements = () => {
                     ) : (
                         <>
 
-                            {/* Toolbar (Contextual) */}
-                            {renderToolbar()}
+                            {/* Quick Access Bar (top) */}
+                            {renderQuickAccess()}
 
-                            {/* Canvas Area */}
-                            <div className="canvas-wrapper d-flex align-items-center justify-content-center w-100" style={{ perspective: '1000px' }}>
+                            {/* Canvas Area with Left Tools */}
+                            <div className="canvas-wrapper d-flex align-items-center justify-content-center w-100" style={{ perspective: '1000px', position: 'relative' }}>
+                                
+                                {/* Left Side Tools Panel */}
+                                {renderLeftTools()}
+                                
                                 <motion.div
                                     layout
                                     ref={previewRef}
@@ -1422,7 +1521,8 @@ const AdminAnnouncements = () => {
                                         boxShadow: '0 30px 60px -12px rgba(0,0,0,0.4), 0 18px 36px -18px rgba(0,0,0,0.5)',
                                         borderRadius: '4px',
                                         containerType: 'inline-size',
-                                        touchAction: 'none'
+                                        touchAction: 'none',
+                                        marginLeft: isMobile ? '60px' : '80px'
                                     }}
                                 >
                                     {/* Dark Overlay */}
@@ -1433,6 +1533,7 @@ const AdminAnnouncements = () => {
                                         <div
                                             onMouseDown={() => setSelectedElementId('logoIasd')}
                                             onTouchStart={() => setSelectedElementId('logoIasd')}
+                                            onDoubleClick={() => handleElementDoubleClick('logoIasd')}
                                             style={{
                                                 position: 'absolute', top: '5%', left: '5%', cursor: 'pointer',
                                                 outline: selectedElementId === 'logoIasd' ? '2px dashed #00d2f3' : 'none',
@@ -1446,6 +1547,7 @@ const AdminAnnouncements = () => {
                                         <div
                                             onMouseDown={() => setSelectedElementId('logoOasis')}
                                             onTouchStart={() => setSelectedElementId('logoOasis')}
+                                            onDoubleClick={() => handleElementDoubleClick('logoOasis')}
                                             style={{
                                                 position: 'absolute', top: '4%', right: '5%', cursor: 'pointer',
                                                 outline: selectedElementId === 'logoOasis' ? '2px dashed #00d2f3' : 'none',
@@ -1459,6 +1561,7 @@ const AdminAnnouncements = () => {
                                         <div
                                             onMouseDown={() => setSelectedElementId('rrss')}
                                             onTouchStart={() => setSelectedElementId('rrss')}
+                                            onDoubleClick={() => handleElementDoubleClick('rrss')}
                                             style={{
                                                 position: 'absolute', bottom: '5%', left: '50%', transform: 'translateX(-50%)', cursor: 'pointer',
                                                 outline: selectedElementId === 'rrss' ? '2px dashed #00d2f3' : 'none',
@@ -1478,6 +1581,7 @@ const AdminAnnouncements = () => {
                                             dragMomentum={false}
                                             onMouseDown={() => setSelectedElementId('tag')}
                                             onTouchStart={() => setSelectedElementId('tag')}
+                                            onDoubleClick={() => handleElementDoubleClick('tag')}
                                             style={{
                                                 x: formData.tagPos.x, y: formData.tagPos.y, cursor: 'move', alignSelf: 'center', marginBottom: '10px',
                                                 outline: selectedElementId === 'tag' ? '2px dashed #00d2f3' : 'none',
@@ -1504,6 +1608,7 @@ const AdminAnnouncements = () => {
                                             <motion.div drag dragMomentum={false}
                                                 onMouseDown={() => setSelectedElementId('title')}
                                                 onTouchStart={() => setSelectedElementId('title')}
+                                                onDoubleClick={() => handleElementDoubleClick('title')}
                                                 style={{
                                                     x: formData.titlePos.x, y: formData.titlePos.y, cursor: 'move',
                                                     outline: selectedElementId === 'title' ? '2px dashed #00d2f3' : 'none',
@@ -1518,6 +1623,7 @@ const AdminAnnouncements = () => {
                                             <motion.div drag dragMomentum={false}
                                                 onMouseDown={() => setSelectedElementId('title2')}
                                                 onTouchStart={() => setSelectedElementId('title2')}
+                                                onDoubleClick={() => handleElementDoubleClick('title2')}
                                                 style={{
                                                     x: formData.title2Pos.x, y: formData.title2Pos.y, cursor: 'move', marginTop: '10px',
                                                     outline: selectedElementId === 'title2' ? '2px dashed #00d2f3' : 'none',
@@ -1534,6 +1640,7 @@ const AdminAnnouncements = () => {
                                                 <motion.div drag dragMomentum={false}
                                                     onMouseDown={() => setSelectedElementId('title3')}
                                                     onTouchStart={() => setSelectedElementId('title3')}
+                                                    onDoubleClick={() => handleElementDoubleClick('title3')}
                                                     style={{
                                                         x: formData.title3Pos.x, y: formData.title3Pos.y, cursor: 'move', marginTop: '8px',
                                                         outline: selectedElementId === 'title3' ? '2px dashed #00d2f3' : 'none',
@@ -1549,6 +1656,7 @@ const AdminAnnouncements = () => {
                                             <motion.div drag dragMomentum={false}
                                                 onMouseDown={() => setSelectedElementId('speaker')}
                                                 onTouchStart={() => setSelectedElementId('speaker')}
+                                                onDoubleClick={() => handleElementDoubleClick('speaker')}
                                                 style={{
                                                     x: formData.speakerPos.x, y: formData.speakerPos.y, cursor: 'move', marginTop: '15px',
                                                     outline: selectedElementId === 'speaker' ? '2px dashed #00d2f3' : 'none',
@@ -1567,6 +1675,7 @@ const AdminAnnouncements = () => {
                                                 drag dragMomentum={false}
                                                 onMouseDown={() => setSelectedElementId('content')}
                                                 onTouchStart={() => setSelectedElementId('content')}
+                                                onDoubleClick={() => handleElementDoubleClick('content')}
                                                 style={{
                                                     x: formData.contentPos.x, y: formData.contentPos.y, cursor: 'move', marginTop: '20px', alignSelf: 'center',
                                                     outline: selectedElementId === 'content' ? '2px dashed #00d2f3' : 'none',
@@ -1835,6 +1944,7 @@ const AdminAnnouncements = () => {
                         #preview-container {
                             width: 90% !important;
                             max-width: 320px !important;
+                            margin-left: 50px !important;
                         }
                         .announcements-list-drawer {
                             max-height: 35vh !important;
@@ -1842,14 +1952,24 @@ const AdminAnnouncements = () => {
                         .announcements-list-drawer .list-group-item {
                             padding: 0.5rem 0.75rem !important;
                         }
-                        .canva-toolbar {
-                            gap: 6px !important;
-                            padding: 6px 12px !important;
+                        .left-tools-panel {
+                            left: 4px !important;
+                            padding: 6px !important;
+                            min-width: 44px !important;
                         }
-                        .canva-toolbar .btn {
+                        .left-tools-panel .btn {
                             width: 32px !important;
                             height: 32px !important;
                             font-size: 0.85rem !important;
+                        }
+                        .quick-access-bar {
+                            gap: 6px !important;
+                            padding: 6px 10px !important;
+                        }
+                        .quick-access-bar .btn {
+                            width: 32px !important;
+                            height: 32px !important;
+                            font-size: 0.8rem !important;
                         }
                     }
                     
@@ -1878,8 +1998,8 @@ const AdminAnnouncements = () => {
                     @media (max-width: 991px) {
                         .active-sidebar-btn { border-left: none !important; border-top: 3px solid #00d3df !important; }
                     }
-                    .canva-toolbar { border: 1px solid rgba(91, 46, 166, 0.15) !important; }
-                    .canva-toolbar .btn:hover { background: rgba(91, 46, 166, 0.1) !important; transform: scale(1.05); }
+                    .left-tools-panel .btn:hover { background: rgba(91, 46, 166, 0.15) !important; transform: scale(1.05); }
+                    .quick-access-bar .btn:hover { background: rgba(91, 46, 166, 0.15) !important; transform: scale(1.05); }
 
                     /* Patterns for Biblical Styles */
                     .content-box.pattern-dots::after {
