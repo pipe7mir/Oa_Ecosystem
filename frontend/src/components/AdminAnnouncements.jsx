@@ -608,13 +608,21 @@ const AdminAnnouncements = () => {
             const pos = getRelPos(titleRef);
             if (pos) {
                 const fs = Math.round(getFs(titleRef));
-                ctx.font = `${fs}px "${formData.titleFont}", serif`;
+                const bold = formData.titleBold ? 'bold ' : '';
+                const italic = formData.titleItalic ? 'italic ' : '';
+                const lh = formData.titleLineHeight || 1.2;
+                ctx.font = `${italic}${bold}${fs}px "${formData.titleFont}", serif`;
                 ctx.globalAlpha = (formData.titleOpacity || 100) / 100;
-                ctx.fillStyle = formData.titleColor; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-                ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 15;
+                ctx.fillStyle = formData.titleColor; ctx.textAlign = formData.titleAlign || 'center'; ctx.textBaseline = 'top';
+                if (formData.titleShadow) { ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 12; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; }
+                else { ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 15; }
                 const lines = wrap(formData.title, W * 0.9);
-                lines.forEach((l, i) => ctx.fillText(l, pos.x + pos.w / 2, pos.y + i * fs * 1.15));
-                ctx.shadowBlur = 0;
+                const alignX = formData.titleAlign === 'left' ? pos.x + 20 : formData.titleAlign === 'right' ? pos.x + pos.w - 20 : pos.x + pos.w / 2;
+                lines.forEach((l, i) => {
+                    ctx.fillText(l, alignX, pos.y + i * fs * lh);
+                    if (formData.titleUnderline) { const tw = ctx.measureText(l).width; ctx.fillRect(alignX - tw / 2, pos.y + i * fs * lh + fs + 2, tw, 2); }
+                });
+                ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
                 ctx.globalAlpha = 1;
             }
         }
@@ -624,11 +632,17 @@ const AdminAnnouncements = () => {
             const pos = getRelPos(title2Ref);
             if (pos) {
                 const fs = Math.round(getFs(title2Ref));
-                ctx.font = `${fs}px "${formData.title2Font}", Arial`;
+                const bold = formData.title2Bold ? 'bold ' : '';
+                const italic = formData.title2Italic ? 'italic ' : '';
+                const lh = formData.title2LineHeight || 1.2;
+                ctx.font = `${italic}${bold}${fs}px "${formData.title2Font}", Arial`;
                 ctx.globalAlpha = (formData.title2Opacity || 100) / 100;
-                ctx.fillStyle = formData.title2Color; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+                ctx.fillStyle = formData.title2Color; ctx.textAlign = formData.title2Align || 'center'; ctx.textBaseline = 'top';
+                if (formData.title2Shadow) { ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 10; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; }
                 const lines = wrap(formData.title2, W * 0.9);
-                lines.forEach((l, i) => ctx.fillText(l, pos.x + pos.w / 2, pos.y + i * fs * 1.15));
+                const alignX = formData.title2Align === 'left' ? pos.x + 20 : formData.title2Align === 'right' ? pos.x + pos.w - 20 : pos.x + pos.w / 2;
+                lines.forEach((l, i) => ctx.fillText(l, alignX, pos.y + i * fs * lh));
+                ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
                 ctx.globalAlpha = 1;
             }
         }
@@ -638,11 +652,17 @@ const AdminAnnouncements = () => {
             const pos = getRelPos(title3Ref);
             if (pos) {
                 const fs = Math.round(getFs(title3Ref));
-                ctx.font = `${fs}px "${formData.title3Font}", Arial`;
+                const bold = formData.title3Bold ? 'bold ' : '';
+                const italic = formData.title3Italic ? 'italic ' : '';
+                const lh = formData.title3LineHeight || 1.2;
+                ctx.font = `${italic}${bold}${fs}px "${formData.title3Font}", Arial`;
                 ctx.globalAlpha = (formData.title3Opacity || 100) / 100;
-                ctx.fillStyle = formData.title3Color; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+                ctx.fillStyle = formData.title3Color; ctx.textAlign = formData.title3Align || 'center'; ctx.textBaseline = 'top';
+                if (formData.title3Shadow) { ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 10; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; }
                 const lines = wrap(formData.title3, W * 0.9);
-                lines.forEach((l, i) => ctx.fillText(l, pos.x + pos.w / 2, pos.y + i * fs * 1.15));
+                const alignX = formData.title3Align === 'left' ? pos.x + 20 : formData.title3Align === 'right' ? pos.x + pos.w - 20 : pos.x + pos.w / 2;
+                lines.forEach((l, i) => ctx.fillText(l, alignX, pos.y + i * fs * lh));
+                ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
                 ctx.globalAlpha = 1;
             }
         }
@@ -652,10 +672,13 @@ const AdminAnnouncements = () => {
             const pos = getRelPos(speakerRef);
             if (pos) {
                 const fs = Math.round(getFs(speakerRef));
-                ctx.font = `${fs}px "${formData.speakerFont}", cursive`;
+                const bold = formData.speakerBold ? 'bold ' : '';
+                const italic = formData.speakerItalic ? 'italic ' : '';
+                ctx.font = `${italic}${bold}${fs}px "${formData.speakerFont}", cursive`;
                 ctx.globalAlpha = (formData.speakerOpacity || 100) / 100;
-                ctx.fillStyle = formData.speakerColor; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-                ctx.fillText(formData.speaker, pos.x + pos.w / 2, pos.y);
+                ctx.fillStyle = formData.speakerColor; ctx.textAlign = formData.speakerAlign || 'center'; ctx.textBaseline = 'top';
+                const alignX = formData.speakerAlign === 'left' ? pos.x + 20 : formData.speakerAlign === 'right' ? pos.x + pos.w - 20 : pos.x + pos.w / 2;
+                ctx.fillText(formData.speaker, alignX, pos.y);
                 ctx.globalAlpha = 1;
             }
         }
@@ -777,6 +800,40 @@ const AdminAnnouncements = () => {
                 ctx.globalAlpha = 0.9; ctx.drawImage(img, x, y, finalW, finalH); ctx.globalAlpha = 1;
             }
         }
+        // Shapes overlay
+        if (Array.isArray(formData.shapes) && formData.shapes.length > 0) {
+            for (const sh of formData.shapes) {
+                const sx = (sh.x / 100) * W;
+                const sy = (sh.y / 100) * H;
+                const sz = sh.size || 80;
+                const grad = ctx.createLinearGradient(
+                    sx - sz / 2 + Math.cos((sh.angle || 135) * Math.PI / 180) * sz,
+                    sy - sz / 2 + Math.sin((sh.angle || 135) * Math.PI / 180) * sz,
+                    sx + sz / 2, sy + sz / 2
+                );
+                grad.addColorStop(0, sh.gradFrom || '#5b2ea6');
+                grad.addColorStop(1, sh.gradTo || '#a78bfa');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                if (sh.type === 'circle') {
+                    ctx.arc(sx, sy, sz / 2, 0, Math.PI * 2);
+                } else if (sh.type === 'triangle') {
+                    ctx.moveTo(sx, sy - sz / 2); ctx.lineTo(sx + sz / 2, sy + sz / 2); ctx.lineTo(sx - sz / 2, sy + sz / 2);
+                } else if (sh.type === 'diamond') {
+                    ctx.moveTo(sx, sy - sz / 2); ctx.lineTo(sx + sz / 2, sy); ctx.lineTo(sx, sy + sz / 2); ctx.lineTo(sx - sz / 2, sy);
+                } else if (sh.type === 'rounded') {
+                    ctx.roundRect(sx - sz / 2, sy - sz / 2, sz, sz, sz * 0.2);
+                } else if (sh.type === 'line') {
+                    ctx.lineWidth = 6; ctx.strokeStyle = sh.gradFrom || '#5b2ea6';
+                    ctx.moveTo(sx - sz / 2, sy); ctx.lineTo(sx + sz / 2, sy);
+                    ctx.stroke(); ctx.beginPath();
+                } else {
+                    ctx.rect(sx - sz / 2, sy - sz / 2, sz, sz);
+                }
+                ctx.fill();
+            }
+        }
+
         return canvas;
     };
 
@@ -1517,7 +1574,7 @@ const AdminAnnouncements = () => {
                                         const active = selectedElementId === el.id;
                                         return (
                                             <button key={el.id}
-                                                onClick={() => { setSelectedElementId(el.id); setActiveRibbonTab('inicio'); }}
+                                                onClick={() => setSelectedElementId(el.id)}
                                                 title={el.title}
                                                 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', border: `2px solid ${active ? '#5b2ea6' : '#e9ecef'}`, borderRadius: '8px', background: active ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', gap: '1px' }}>
                                                 <i className={`bi ${el.icon}`} style={{ fontSize: el.size || '1rem', color: active ? '#5b2ea6' : el.color }}></i>
@@ -1654,25 +1711,30 @@ const AdminAnnouncements = () => {
                     {activeRibbonTab === 'diseño' && (
                         <>
                             {/* Grupo: PLANTILLAS */}
-                            <div className="d-flex flex-column px-3 border-end">
-                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Plantillas</span>
-                                <div className="d-flex gap-1 overflow-auto" style={{ maxWidth: '280px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 10px', borderRight: '1px solid #e9ecef', gap: '2px' }}>
+                                <div style={{ display: 'flex', gap: '5px', overflowX: 'auto', maxWidth: '420px', paddingBottom: '2px' }}>
                                     {TEMPLATES.map(tpl => (
                                         <button
                                             key={tpl.id}
                                             onClick={() => applyTemplate(tpl)}
-                                            className="btn btn-sm p-0 flex-shrink-0"
                                             style={{
-                                                width: '40px',
-                                                height: '50px',
+                                                flexShrink: 0,
+                                                width: '62px', height: '70px',
                                                 background: `linear-gradient(135deg, ${tpl.gradientStart}, ${tpl.gradientEnd})`,
-                                                border: '2px solid #ddd',
-                                                borderRadius: '4px'
+                                                border: '2px solid #ddd', borderRadius: '8px',
+                                                cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                                                alignItems: 'center', justifyContent: 'flex-end',
+                                                padding: '4px', gap: '2px', transition: 'transform 0.1s',
                                             }}
                                             title={tpl.name}
-                                        />
+                                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                                        >
+                                            <span style={{ fontSize: '0.45rem', fontWeight: 700, color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase', letterSpacing: '0.5px', background: 'rgba(0,0,0,0.3)', borderRadius: '3px', padding: '1px 3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '58px' }}>{tpl.name}</span>
+                                        </button>
                                     ))}
                                 </div>
+                                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', textAlign: 'center' }}>Plantillas</span>
                             </div>
 
                             {/* Grupo: FONDO */}
@@ -1688,23 +1750,29 @@ const AdminAnnouncements = () => {
                             </div>
 
                             {/* Grupo: GALERÍA RÁPIDA */}
-                            <div className="d-flex flex-column px-3 border-end">
-                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Imágenes Stock</span>
-                                <div className="d-flex gap-1 overflow-auto" style={{ maxWidth: '200px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 10px', borderRight: '1px solid #e9ecef', gap: '2px' }}>
+                                <div style={{ display: 'flex', gap: '5px', overflowX: 'auto', maxWidth: '340px', paddingBottom: '2px' }}>
                                     {['https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=400&q=80',
                                         'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=400&q=80',
                                         'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&q=80',
-                                        'https://images.unsplash.com/photo-1514632595-4944383f2737?w=400&q=80'
+                                        'https://images.unsplash.com/photo-1514632595-4944383f2737?w=400&q=80',
+                                        'https://images.unsplash.com/photo-1529070538774-1843cb3265df?w=400&q=80',
+                                        'https://images.unsplash.com/photo-1499209974431-2761e25236d0?w=400&q=80',
                                     ].map((img, i) => (
                                         <img key={i} src={img} onClick={() => handleSelectStock(img)}
-                                            className="flex-shrink-0"
-                                            style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', cursor: 'pointer', border: '2px solid #ddd' }}
+                                            style={{ width: '58px', height: '68px', objectFit: 'cover', borderRadius: '8px', cursor: 'pointer', border: '2px solid #ddd', flexShrink: 0, transition: 'transform 0.1s' }}
+                                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                                             alt="stock" />
                                     ))}
-                                    <button className="btn btn-light flex-shrink-0" onClick={() => setShowLibrary(true)} style={{ width: '40px', height: '40px' }} title="Ver más">
-                                        <i className="bi bi-plus"></i>
+                                    <button onClick={() => setShowLibrary(true)}
+                                        style={{ width: '58px', height: '68px', flexShrink: 0, border: '2px dashed #dee2e6', borderRadius: '8px', background: '#f8f9fa', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', color: '#888' }}
+                                        title="Ver más">
+                                        <i className="bi bi-plus-circle" style={{ fontSize: '1.2rem' }}></i>
+                                        <span style={{ fontSize: '0.5rem', fontWeight: 600 }}>Más</span>
                                     </button>
                                 </div>
+                                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', textAlign: 'center' }}>Imágenes</span>
                             </div>
 
                             {/* Grupo: MEZCLA */}
