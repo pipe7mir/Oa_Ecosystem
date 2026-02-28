@@ -240,7 +240,7 @@ const AdminAnnouncements = () => {
     const [announcements, setAnnouncements] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [activeSidebar, setActiveSidebar] = useState('design');
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(window.innerWidth < 992);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true); // Start collapsed
     const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
     const [activeAdvTab, setActiveAdvTab] = useState('pos'); // pos, style, brand
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -248,6 +248,7 @@ const AdminAnnouncements = () => {
     const [assets, setAssets] = useState({ oasis: null, iasd: null, rrss: null });
     const [showLibrary, setShowLibrary] = useState(false);
     const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+    const [activeRibbonTab, setActiveRibbonTab] = useState('inicio'); // Ribbon tabs: inicio, insertar, diseño, formato
 
     // Handle responsive breakpoints
     useEffect(() => {
@@ -915,7 +916,7 @@ const AdminAnnouncements = () => {
                     className="canva-panel bg-white shadow-lg scrollbar-custom"
                     style={{ 
                         position: 'fixed', 
-                        top: '42px', 
+                        top: activeMode === 'anuncios' ? '164px' : '42px', // 42px header + 122px ribbon
                         left: 0, 
                         bottom: 0,
                         width: '300px', 
@@ -1273,197 +1274,290 @@ const AdminAnnouncements = () => {
         </AnimatePresence>
     );
 
-    // Left Side Tools Panel - Combined with Quick Access and Format Selector
-    const renderLeftTools = () => {
+    // Ribbon Menu - PowerPoint/Illustrator Style
+    const renderRibbon = () => {
         const target = selectedElementId || 'title';
         const isLogo = target.toLowerCase().includes('logo') || target.toLowerCase().includes('rrss') || target.toLowerCase().includes('customlogo');
         const fontSizeKey = `${target}Size`;
         const fontColorKey = `${target}Color`;
-
-        const squareBtnStyle = {
-            width: '38px',
-            height: '38px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '1px solid rgba(91, 46, 166, 0.2)',
-            background: 'white',
-            color: '#5b2ea6',
-            borderRadius: '10px',
-            fontSize: '0.95rem',
-            transition: 'all 0.2s',
-            cursor: 'pointer',
-        };
-
-        const formatBtnStyle = (isActive) => ({
-            width: '38px',
-            height: '38px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: isActive ? '2px solid #5b2ea6' : '1px solid rgba(91, 46, 166, 0.2)',
-            background: isActive ? 'rgba(91, 46, 166, 0.15)' : 'white',
-            color: isActive ? '#5b2ea6' : '#666',
-            borderRadius: '10px',
-            fontSize: '0.95rem',
-            transition: 'all 0.2s',
-            cursor: 'pointer',
-        });
+        const fontKey = `${target}Font`;
 
         return (
-            <div 
-                className="left-tools-panel d-flex flex-column gap-2 p-2 bg-white shadow rounded-3"
-                style={{ 
-                    position: 'absolute', 
-                    left: isMobile ? '8px' : '16px', 
-                    top: '50%', 
-                    transform: 'translateY(-50%)',
-                    zIndex: 50,
-                    minWidth: '54px'
-                }}
-            >
-                {/* Quick Access Section */}
-                <button 
-                    style={squareBtnStyle}
-                    className="btn"
-                    onClick={() => { setActiveSidebar('design'); setIsSidebarCollapsed(false); setShowForm(false); }}
-                    title="Plantillas"
-                >
-                    <i className="bi bi-grid-3x3-gap"></i>
-                </button>
-                <button 
-                    style={squareBtnStyle}
-                    className="btn"
-                    onClick={() => { setActiveSidebar('media'); setIsSidebarCollapsed(false); setShowForm(false); }}
-                    title="Agregar imagen"
-                >
-                    <i className="bi bi-image"></i>
-                </button>
-                <button 
-                    style={squareBtnStyle}
-                    className="btn"
-                    onClick={() => { setActiveSidebar('text'); setIsSidebarCollapsed(false); setShowForm(false); }}
-                    title="Editar textos"
-                >
-                    <i className="bi bi-fonts"></i>
-                </button>
-                <button 
-                    style={squareBtnStyle}
-                    className="btn"
-                    onClick={() => { setActiveSidebar('brand'); setIsSidebarCollapsed(false); setShowForm(false); }}
-                    title="Logos y marca"
-                >
-                    <i className="bi bi-shield-check"></i>
-                </button>
-                <button 
-                    style={{ ...squareBtnStyle, background: '#5b2ea6', color: 'white' }}
-                    className="btn"
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    title="Guardar anuncio"
-                >
-                    <i className={`bi ${isSubmitting ? 'bi-hourglass-split' : 'bi-cloud-arrow-up'}`}></i>
-                </button>
-
-                {/* Divider */}
-                <div style={{ height: '1px', background: 'rgba(91, 46, 166, 0.2)', margin: '4px 0' }} />
-
-                {/* Size Controls */}
-                <button 
-                    style={squareBtnStyle}
-                    className="btn"
-                    onClick={() => set(fontSizeKey, Math.max(isLogo ? 10 : 0.1, (formData[fontSizeKey] || 1) - (isLogo ? 5 : 0.1)))}
-                    title="Reducir tamaño"
-                >
-                    <i className="bi bi-dash-lg"></i>
-                </button>
-
-                <div className="fw-bold text-center" style={{ 
-                    fontSize: '0.7rem',
-                    color: '#5b2ea6',
-                    background: 'rgba(91, 46, 166, 0.1)',
-                    padding: '6px 4px',
-                    borderRadius: '8px'
-                }}>
-                    {isLogo ? Math.round(formData[fontSizeKey]) : (formData[fontSizeKey] || 1).toFixed(1)}
+            <div className="ribbon-container bg-white border-bottom shadow-sm" style={{ borderRadius: '0' }}>
+                {/* Ribbon Tabs */}
+                <div className="d-flex border-bottom bg-light px-2" style={{ gap: '2px' }}>
+                    {['Inicio', 'Insertar', 'Diseño', 'Formato'].map(tab => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveRibbonTab(tab.toLowerCase())}
+                            style={{
+                                border: 'none',
+                                background: activeRibbonTab === tab.toLowerCase() ? '#fff' : 'transparent',
+                                borderBottom: activeRibbonTab === tab.toLowerCase() ? '3px solid #5b2ea6' : 'none',
+                                padding: '6px 20px',
+                                fontSize: '0.85rem',
+                                fontWeight: activeRibbonTab === tab.toLowerCase() ? 'bold' : 'normal',
+                                color: activeRibbonTab === tab.toLowerCase() ? '#5b2ea6' : '#666',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                    <div className="ms-auto d-flex align-items-center gap-2 px-3">
+                        <button 
+                            onClick={() => setShowForm(!showForm)} 
+                            className="btn btn-sm btn-outline-secondary" 
+                            style={{ fontSize: '0.75rem' }}
+                        >
+                            <i className="bi bi-folder2-open me-1"></i> Mis Anuncios
+                        </button>
+                        <button 
+                            onClick={handleSubmit} 
+                            disabled={isSubmitting} 
+                            className="btn btn-sm btn-success px-4" 
+                            style={{ borderRadius: '6px' }}
+                        >
+                            <i className={`bi ${isSubmitting ? 'bi-hourglass-split' : 'bi-save'} me-1`}></i> Guardar
+                        </button>
+                        <button 
+                            onClick={handleDownload} 
+                            className="btn btn-sm btn-primary px-4" 
+                            style={{ borderRadius: '6px' }}
+                        >
+                            <i className="bi bi-download me-1"></i> Descargar
+                        </button>
+                    </div>
                 </div>
 
-                <button 
-                    style={squareBtnStyle}
-                    className="btn"
-                    onClick={() => set(fontSizeKey, Math.min(600, (formData[fontSizeKey] || 1) + (isLogo ? 5 : 0.1)))}
-                    title="Aumentar tamaño"
-                >
-                    <i className="bi bi-plus-lg"></i>
-                </button>
+                {/* Ribbon Content */}
+                <div className="p-3 bg-white d-flex align-items-center gap-4 flex-wrap" style={{ minHeight: '80px' }}>
+                    
+                    {/* ═══════ INICIO ═══════ */}
+                    {activeRibbonTab === 'inicio' && (
+                        <>
+                            {/* Grupo: Elemento */}
+                            <div className="d-flex flex-column align-items-center px-3 border-end">
+                                <div className="d-flex gap-2 mb-1">
+                                    <select
+                                        className="form-select form-select-sm py-0"
+                                        style={{ fontSize: '0.75rem', width: '120px', height: '28px' }}
+                                        value={selectedElementId || 'title'}
+                                        onChange={(e) => setSelectedElementId(e.target.value === 'title' ? null : e.target.value)}
+                                    >
+                                        <option value="title">Título</option>
+                                        <option value="title2">Subtítulo</option>
+                                        <option value="title3">Línea 3</option>
+                                        <option value="tag">Etiqueta</option>
+                                        <option value="dateTime">Fecha/Hora</option>
+                                        <option value="location">Ubicación</option>
+                                        <option value="logo">Logo Oasis</option>
+                                        <option value="rrss">Redes Sociales</option>
+                                    </select>
+                                </div>
+                                <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Elemento</span>
+                            </div>
 
-                {/* Color Picker (solo para texto) */}
-                {!isLogo && (
-                    <label style={{ 
-                        ...squareBtnStyle, 
-                        position: 'relative',
-                        overflow: 'hidden',
-                        background: formData[fontColorKey] || '#ffffff',
-                        border: '2px solid #5b2ea6'
-                    }} title="Color">
-                        <input 
-                            type="color" 
-                            style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                            value={formData[fontColorKey] || '#ffffff'} 
-                            onChange={e => set(fontColorKey, e.target.value)} 
-                        />
-                        <i className="bi bi-palette" style={{ color: formData[fontColorKey]?.toLowerCase() === '#ffffff' || formData[fontColorKey]?.toLowerCase() === '#fff' ? '#333' : 'white', mixBlendMode: 'difference' }}></i>
-                    </label>
-                )}
+                            {/* Grupo: Tamaño */}
+                            <div className="d-flex flex-column align-items-center px-3 border-end">
+                                <div className="d-flex gap-1 mb-1 align-items-center">
+                                    <button 
+                                        onClick={() => set(fontSizeKey, Math.max(isLogo ? 10 : 0.1, (formData[fontSizeKey] || 1) - (isLogo ? 5 : 0.1)))}
+                                        className="btn btn-sm btn-light py-0 px-2"
+                                    >
+                                        <i className="bi bi-dash"></i>
+                                    </button>
+                                    <span className="fw-bold px-2" style={{ fontSize: '0.8rem', minWidth: '40px', textAlign: 'center', background: '#f8f9fa', borderRadius: '4px', padding: '2px' }}>
+                                        {isLogo ? Math.round(formData[fontSizeKey] || 60) : (formData[fontSizeKey] || 1).toFixed(1)}
+                                    </span>
+                                    <button 
+                                        onClick={() => set(fontSizeKey, Math.min(600, (formData[fontSizeKey] || 1) + (isLogo ? 5 : 0.1)))}
+                                        className="btn btn-sm btn-light py-0 px-2"
+                                    >
+                                        <i className="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                                <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Tamaño</span>
+                            </div>
 
-                {/* Deselect */}
-                {selectedElementId && (
-                    <button 
-                        style={{ ...squareBtnStyle, background: 'rgba(220, 53, 69, 0.1)', color: '#dc3545', border: '1px solid rgba(220, 53, 69, 0.3)' }}
-                        className="btn"
-                        onClick={() => setSelectedElementId(null)} 
-                        title="Deseleccionar"
-                    >
-                        <i className="bi bi-x-lg"></i>
-                    </button>
-                )}
+                            {/* Grupo: Color (solo texto) */}
+                            {!isLogo && (
+                                <div className="d-flex flex-column align-items-center px-3 border-end">
+                                    <div className="d-flex gap-1 mb-1">
+                                        <input
+                                            type="color"
+                                            className="form-control form-control-color p-0"
+                                            style={{ width: 28, height: 28, border: '2px solid #ddd', borderRadius: '4px' }}
+                                            value={formData[fontColorKey] || '#ffffff'}
+                                            onChange={(e) => set(fontColorKey, e.target.value)}
+                                        />
+                                        {['#ffffff', '#000000', '#5b2ea6', '#f59e0b', '#ef4444'].map(c => (
+                                            <button 
+                                                key={c} 
+                                                onClick={() => set(fontColorKey, c)} 
+                                                style={{ width: 22, height: 22, background: c, border: formData[fontColorKey] === c ? '2px solid #5b2ea6' : '1px solid #ddd', borderRadius: '3px' }} 
+                                            />
+                                        ))}
+                                    </div>
+                                    <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Color</span>
+                                </div>
+                            )}
 
-                {/* Divider */}
-                <div style={{ height: '1px', background: 'rgba(91, 46, 166, 0.2)', margin: '4px 0' }} />
+                            {/* Grupo: Formato */}
+                            <div className="d-flex flex-column align-items-center px-3">
+                                <div className="d-flex gap-1 mb-1">
+                                    {Object.keys(FORMATS).map(k => (
+                                        <button 
+                                            key={k}
+                                            onClick={() => set('format', k)}
+                                            className={`btn btn-sm ${formData.format === k ? 'btn-primary' : 'btn-light'}`}
+                                            style={{ padding: '4px 8px' }}
+                                            title={FORMATS[k].label}
+                                        >
+                                            <i className={`bi ${FORMATS[k].icon}`}></i>
+                                        </button>
+                                    ))}
+                                </div>
+                                <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Formato</span>
+                            </div>
+                        </>
+                    )}
 
-                {/* Format Selector */}
-                {Object.keys(FORMATS).map(k => (
-                    <button 
-                        key={k}
-                        style={formatBtnStyle(formData.format === k)}
-                        className="btn"
-                        onClick={() => set('format', k)}
-                        title={FORMATS[k].label}
-                    >
-                        <i className={`bi ${FORMATS[k].icon}`}></i>
-                    </button>
-                ))}
+                    {/* ═══════ INSERTAR ═══════ */}
+                    {activeRibbonTab === 'insertar' && (
+                        <>
+                            <div className="d-flex gap-3">
+                                <div className="d-flex flex-column align-items-center">
+                                    <button onClick={() => { setActiveSidebar('media'); setIsSidebarCollapsed(false); }} className="btn btn-light mb-1">
+                                        <i className="bi bi-image fs-4"></i>
+                                    </button>
+                                    <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Imagen</span>
+                                </div>
+                                <div className="d-flex flex-column align-items-center">
+                                    <button onClick={() => { setActiveSidebar('text'); setIsSidebarCollapsed(false); }} className="btn btn-light mb-1">
+                                        <i className="bi bi-fonts fs-4"></i>
+                                    </button>
+                                    <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Texto</span>
+                                </div>
+                                <div className="vr mx-2"></div>
+                                <div className="d-flex flex-column align-items-center">
+                                    <button onClick={() => { setActiveSidebar('brand'); setIsSidebarCollapsed(false); }} className="btn btn-light mb-1">
+                                        <i className="bi bi-shield-check fs-4"></i>
+                                    </button>
+                                    <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Logo Oasis</span>
+                                </div>
+                                <div className="d-flex flex-column align-items-center">
+                                    <button onClick={() => { setActiveSidebar('brand'); setIsSidebarCollapsed(false); }} className="btn btn-light mb-1">
+                                        <i className="bi bi-share fs-4"></i>
+                                    </button>
+                                    <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Redes</span>
+                                </div>
+                            </div>
+                        </>
+                    )}
 
-                {/* Divider */}
-                <div style={{ height: '1px', background: 'rgba(91, 46, 166, 0.2)', margin: '4px 0' }} />
+                    {/* ═══════ DISEÑO ═══════ */}
+                    {activeRibbonTab === 'diseño' && (
+                        <>
+                            <div className="d-flex flex-column align-items-center px-3 border-end">
+                                <button onClick={() => { setActiveSidebar('design'); setIsSidebarCollapsed(false); }} className="btn btn-light mb-1">
+                                    <i className="bi bi-grid-3x3-gap fs-4"></i>
+                                </button>
+                                <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Plantillas</span>
+                            </div>
+                            <div className="d-flex flex-column align-items-center px-3 border-end">
+                                <div className="d-flex gap-1 mb-1">
+                                    <input type="color" className="form-control form-control-color p-0" style={{ width: 28, height: 28 }} value={formData.gradientStart} onChange={e => set('gradientStart', e.target.value)} title="Color inicial" />
+                                    <input type="color" className="form-control form-control-color p-0" style={{ width: 28, height: 28 }} value={formData.gradientEnd} onChange={e => set('gradientEnd', e.target.value)} title="Color final" />
+                                </div>
+                                <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Fondo</span>
+                            </div>
+                            <div className="d-flex flex-column align-items-center px-3">
+                                <div className="d-flex gap-1 mb-1 overflow-auto" style={{ maxWidth: '300px' }}>
+                                    {TEMPLATES.slice(0, 4).map(tpl => (
+                                        <button
+                                            key={tpl.id}
+                                            onClick={() => applyTemplate(tpl)}
+                                            className="btn btn-sm p-0 flex-shrink-0"
+                                            style={{
+                                                width: '50px',
+                                                height: '35px',
+                                                background: `linear-gradient(135deg, ${tpl.gradientStart}, ${tpl.gradientEnd})`,
+                                                border: '2px solid #ddd',
+                                                borderRadius: '4px'
+                                            }}
+                                            title={tpl.name}
+                                        />
+                                    ))}
+                                </div>
+                                <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Temas</span>
+                            </div>
+                        </>
+                    )}
 
-                {/* Utility Buttons */}
-                <button 
-                    style={{ ...squareBtnStyle, background: '#28a745', color: 'white', border: 'none' }}
-                    className="btn"
-                    onClick={handleDownload}
-                    title="Descargar imagen"
-                >
-                    <i className="bi bi-download"></i>
-                </button>
-                <button 
-                    style={squareBtnStyle}
-                    className="btn"
-                    onClick={handleFullscreen}
-                    title="Pantalla completa"
-                >
-                    <i className="bi bi-arrows-fullscreen"></i>
-                </button>
+                    {/* ═══════ FORMATO ═══════ */}
+                    {activeRibbonTab === 'formato' && (
+                        <>
+                            {/* Grupo: Posición */}
+                            <div className="d-flex flex-column align-items-center px-3 border-end">
+                                <div className="d-flex flex-column gap-1 mb-1">
+                                    <div className="d-flex gap-1">
+                                        <span className="small me-1" style={{ width: '20px' }}>X:</span>
+                                        <input 
+                                            type="range" 
+                                            className="form-range" 
+                                            style={{ width: '80px' }}
+                                            min="-50" max="50" 
+                                            value={formData[`${target}Pos`]?.x || 0} 
+                                            onChange={e => set(`${target}Pos`, { ...formData[`${target}Pos`], x: parseFloat(e.target.value) })} 
+                                        />
+                                    </div>
+                                    <div className="d-flex gap-1">
+                                        <span className="small me-1" style={{ width: '20px' }}>Y:</span>
+                                        <input 
+                                            type="range" 
+                                            className="form-range" 
+                                            style={{ width: '80px' }}
+                                            min="-50" max="50" 
+                                            value={formData[`${target}Pos`]?.y || 0} 
+                                            onChange={e => set(`${target}Pos`, { ...formData[`${target}Pos`], y: parseFloat(e.target.value) })} 
+                                        />
+                                    </div>
+                                </div>
+                                <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Posición</span>
+                            </div>
+
+                            {/* Grupo: Opacidad */}
+                            <div className="d-flex flex-column align-items-center px-3 border-end">
+                                <div className="d-flex gap-1 align-items-center mb-1">
+                                    <input 
+                                        type="range" 
+                                        className="form-range" 
+                                        style={{ width: '80px' }}
+                                        min="0" max="100" 
+                                        value={formData[`${target}Opacity`] || 100} 
+                                        onChange={e => set(`${target}Opacity`, parseInt(e.target.value))} 
+                                    />
+                                    <span className="small" style={{ minWidth: '30px' }}>{formData[`${target}Opacity`] || 100}%</span>
+                                </div>
+                                <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Opacidad</span>
+                            </div>
+
+                            {/* Grupo: Vista */}
+                            <div className="d-flex flex-column align-items-center px-3">
+                                <div className="d-flex gap-2 mb-1">
+                                    <button onClick={handleFullscreen} className="btn btn-light" title="Pantalla Completa">
+                                        <i className="bi bi-arrows-fullscreen"></i>
+                                    </button>
+                                    <button onClick={() => setSelectedElementId(null)} className="btn btn-light" title="Deseleccionar">
+                                        <i className="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                                <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Vista</span>
+                            </div>
+                        </>
+                    )}
+                </div>
             </div>
         );
     };
@@ -1472,61 +1566,42 @@ const AdminAnnouncements = () => {
     const handleElementDoubleClick = (elementId) => {
         setSelectedElementId(elementId);
         setShowForm(false); // Close MIS ANUNCIOS to prevent overlap
-        // Open the text panel for editing
-        if (!elementId.toLowerCase().includes('logo') && !elementId.toLowerCase().includes('rrss')) {
-            setActiveSidebar('text');
-            setIsSidebarCollapsed(false);
-        } else {
-            setActiveSidebar('brand');
-            setIsSidebarCollapsed(false);
-        }
+        // Open ribbon and select the element
+        setActiveRibbonTab('inicio');
     };
 
     return (
-        <div className="canva-container d-flex" style={{ height: '100vh', width: '100vw', background: '#f4f7f8', overflow: 'hidden' }}>
+        <div className="canva-container d-flex flex-column" style={{ height: '100vh', width: '100vw', background: '#f4f7f8', overflow: 'hidden' }}>
             <FontPreloader />
 
-            {/* Config Panel (Drawer) - Opens from left tools */}
+            {/* Header with Logo and Mode Switcher */}
+            <header className="d-flex align-items-center px-3 bg-white border-bottom" style={{ height: '42px', minHeight: '42px' }}>
+                <img src={logoOasis} style={{ height: '26px', cursor: 'pointer' }} alt="Oasis" onClick={() => navigate('/admin')} title="Volver al inicio" />
+                <div style={{ width: '1px', height: '20px', background: '#ddd', margin: '0 12px' }} />
+                <span className="fw-bold" style={{ fontSize: '0.9rem', color: '#333' }}>EDITOR</span>
+                <div style={{ width: '1px', height: '20px', background: '#ddd', margin: '0 12px' }} />
+                <div className="nav nav-pills p-1 rounded-pill" style={{ background: '#f8f9fa', fontSize: '0.7rem' }}>
+                    <button 
+                        className={`nav-link rounded-pill px-3 py-1 fw-semibold`}
+                        style={{ fontSize: '0.7rem', background: activeMode === 'anuncios' ? '#5b2ea6' : 'transparent', color: activeMode === 'anuncios' ? 'white' : '#666' }}
+                        onClick={() => setActiveMode('anuncios')}
+                    >Anuncios</button>
+                    <button 
+                        className={`nav-link rounded-pill px-3 py-1 fw-semibold`}
+                        style={{ fontSize: '0.7rem', background: activeMode === 'presentaciones' ? '#5b2ea6' : 'transparent', color: activeMode === 'presentaciones' ? 'white' : '#666' }}
+                        onClick={() => setActiveMode('presentaciones')}
+                    >Presentaciones</button>
+                </div>
+            </header>
+
+            {/* Ribbon Menu */}
+            {activeMode === 'anuncios' && renderRibbon()}
+
+            {/* Config Panel (Drawer) - Opens from ribbon */}
             {renderPanel()}
 
             {/* Main Workspace */}
             <div className="canva-workspace flex-grow-1 d-flex flex-column" style={{ position: 'relative' }}>
-                {/* Minimal Header - Illustrator Style */}
-                <header 
-                    className="workspace-header d-flex justify-content-between align-items-center px-3 bg-white border-bottom" 
-                    style={{ height: '42px', minHeight: '42px' }}
-                >
-                    <div className="d-flex align-items-center gap-2">
-                        <img src={logoOasis} style={{ height: '26px', cursor: 'pointer' }} alt="Oasis" onClick={() => navigate('/admin')} title="Volver al inicio" />
-                        <div style={{ width: '1px', height: '20px', background: '#ddd' }} />
-                        <div className="nav nav-pills p-1 rounded-pill" style={{ background: '#f8f9fa', fontSize: '0.7rem' }}>
-                            <button 
-                                className={`nav-link rounded-pill px-3 py-1 fw-semibold ${activeMode === 'anuncios' ? '' : 'text-secondary'}`}
-                                style={{ fontSize: '0.7rem', background: activeMode === 'anuncios' ? '#5b2ea6' : 'transparent', color: activeMode === 'anuncios' ? 'white' : undefined }}
-                                onClick={() => setActiveMode('anuncios')}
-                            >Anuncios</button>
-                            <button 
-                                className={`nav-link rounded-pill px-3 py-1 fw-semibold ${activeMode === 'presentaciones' ? '' : 'text-secondary'}`}
-                                style={{ fontSize: '0.7rem', background: activeMode === 'presentaciones' ? '#5b2ea6' : 'transparent', color: activeMode === 'presentaciones' ? 'white' : undefined }}
-                                onClick={() => setActiveMode('presentaciones')}
-                            >Presentaciones</button>
-                        </div>
-                    </div>
-                    <div className="d-flex align-items-center gap-2">
-                        <button 
-                            className="btn btn-sm rounded-pill px-3 fw-semibold d-flex align-items-center gap-1" 
-                            style={{ fontSize: '0.7rem', background: showForm ? '#5b2ea6' : '#f8f9fa', color: showForm ? 'white' : '#333', border: 'none' }} 
-                            onClick={() => {
-                                if (!showForm && !isMobile) setIsSidebarCollapsed(true);
-                                setShowForm(!showForm);
-                            }}
-                        >
-                            <i className="bi bi-folder2-open"></i>
-                            <span className="d-none d-md-inline">Mis Anuncios</span>
-                        </button>
-                    </div>
-                </header>
-
                 <main
                     className="workspace-body flex-grow-1 d-flex flex-column align-items-center justify-content-center p-4"
                     style={{ overflowY: 'auto', background: '#e9ecef', position: 'relative' }}
@@ -1538,11 +1613,8 @@ const AdminAnnouncements = () => {
                         <div className="w-100 h-100"><OasisPress /></div>
                     ) : (
                         <>
-                            {/* Canvas Area with Left Tools */}
+                            {/* Canvas Area */}
                             <div className="canvas-wrapper d-flex align-items-center justify-content-center w-100" style={{ perspective: '1000px', position: 'relative' }}>
-                                
-                                {/* Left Side Tools Panel */}
-                                {renderLeftTools()}
                                 
                                 <motion.div
                                     layout
