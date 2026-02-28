@@ -369,6 +369,8 @@ const AdminAnnouncements = () => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showTagEditor, setShowTagEditor] = useState(false);
     const [shapeMode, setShapeMode] = useState(false); // listening for click on canvas to place shape
+    const [editingElement, setEditingElement] = useState(null); // which element is being inline-edited
+    const [editingValue, setEditingValue] = useState('');
 
     // Handle responsive breakpoints
     useEffect(() => {
@@ -562,6 +564,28 @@ const AdminAnnouncements = () => {
             window.removeEventListener('touchend', onDragEnd);
         };
     }, [onDragMove, onDragEnd]);
+
+    /* ─── Inline text editing handler ─── */
+    const EDITABLE_FIELDS = {
+        title: 'title', title2: 'title2', title3: 'title3',
+        speaker: 'speaker', tag: 'tag', content: 'content', location: 'location',
+    };
+    const handleElementDoubleClick = (id) => {
+        const field = EDITABLE_FIELDS[id];
+        if (!field) return; // logos are not text-editable
+        setEditingElement(id);
+        setEditingValue(formData[field] || '');
+        setSelectedElementId(id);
+    };
+    const commitEdit = () => {
+        if (editingElement && EDITABLE_FIELDS[editingElement]) {
+            set(EDITABLE_FIELDS[editingElement], editingValue);
+        }
+        setEditingElement(null);
+    };
+
+    /* ─── Selected element quick-edit field key ─── */
+    const selectedFieldKey = selectedElementId && EDITABLE_FIELDS[selectedElementId] ? EDITABLE_FIELDS[selectedElementId] : null;
 
     const handleFullscreen = () => {
         if (previewRef.current) {
@@ -2009,13 +2033,7 @@ const AdminAnnouncements = () => {
         );
     };
 
-    // Handle double-click to select element for editing
-    const handleElementDoubleClick = (elementId) => {
-        setSelectedElementId(elementId);
-        setShowForm(false); // Close MIS ANUNCIOS to prevent overlap
-        // Open ribbon and select the element
-        setActiveRibbonTab('inicio');
-    };
+
 
     return (
         <div className="canva-container d-flex flex-column" style={{ position: 'relative', minHeight: '80vh', width: '100%', background: '#f4f7f8', overflow: 'hidden' }}>
@@ -2125,11 +2143,12 @@ const AdminAnnouncements = () => {
                                         position: 'relative',
                                         overflow: 'hidden',
                                         ...previewBgStyle,
-                                        cursor: 'default',
+                                        cursor: shapeMode ? 'crosshair' : 'default',
                                         boxShadow: '0 30px 60px -12px rgba(0,0,0,0.4), 0 18px 36px -18px rgba(0,0,0,0.5)',
                                         borderRadius: '4px',
                                         containerType: 'inline-size',
-                                        touchAction: 'none'
+                                        touchAction: 'none',
+                                        outline: shapeMode ? '3px dashed #5b2ea6' : 'none',
                                     }}
                                 >
                                     {/* Dark Overlay */}
@@ -2343,7 +2362,90 @@ const AdminAnnouncements = () => {
                                             )}
                                         </div>
                                     </div>
+
+                                    {/* ══════════════════════════════════
+                                        INLINE TEXT EDITOR OVERLAY
+                                        Double-click any element to edit.
+                                    ══════════════════════════════════ */}
+                                    {editingElement && (
+                                        <div
+                                            style={{ position: 'absolute', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(2px)' }}
+                                            onClick={(e) => { if (e.target === e.currentTarget) commitEdit(); }}
+                                        >
+                                            <div style={{ width: '88%', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                                                <div style={{ background: 'rgba(91,46,166,0.95)', borderRadius: '10px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <i className="bi bi-pencil-fill" style={{ color: '#fff', fontSize: '0.8rem' }}></i>
+                                                    <span style={{ color: '#fff', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                        {editingElement}
+                                                    </span>
+                                                    <button onClick={() => setEditingElement(null)}
+                                                        style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', borderRadius: '4px', padding: '0 6px', cursor: 'pointer', fontSize: '0.7rem' }}>✕</button>
+                                                </div>
+                                                <textarea
+                                                    autoFocus
+                                                    value={editingValue}
+                                                    onChange={e => setEditingValue(e.target.value)}
+                                                    onFocus={e => e.target.select()}
+                                                    onKeyDown={e => {
+                                                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); commitEdit(); }
+                                                        if (e.key === 'Escape') setEditingElement(null);
+                                                    }}
+                                                    onBlur={commitEdit}
+                                                    rows={editingElement === 'content' ? 4 : 2}
+                                                    placeholder="Escribe aquí..."
+                                                    style={{
+                                                        width: '100%', resize: 'none', border: '2px solid #5b2ea6',
+                                                        borderRadius: '10px', padding: '12px 14px',
+                                                        fontSize: editingElement === 'title' ? '1.1rem' : '0.9rem',
+                                                        fontWeight: ['title', 'title2', 'title3'].includes(editingElement) ? 700 : 500,
+                                                        background: 'rgba(255,255,255,0.97)',
+                                                        color: '#1f1f2e', outline: 'none',
+                                                        textAlign: 'center', fontFamily: 'sans-serif',
+                                                        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                                                    }}
+                                                />
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button onClick={() => setEditingElement(null)}
+                                                        style={{ background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '8px', padding: '6px 16px', fontWeight: 600, cursor: 'pointer', fontSize: '0.75rem', color: '#555' }}>
+                                                        Esc — Cancelar
+                                                    </button>
+                                                    <button onClick={commitEdit}
+                                                        style={{ background: '#5b2ea6', border: 'none', borderRadius: '8px', padding: '6px 20px', fontWeight: 700, cursor: 'pointer', fontSize: '0.75rem', color: '#fff' }}>
+                                                        ✓ Aplicar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </motion.div>
+
+                                {/* ── Quick-edit bar below the canvas ── */}
+                                {selectedFieldKey && !editingElement && (
+                                    <div style={{
+                                        marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px',
+                                        background: 'rgba(31,31,46,0.92)', borderRadius: '12px',
+                                        padding: '6px 12px', boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                                        minWidth: '240px', maxWidth: '360px', width: '100%',
+                                    }}>
+                                        <i className="bi bi-pencil-fill" style={{ color: '#a78bfa', fontSize: '0.75rem', flexShrink: 0 }}></i>
+                                        <input
+                                            type="text"
+                                            value={formData[selectedFieldKey] || ''}
+                                            onChange={e => set(selectedFieldKey, e.target.value)}
+                                            placeholder={`✏ ${selectedElementId}…`}
+                                            style={{
+                                                flex: 1, border: 'none', background: 'transparent',
+                                                color: '#fff', fontSize: '0.78rem', fontWeight: 600,
+                                                outline: 'none', minWidth: 0,
+                                            }}
+                                        />
+                                        <button onClick={() => handleElementDoubleClick(selectedElementId)}
+                                            title="Editar en canvas"
+                                            style={{ background: '#5b2ea6', border: 'none', borderRadius: '6px', width: '22px', height: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                            <i className="bi bi-pencil" style={{ color: '#fff', fontSize: '0.6rem' }}></i>
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </>
                     )}
