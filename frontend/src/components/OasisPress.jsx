@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import jsPDF from 'jspdf/dist/jspdf.umd.min.js';
+import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import pptxgen from 'pptxgenjs/dist/pptxgen.bundle.js';
+import pptxgen from 'pptxgenjs';
 
 // Biblioteca de imágenes y logos
 const IMAGE_LIBRARY = {
