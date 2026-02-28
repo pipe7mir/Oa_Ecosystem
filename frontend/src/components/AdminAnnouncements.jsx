@@ -1675,10 +1675,18 @@ const AdminAnnouncements = () => {
             {activeMode === 'anuncios' && renderRibbon()}
 
             {/* Main Workspace */}
-            <div className="canva-workspace flex-grow-1 d-flex" style={{ position: 'relative' }}>
+            <div className="canva-workspace flex-grow-1" style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
                 <main
-                    className="workspace-body flex-grow-1 d-flex align-items-center justify-content-center"
-                    style={{ overflowY: 'auto', background: '#e9ecef', position: 'relative', padding: '1.5rem', width: '100%' }}
+                    className="workspace-body flex-grow-1"
+                    style={{ 
+                        overflowY: 'auto', 
+                        background: '#e9ecef', 
+                        position: 'relative', 
+                        padding: '1.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}
                     onMouseDown={(e) => {
                         if (e.target === e.currentTarget) setSelectedElementId(null);
                     }}
@@ -1687,8 +1695,18 @@ const AdminAnnouncements = () => {
                         <div className="w-100 h-100"><OasisPress /></div>
                     ) : (
                         <>
-                            {/* Canvas Area - Centered */}
-                            <div className="canvas-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, perspective: '1000px' }}>
+                            {/* Canvas Area - Perfectly Centered */}
+                            <div 
+                                className="canvas-wrapper" 
+                                style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    width: '100%',
+                                    height: '100%',
+                                    perspective: '1000px' 
+                                }}
+                            >
                                 
                                 <motion.div
                                     layout
