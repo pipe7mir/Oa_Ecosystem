@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas';
-import pptxgen from 'pptxgenjs';
 
 // Biblioteca de imágenes y logos
 const IMAGE_LIBRARY = {
@@ -138,7 +137,8 @@ const OasisPress = () => {
         }
         doc.save(`${title}.pdf`);
     };
-    const handleExportPPTX = () => {
+    const handleExportPPTX = async () => {
+        const pptxgen = (await import('pptxgenjs')).default;
         const pptx = new pptxgen();
         slides.forEach(() => {
             const slide = pptx.addSlide();
