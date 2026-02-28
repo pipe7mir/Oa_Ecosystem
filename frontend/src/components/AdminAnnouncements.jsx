@@ -1426,31 +1426,65 @@ const AdminAnnouncements = () => {
                     {/* ═══════ INSERTAR ═══════ */}
                     {activeRibbonTab === 'insertar' && (
                         <>
-                            <div className="d-flex gap-3">
-                                <div className="d-flex flex-column align-items-center">
-                                    <button onClick={() => { setActiveSidebar('media'); setIsSidebarCollapsed(false); }} className="btn btn-light mb-1">
-                                        <i className="bi bi-image fs-4"></i>
-                                    </button>
-                                    <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Imagen</span>
+                            {/* Grupo: TEXTO */}
+                            <div className="d-flex flex-column px-3 border-end">
+                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Texto</span>
+                                <div className="d-flex gap-1 flex-wrap" style={{ maxWidth: '280px' }}>
+                                    {[
+                                        { id: 'title', icon: 'bi-type-h1', label: 'H1', title: 'Título' },
+                                        { id: 'title2', icon: 'bi-type-h2', label: 'H2', title: 'Sub 1' },
+                                        { id: 'title3', icon: 'bi-type-h3', label: 'H3', title: 'Sub 2' },
+                                        { id: 'speaker', icon: 'bi-person', label: '', title: 'Orador' },
+                                        { id: 'tag', icon: 'bi-tag', label: '', title: 'Etiqueta' },
+                                        { id: 'date', icon: 'bi-calendar3', label: '', title: 'Fecha' },
+                                        { id: 'time', icon: 'bi-clock', label: '', title: 'Hora' },
+                                        { id: 'location', icon: 'bi-geo-alt', label: '', title: 'Lugar' },
+                                    ].map(el => (
+                                        <button key={el.id}
+                                            className={`btn p-0 d-flex flex-column align-items-center justify-content-center ${selectedElementId === el.id ? 'btn-primary text-white' : 'btn-light'}`}
+                                            style={{ width: '32px', height: '32px', fontSize: '0.7rem' }}
+                                            onClick={() => { setSelectedElementId(el.id); setActiveRibbonTab('inicio'); }}
+                                            title={el.title}>
+                                            <i className={`bi ${el.icon}`} style={{ fontSize: '0.85rem' }}></i>
+                                            {el.label && <span style={{ fontSize: '0.5rem', lineHeight: 1 }}>{el.label}</span>}
+                                        </button>
+                                    ))}
                                 </div>
-                                <div className="d-flex flex-column align-items-center">
-                                    <button onClick={() => { setActiveSidebar('text'); setIsSidebarCollapsed(false); }} className="btn btn-light mb-1">
-                                        <i className="bi bi-fonts fs-4"></i>
-                                    </button>
-                                    <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Texto</span>
+                            </div>
+
+                            {/* Grupo: COLORES RÁPIDOS */}
+                            <div className="d-flex flex-column px-3 border-end">
+                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Colores Rápidos</span>
+                                <div className="d-flex gap-1 flex-wrap" style={{ maxWidth: '160px' }}>
+                                    {['#ffffff', '#000000', '#5b2ea6', '#ff6b35', '#f7c59f', '#2ec4b6', '#e71d36', '#011627', '#ffd700', '#00ff88'].map(c => (
+                                        <button key={c} className="btn p-0 border rounded-1" 
+                                            style={{ width: '20px', height: '20px', background: c, border: selectedElementId && formData[`${selectedElementId}Color`] === c ? '2px solid #5b2ea6' : '1px solid #ddd' }}
+                                            onClick={() => selectedElementId && set(`${selectedElementId}Color`, c)} 
+                                            title={c}></button>
+                                    ))}
                                 </div>
-                                <div className="vr mx-2"></div>
-                                <div className="d-flex flex-column align-items-center">
-                                    <button onClick={() => { setActiveSidebar('brand'); setIsSidebarCollapsed(false); }} className="btn btn-light mb-1">
-                                        <i className="bi bi-shield-check fs-4"></i>
+                            </div>
+
+                            {/* Grupo: MEDIOS */}
+                            <div className="d-flex flex-column px-3 border-end">
+                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Medios</span>
+                                <div className="d-flex gap-2">
+                                    <button onClick={() => { setActiveSidebar('media'); setIsSidebarCollapsed(false); }} className="btn btn-light p-2" title="Imagen de fondo">
+                                        <i className="bi bi-image" style={{ fontSize: '1rem' }}></i>
                                     </button>
-                                    <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Logo Oasis</span>
                                 </div>
-                                <div className="d-flex flex-column align-items-center">
-                                    <button onClick={() => { setActiveSidebar('brand'); setIsSidebarCollapsed(false); }} className="btn btn-light mb-1">
-                                        <i className="bi bi-share fs-4"></i>
+                            </div>
+
+                            {/* Grupo: MARCA */}
+                            <div className="d-flex flex-column px-3">
+                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Marca</span>
+                                <div className="d-flex gap-2">
+                                    <button onClick={() => { setActiveSidebar('brand'); setIsSidebarCollapsed(false); }} className="btn btn-light p-2" title="Logo Oasis">
+                                        <i className="bi bi-shield-check" style={{ fontSize: '1rem' }}></i>
                                     </button>
-                                    <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Redes</span>
+                                    <button onClick={() => { setActiveSidebar('brand'); setIsSidebarCollapsed(false); }} className="btn btn-light p-2" title="Redes Sociales">
+                                        <i className="bi bi-share" style={{ fontSize: '1rem' }}></i>
+                                    </button>
                                 </div>
                             </div>
                         </>
@@ -1852,34 +1886,33 @@ const AdminAnnouncements = () => {
                     )}
                 </main>
 
-                {/* Bottom Announcements List (Drawer-like) */}
+                {/* Side Panel: Mis Anuncios (Right Drawer) */}
                 <AnimatePresence>
                     {showForm && (
                         <motion.div
-                            initial={{ y: '100%' }}
-                            animate={{ y: 0 }}
-                            exit={{ y: '100%' }}
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="announcements-list-drawer bg-white border-top shadow-lg"
+                            className="announcements-list-drawer bg-white border-start shadow-lg"
                             style={{ 
                                 position: 'fixed', 
-                                bottom: isMobile ? '56px' : 0, 
-                                left: 0, 
+                                top: activeMode === 'anuncios' ? '164px' : '42px',
                                 right: 0, 
-                                height: isMobile ? '35vh' : '220px', 
-                                maxHeight: '40vh',
+                                bottom: 0,
+                                width: isMobile ? '100%' : '280px', 
                                 zIndex: 105, 
                                 overflowY: 'auto',
-                                borderRadius: isMobile ? '16px 16px 0 0' : '0'
+                                borderRadius: '0'
                             }}
                         >
                             <div className="p-2 px-3 border-bottom d-flex justify-content-between align-items-center sticky-top bg-white">
-                                <h6 className="fw-bold mb-0" style={{ fontSize: '0.85rem' }}>MIS ANUNCIOS</h6>
+                                <h6 className="fw-bold mb-0" style={{ fontSize: '0.8rem' }}>MIS ANUNCIOS</h6>
                                 <button className="btn-close" style={{ fontSize: '0.6rem' }} onClick={() => setShowForm(false)}></button>
                             </div>
                             <div className="p-0">
                                 {announcements.length === 0 ? (
-                                    <div className="text-center text-muted py-4" style={{ fontSize: '0.8rem' }}>No hay anuncios guardados</div>
+                                    <div className="text-center text-muted py-4" style={{ fontSize: '0.75rem' }}>No hay anuncios guardados</div>
                                 ) : (
                                     <div className="list-group list-group-flush">
                                         {announcements.map(ann => {
@@ -1889,23 +1922,23 @@ const AdminAnnouncements = () => {
                                                     : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${ann.imageUrl || ann.image_url}`) 
                                                 : null;
                                             return (
-                                                <div key={ann.id} className="list-group-item d-flex align-items-center justify-content-between py-2 px-3 border-bottom">
-                                                    <div className="d-flex align-items-center gap-2">
+                                                <div key={ann.id} className="list-group-item d-flex align-items-center justify-content-between py-2 px-2 border-bottom">
+                                                    <div className="d-flex align-items-center gap-2" style={{ minWidth: 0, flex: 1 }}>
                                                         <img 
                                                             src={imgUrl || logoOasis} 
-                                                            className="rounded-circle shadow-sm flex-shrink-0" 
-                                                            style={{ width: '36px', height: '36px', objectFit: 'cover', border: '2px solid #e9ecef' }} 
+                                                            className="rounded shadow-sm flex-shrink-0" 
+                                                            style={{ width: '40px', height: '50px', objectFit: 'cover', border: '1px solid #e9ecef', borderRadius: '4px' }} 
                                                             alt={ann.title}
                                                         />
-                                                        <div style={{ minWidth: 0 }}>
-                                                            <div className="fw-semibold text-truncate" style={{ fontSize: '0.8rem', maxWidth: '140px' }}>{ann.title || 'Sin título'}</div>
-                                                            <span className="badge" style={{ fontSize: '0.55rem', background: theme.colors.primary, color: 'white' }}>{ann.tag}</span>
+                                                        <div style={{ minWidth: 0, flex: 1 }}>
+                                                            <div className="fw-semibold text-truncate" style={{ fontSize: '0.7rem' }}>{ann.title || 'Sin título'}</div>
+                                                            <span className="badge" style={{ fontSize: '0.5rem', background: theme.colors.primary, color: 'white' }}>{ann.tag}</span>
                                                         </div>
                                                     </div>
                                                     <div className="d-flex gap-1 flex-shrink-0">
                                                         <button 
                                                             className="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center" 
-                                                            style={{ width: '32px', height: '32px', borderRadius: '8px', fontSize: '0.75rem' }}
+                                                            style={{ width: '26px', height: '26px', borderRadius: '4px', fontSize: '0.65rem' }}
                                                             onClick={(e) => { e.stopPropagation(); handleEdit(ann); }}
                                                             title="Editar anuncio"
                                                         >
@@ -1913,7 +1946,7 @@ const AdminAnnouncements = () => {
                                                         </button>
                                                         <button 
                                                             className="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center" 
-                                                            style={{ width: '32px', height: '32px', borderRadius: '8px', fontSize: '0.75rem' }}
+                                                            style={{ width: '26px', height: '26px', borderRadius: '4px', fontSize: '0.65rem' }}
                                                             onClick={(e) => { e.stopPropagation(); handleDelete(ann.id); }}
                                                             title="Eliminar anuncio"
                                                         >
