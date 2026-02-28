@@ -241,12 +241,24 @@ const AdminAnnouncements = () => {
     const [showForm, setShowForm] = useState(false);
     const [activeSidebar, setActiveSidebar] = useState('design');
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(window.innerWidth < 992);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
     const [activeAdvTab, setActiveAdvTab] = useState('pos'); // pos, style, brand
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedElementId, setSelectedElementId] = useState(null);
     const [assets, setAssets] = useState({ oasis: null, iasd: null, rrss: null });
     const [showLibrary, setShowLibrary] = useState(false);
     const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+
+    // Handle responsive breakpoints
+    useEffect(() => {
+        const handleResize = () => {
+            const mobile = window.innerWidth < 992;
+            setIsMobile(mobile);
+            if (mobile) setIsSidebarCollapsed(true);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const DEFAULTS = {
         id: '', title: '', title2: '', title3: '', speaker: '', content: '', tag: 'GALA', date: '', time: '',
@@ -1303,23 +1315,23 @@ const AdminAnnouncements = () => {
             {/* Main Workspace */}
             <div className="canva-workspace flex-grow-1 d-flex flex-column" style={{ position: 'relative' }}>
                 {/* Header / Mode Switcher */}
-                <header className="workspace-header d-flex justify-content-between align-items-center p-3 border-bottom bg-white">
-                    <div className="d-flex align-items-center gap-3">
-                        <button className="btn btn-sm btn-light rounded-pill px-3 fw-bold" onClick={() => navigate('/admin')}>
-                            <i className="bi bi-house-door me-2"></i>Inicio
+                <header className="workspace-header d-flex justify-content-between align-items-center p-2 px-3 border-bottom bg-white" style={{ flexWrap: 'wrap', gap: '8px' }}>
+                    <div className="d-flex align-items-center gap-2" style={{ flexWrap: 'wrap' }}>
+                        <button className="btn btn-sm btn-light rounded-pill px-2 fw-bold d-none d-md-flex" onClick={() => navigate('/admin')}>
+                            <i className="bi bi-house-door me-1"></i><span className="d-none d-lg-inline">Inicio</span>
                         </button>
                         <div className="nav nav-pills p-1 rounded-pill bg-light x-small shadow-sm border">
-                            <button className={`nav-link rounded-pill px-3 py-1 fw-bold ${activeMode === 'anuncios' ? 'active' : 'text-dark'}`} onClick={() => setActiveMode('anuncios')}>Anuncios</button>
-                            <button className={`nav-link rounded-pill px-3 py-1 fw-bold ${activeMode === 'presentaciones' ? 'active' : 'text-dark'}`} onClick={() => setActiveMode('presentaciones')}>Presentaciones</button>
+                            <button className={`nav-link rounded-pill px-2 px-md-3 py-1 fw-bold ${activeMode === 'anuncios' ? 'active' : 'text-dark'}`} onClick={() => setActiveMode('anuncios')}>Anuncios</button>
+                            <button className={`nav-link rounded-pill px-2 px-md-3 py-1 fw-bold ${activeMode === 'presentaciones' ? 'active' : 'text-dark'}`} onClick={() => setActiveMode('presentaciones')}>Presentaciones</button>
                         </div>
                     </div>
-                    <div className="d-flex align-items-center gap-2">
-                        <span className="badge bg-secondary-subtle text-secondary rounded-pill px-3 border x-small">{formData.format.toUpperCase()} {currentFmt.W}x{currentFmt.H}</span>
-                        <button className="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold" onClick={() => setShowForm(!showForm)}>
-                            {showForm ? 'Ocultar Lista' : 'Ver Mis Anuncios'}
+                    <div className="d-flex align-items-center gap-1 gap-md-2">
+                        <span className="badge bg-secondary-subtle text-secondary rounded-pill px-2 border x-small d-none d-sm-inline">{formData.format.toUpperCase()} {currentFmt.W}x{currentFmt.H}</span>
+                        <button className="btn btn-outline-dark btn-sm rounded-pill px-2 px-md-3 fw-bold" style={{ fontSize: '0.7rem' }} onClick={() => setShowForm(!showForm)}>
+                            {showForm ? 'Ocultar Lista' : <><i className="bi bi-list me-1"></i><span className="d-none d-md-inline">Mis Anuncios</span></>}
                         </button>
-                        <button className="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm" onClick={handleDownload}>
-                            <i className="bi bi-download me-2"></i>Descargar
+                        <button className="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" style={{ fontSize: '0.7rem' }} onClick={handleDownload}>
+                            <i className="bi bi-download"></i><span className="d-none d-md-inline ms-1">Descargar</span>
                         </button>
                     </div>
                 </header>
@@ -1584,15 +1596,25 @@ const AdminAnnouncements = () => {
                             exit={{ y: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                             className="announcements-list-drawer bg-white border-top shadow-lg"
-                            style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '40vh', zIndex: 110, overflowY: 'auto' }}
+                            style={{ 
+                                position: 'fixed', 
+                                bottom: isMobile ? '56px' : 0, 
+                                left: isMobile ? 0 : (isSidebarCollapsed ? '72px' : '392px'), 
+                                right: 0, 
+                                height: isMobile ? '35vh' : '260px', 
+                                maxHeight: '45vh',
+                                zIndex: 105, 
+                                overflowY: 'auto',
+                                borderRadius: isMobile ? '16px 16px 0 0' : '0'
+                            }}
                         >
-                            <div className="p-3 border-bottom d-flex justify-content-between align-items-center sticky-top bg-white">
-                                <h6 className="fw-bold mb-0">MIS ANUNCIOS</h6>
-                                <button className="btn-close" onClick={() => setShowForm(false)}></button>
+                            <div className="p-2 px-3 border-bottom d-flex justify-content-between align-items-center sticky-top bg-white">
+                                <h6 className="fw-bold mb-0" style={{ fontSize: '0.85rem' }}>MIS ANUNCIOS</h6>
+                                <button className="btn-close" style={{ fontSize: '0.6rem' }} onClick={() => setShowForm(false)}></button>
                             </div>
                             <div className="p-0">
                                 {announcements.length === 0 ? (
-                                    <div className="text-center text-muted py-5">No hay anuncios guardados</div>
+                                    <div className="text-center text-muted py-4" style={{ fontSize: '0.8rem' }}>No hay anuncios guardados</div>
                                 ) : (
                                     <div className="list-group list-group-flush">
                                         {announcements.map(ann => {
@@ -1602,23 +1624,23 @@ const AdminAnnouncements = () => {
                                                     : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${ann.imageUrl || ann.image_url}`) 
                                                 : null;
                                             return (
-                                                <div key={ann.id} className="list-group-item d-flex align-items-center justify-content-between py-3 px-4 border-bottom">
-                                                    <div className="d-flex align-items-center gap-3">
+                                                <div key={ann.id} className="list-group-item d-flex align-items-center justify-content-between py-2 px-3 border-bottom">
+                                                    <div className="d-flex align-items-center gap-2">
                                                         <img 
                                                             src={imgUrl || logoOasis} 
-                                                            className="rounded-circle shadow-sm" 
-                                                            style={{ width: '44px', height: '44px', objectFit: 'cover', border: '2px solid #e9ecef' }} 
+                                                            className="rounded-circle shadow-sm flex-shrink-0" 
+                                                            style={{ width: '36px', height: '36px', objectFit: 'cover', border: '2px solid #e9ecef' }} 
                                                             alt={ann.title}
                                                         />
-                                                        <div>
-                                                            <div className="fw-semibold" style={{ fontSize: '0.9rem' }}>{ann.title}</div>
-                                                            <span className="badge" style={{ fontSize: '0.65rem', background: theme.colors.primary, color: 'white' }}>{ann.tag}</span>
+                                                        <div style={{ minWidth: 0 }}>
+                                                            <div className="fw-semibold text-truncate" style={{ fontSize: '0.8rem', maxWidth: '140px' }}>{ann.title || 'Sin título'}</div>
+                                                            <span className="badge" style={{ fontSize: '0.55rem', background: theme.colors.primary, color: 'white' }}>{ann.tag}</span>
                                                         </div>
                                                     </div>
-                                                    <div className="d-flex gap-2">
+                                                    <div className="d-flex gap-1 flex-shrink-0">
                                                         <button 
                                                             className="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center" 
-                                                            style={{ width: '36px', height: '36px', borderRadius: '8px' }}
+                                                            style={{ width: '32px', height: '32px', borderRadius: '8px', fontSize: '0.75rem' }}
                                                             onClick={(e) => { e.stopPropagation(); handleEdit(ann); }}
                                                             title="Editar anuncio"
                                                         >
@@ -1626,7 +1648,7 @@ const AdminAnnouncements = () => {
                                                         </button>
                                                         <button 
                                                             className="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center" 
-                                                            style={{ width: '36px', height: '36px', borderRadius: '8px' }}
+                                                            style={{ width: '32px', height: '32px', borderRadius: '8px', fontSize: '0.75rem' }}
                                                             onClick={(e) => { e.stopPropagation(); handleDelete(ann.id); }}
                                                             title="Eliminar anuncio"
                                                         >
@@ -1708,44 +1730,90 @@ const AdminAnnouncements = () => {
                             bottom: 0;
                             left: 0;
                             width: 100% !important;
-                            height: 60px !important;
+                            height: 56px !important;
                             flex-direction: row !important;
                             padding: 0 !important;
                             justify-content: space-around !important;
                             border-right: none !important;
                             border-top: 1px solid rgba(255,255,255,0.1);
+                            z-index: 200 !important;
                         }
                         .canva-sidebar .nav-btn {
                             height: 100% !important;
                             margin: 0 !important;
+                            font-size: 0.55rem !important;
+                        }
+                        .canva-sidebar .nav-btn i {
+                            font-size: 1.2rem !important;
                         }
                         .canva-sidebar .canva-logo-mini { display: none !important; }
                         
                         .canva-panel {
                             position: fixed !important;
-                            bottom: 60px !important;
+                            bottom: 56px !important;
                             left: 0 !important;
                             width: 100% !important;
                             height: auto !important;
-                            max-height: 50vh !important;
-                            border-radius: 20px 20px 0 0 !important;
+                            max-height: 45vh !important;
+                            border-radius: 16px 16px 0 0 !important;
                             border-right: none !important;
-                            box-shadow: 0 -10px 30px rgba(0,0,0,0.1) !important;
-                            z-index: 100 !important;
+                            box-shadow: 0 -10px 30px rgba(0,0,0,0.15) !important;
+                            z-index: 150 !important;
+                        }
+                        .canva-workspace {
+                            padding-bottom: 56px !important;
                         }
                         .workspace-header {
-                            padding: 0.5rem !important;
+                            padding: 0.4rem 0.5rem !important;
+                            min-height: 48px;
                         }
                         .workspace-header .btn-sm {
-                            padding: 0.25rem 0.5rem !important;
-                            font-size: 0.7rem !important;
+                            padding: 0.2rem 0.4rem !important;
+                            font-size: 0.65rem !important;
+                        }
+                        .workspace-header .nav-pills {
+                            font-size: 0.6rem !important;
                         }
                         .workspace-body {
-                            padding-bottom: 70px !important;
+                            padding: 0.5rem !important;
+                            padding-bottom: 60px !important;
                         }
                         #preview-container {
-                            width: 100% !important;
-                            max-width: 380px !important;
+                            width: 90% !important;
+                            max-width: 320px !important;
+                        }
+                        .announcements-list-drawer {
+                            max-height: 35vh !important;
+                        }
+                        .announcements-list-drawer .list-group-item {
+                            padding: 0.5rem 0.75rem !important;
+                        }
+                        .canva-toolbar {
+                            flex-wrap: wrap !important;
+                            gap: 4px !important;
+                            padding: 8px !important;
+                        }
+                        .canva-toolbar select,
+                        .canva-toolbar input {
+                            font-size: 0.65rem !important;
+                            padding: 0.2rem 0.3rem !important;
+                        }
+                    }
+                    
+                    /* Tablet adjustments */
+                    @media (min-width: 992px) and (max-width: 1199px) {
+                        .canva-panel {
+                            width: 280px !important;
+                        }
+                        #preview-container {
+                            max-width: 400px !important;
+                        }
+                    }
+                    
+                    /* Small desktop */
+                    @media (min-width: 1200px) and (max-width: 1399px) {
+                        #preview-container {
+                            max-width: 450px !important;
                         }
                     }
 
