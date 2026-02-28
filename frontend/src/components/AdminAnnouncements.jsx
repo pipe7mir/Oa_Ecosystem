@@ -1655,8 +1655,8 @@ const AdminAnnouncements = () => {
                                     ref={previewRef}
                                     id="preview-container"
                                     style={{
-                                        width: formData.format === 'whatsapp' ? '360px' : (formData.format === 'youtube' ? '100%' : '480px'),
-                                        maxWidth: '90%',
+                                        width: formData.format === 'whatsapp' ? '280px' : (formData.format === 'youtube' ? '100%' : '380px'),
+                                        maxWidth: isMobile ? '85%' : '70%',
                                         aspectRatio: currentFmt.aspect,
                                         position: 'relative',
                                         overflow: 'hidden',
@@ -1666,7 +1666,7 @@ const AdminAnnouncements = () => {
                                         borderRadius: '4px',
                                         containerType: 'inline-size',
                                         touchAction: 'none',
-                                        marginLeft: isMobile ? '60px' : '80px'
+                                        margin: '0 auto'
                                     }}
                                 >
                                     {/* Dark Overlay */}
