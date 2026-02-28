@@ -908,15 +908,25 @@ const AdminAnnouncements = () => {
         <AnimatePresence>
             {!isSidebarCollapsed && (
                 <motion.div
-                    initial={{ x: -300 }}
-                    animate={{ x: 0 }}
-                    exit={{ x: -300 }}
-                    className="canva-panel bg-white border-end shadow-sm scrollbar-custom"
-                    style={{ width: '320px', zIndex: 90, overflowY: 'auto' }}
+                    initial={{ x: -300, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -300, opacity: 0 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    className="canva-panel bg-white shadow-lg scrollbar-custom"
+                    style={{ 
+                        position: 'fixed', 
+                        top: '42px', 
+                        left: 0, 
+                        bottom: 0,
+                        width: '300px', 
+                        zIndex: 200, 
+                        overflowY: 'auto',
+                        borderRight: '1px solid #e9ecef'
+                    }}
                 >
                     <div className="p-3 d-flex justify-content-between align-items-center border-bottom sticky-top bg-white">
-                        <h6 className="fw-bold mb-0 text-uppercase letter-spacing-1">{SIDEBAR_ITEMS.find(i => i.id === activeSidebar)?.label}</h6>
-                        <button className="btn-close" style={{ fontSize: '0.7rem' }} onClick={() => setIsSidebarCollapsed(true)}></button>
+                        <h6 className="fw-bold mb-0 text-uppercase" style={{ fontSize: '0.75rem', color: '#5b2ea6' }}>{SIDEBAR_ITEMS.find(i => i.id === activeSidebar)?.label}</h6>
+                        <button className="btn-close" style={{ fontSize: '0.6rem' }} onClick={() => setIsSidebarCollapsed(true)}></button>
                     </div>
                     <div className="panel-content p-3">
                         {/* ══════════ DISEÑO: Plantillas + Fondos ══════════ */}
@@ -1433,6 +1443,27 @@ const AdminAnnouncements = () => {
                         <i className={`bi ${FORMATS[k].icon}`}></i>
                     </button>
                 ))}
+
+                {/* Divider */}
+                <div style={{ height: '1px', background: 'rgba(91, 46, 166, 0.2)', margin: '4px 0' }} />
+
+                {/* Utility Buttons */}
+                <button 
+                    style={{ ...squareBtnStyle, background: '#28a745', color: 'white', border: 'none' }}
+                    className="btn"
+                    onClick={handleDownload}
+                    title="Descargar imagen"
+                >
+                    <i className="bi bi-download"></i>
+                </button>
+                <button 
+                    style={squareBtnStyle}
+                    className="btn"
+                    onClick={handleFullscreen}
+                    title="Pantalla completa"
+                >
+                    <i className="bi bi-arrows-fullscreen"></i>
+                </button>
             </div>
         );
     };
@@ -1455,38 +1486,43 @@ const AdminAnnouncements = () => {
         <div className="canva-container d-flex" style={{ height: '100vh', width: '100vw', background: '#f4f7f8', overflow: 'hidden' }}>
             <FontPreloader />
 
-            {/* Sidebar Navigation */}
-            {renderSidebar()}
-
-            {/* Config Panel (Drawer) */}
+            {/* Config Panel (Drawer) - Opens from left tools */}
             {renderPanel()}
 
             {/* Main Workspace */}
             <div className="canva-workspace flex-grow-1 d-flex flex-column" style={{ position: 'relative' }}>
-                {/* Header / Mode Switcher */}
-                <header className="workspace-header d-flex justify-content-between align-items-center p-2 px-3 border-bottom bg-white" style={{ flexWrap: 'wrap', gap: '8px' }}>
-                    <div className="d-flex align-items-center gap-2" style={{ flexWrap: 'wrap' }}>
-                        <button className="btn btn-sm btn-light rounded-pill px-2 fw-bold d-none d-md-flex" onClick={() => navigate('/admin')}>
-                            <i className="bi bi-house-door me-1"></i><span className="d-none d-lg-inline">Inicio</span>
-                        </button>
-                        <div className="nav nav-pills p-1 rounded-pill bg-light x-small shadow-sm border">
-                            <button className={`nav-link rounded-pill px-2 px-md-3 py-1 fw-bold ${activeMode === 'anuncios' ? 'active' : 'text-dark'}`} onClick={() => setActiveMode('anuncios')}>Anuncios</button>
-                            <button className={`nav-link rounded-pill px-2 px-md-3 py-1 fw-bold ${activeMode === 'presentaciones' ? 'active' : 'text-dark'}`} onClick={() => setActiveMode('presentaciones')}>Presentaciones</button>
+                {/* Minimal Header - Illustrator Style */}
+                <header 
+                    className="workspace-header d-flex justify-content-between align-items-center px-3 bg-white border-bottom" 
+                    style={{ height: '42px', minHeight: '42px' }}
+                >
+                    <div className="d-flex align-items-center gap-2">
+                        <img src={logoOasis} style={{ height: '26px', cursor: 'pointer' }} alt="Oasis" onClick={() => navigate('/admin')} title="Volver al inicio" />
+                        <div style={{ width: '1px', height: '20px', background: '#ddd' }} />
+                        <div className="nav nav-pills p-1 rounded-pill" style={{ background: '#f8f9fa', fontSize: '0.7rem' }}>
+                            <button 
+                                className={`nav-link rounded-pill px-3 py-1 fw-semibold ${activeMode === 'anuncios' ? '' : 'text-secondary'}`}
+                                style={{ fontSize: '0.7rem', background: activeMode === 'anuncios' ? '#5b2ea6' : 'transparent', color: activeMode === 'anuncios' ? 'white' : undefined }}
+                                onClick={() => setActiveMode('anuncios')}
+                            >Anuncios</button>
+                            <button 
+                                className={`nav-link rounded-pill px-3 py-1 fw-semibold ${activeMode === 'presentaciones' ? '' : 'text-secondary'}`}
+                                style={{ fontSize: '0.7rem', background: activeMode === 'presentaciones' ? '#5b2ea6' : 'transparent', color: activeMode === 'presentaciones' ? 'white' : undefined }}
+                                onClick={() => setActiveMode('presentaciones')}
+                            >Presentaciones</button>
                         </div>
                     </div>
-                    <div className="d-flex align-items-center gap-1 gap-md-2">
-                        <span className="badge bg-secondary-subtle text-secondary rounded-pill px-2 border x-small d-none d-sm-inline">{formData.format.toUpperCase()} {currentFmt.W}x{currentFmt.H}</span>
-                        <button className="btn btn-outline-dark btn-sm rounded-pill px-2 px-md-3 fw-bold" style={{ fontSize: '0.7rem' }} onClick={() => {
-                            // Close panel when opening MIS ANUNCIOS to prevent overlap
-                            if (!showForm && !isMobile) {
-                                setIsSidebarCollapsed(true);
-                            }
-                            setShowForm(!showForm);
-                        }}>
-                            {showForm ? 'Ocultar Lista' : <><i className="bi bi-list me-1"></i><span className="d-none d-md-inline">Mis Anuncios</span></>}
-                        </button>
-                        <button className="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm" style={{ fontSize: '0.7rem' }} onClick={handleDownload}>
-                            <i className="bi bi-download"></i><span className="d-none d-md-inline ms-1">Descargar</span>
+                    <div className="d-flex align-items-center gap-2">
+                        <button 
+                            className="btn btn-sm rounded-pill px-3 fw-semibold d-flex align-items-center gap-1" 
+                            style={{ fontSize: '0.7rem', background: showForm ? '#5b2ea6' : '#f8f9fa', color: showForm ? 'white' : '#333', border: 'none' }} 
+                            onClick={() => {
+                                if (!showForm && !isMobile) setIsSidebarCollapsed(true);
+                                setShowForm(!showForm);
+                            }}
+                        >
+                            <i className="bi bi-folder2-open"></i>
+                            <span className="d-none d-md-inline">Mis Anuncios</span>
                         </button>
                     </div>
                 </header>
@@ -1756,10 +1792,10 @@ const AdminAnnouncements = () => {
                             style={{ 
                                 position: 'fixed', 
                                 bottom: isMobile ? '56px' : 0, 
-                                left: isMobile ? 0 : (isSidebarCollapsed ? '72px' : '392px'), 
+                                left: 0, 
                                 right: 0, 
-                                height: isMobile ? '35vh' : '260px', 
-                                maxHeight: '45vh',
+                                height: isMobile ? '35vh' : '220px', 
+                                maxHeight: '40vh',
                                 zIndex: 105, 
                                 overflowY: 'auto',
                                 borderRadius: isMobile ? '16px 16px 0 0' : '0'
