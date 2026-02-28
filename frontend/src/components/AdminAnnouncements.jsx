@@ -233,6 +233,121 @@ const SIDEBAR_ITEMS = [
 ];
 
 /* ─────────────────────────────────────────────────
+   CLOCK PICKER MODAL — Reloj analógico AM/PM
+──────────────────────────────────────────────────*/
+const ClockPickerModal = ({ value, onChange, onClose }) => {
+    const parseTime = () => {
+        if (!value) return { h: 12, m: 0, ampm: 'AM' };
+        const [hh, mm] = value.split(':').map(Number);
+        return { h: hh % 12 || 12, m: mm || 0, ampm: hh >= 12 ? 'PM' : 'AM' };
+    };
+    const { h, m, ampm } = parseTime();
+    const toRad = (deg) => (deg - 90) * Math.PI / 180;
+    const cx = 80, cy = 80, r = 70;
+    const hAngle = ((h % 12) / 12) * 360 + (m / 60) * 30;
+    const mAngle = (m / 60) * 360;
+    const hx = cx + r * 0.55 * Math.cos(toRad(hAngle));
+    const hy = cy + r * 0.55 * Math.sin(toRad(hAngle));
+    const mx = cx + r * 0.85 * Math.cos(toRad(mAngle));
+    const my = cy + r * 0.85 * Math.sin(toRad(mAngle));
+    const setTime = (newH, newM, newAmpm) => {
+        const h24 = newAmpm === 'PM' ? (newH === 12 ? 12 : newH + 12) : (newH === 12 ? 0 : newH);
+        onChange(`${String(h24).padStart(2, '0')}:${String(newM).padStart(2, '0')}`);
+    };
+    return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+            <div style={{ background: '#fff', borderRadius: '20px', padding: '24px', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', width: '230px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
+                <h6 style={{ margin: 0, fontWeight: 700, color: '#1f1f2e', fontSize: '0.95rem' }}>Seleccionar Hora</h6>
+                <svg width="160" height="160" viewBox="0 0 160 160">
+                    <circle cx="80" cy="80" r="70" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="2" />
+                    {Array.from({ length: 60 }, (_, i) => {
+                        const a = toRad(i * 6); const ri = 70, ro = i % 5 === 0 ? 58 : 64;
+                        return <line key={i} x1={cx + ri * Math.cos(a)} y1={cy + ri * Math.sin(a)} x2={cx + ro * Math.cos(a)} y2={cy + ro * Math.sin(a)} stroke={i % 5 === 0 ? '#94a3b8' : '#e2e8f0'} strokeWidth={i % 5 === 0 ? 1.5 : 0.8} />;
+                    })}
+                    {Array.from({ length: 12 }, (_, i) => {
+                        const num = i === 0 ? 12 : i;
+                        const a = toRad(i * 30);
+                        return <text key={i} x={cx + 50 * Math.cos(a)} y={cy + 50 * Math.sin(a) + 4} textAnchor="middle" fontSize="9" fill="#475569" fontWeight="600">{num}</text>;
+                    })}
+                    <line x1={cx} y1={cy} x2={mx} y2={my} stroke="#5b2ea6" strokeWidth="2" strokeLinecap="round" />
+                    <line x1={cx} y1={cy} x2={hx} y2={hy} stroke="#1f1f2e" strokeWidth="3.5" strokeLinecap="round" />
+                    <circle cx={cx} cy={cy} r="4.5" fill="#5b2ea6" />
+                </svg>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input type="number" min="1" max="12" value={h}
+                        onChange={e => setTime(Math.max(1, Math.min(12, parseInt(e.target.value) || 12)), m, ampm)}
+                        style={{ width: '52px', textAlign: 'center', fontSize: '1.3rem', fontWeight: 700, border: '2px solid #e2e8f0', borderRadius: '8px', padding: '6px 4px' }} />
+                    <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#5b2ea6' }}>:</span>
+                    <input type="number" min="0" max="59" value={String(m).padStart(2, '0')}
+                        onChange={e => setTime(h, Math.max(0, Math.min(59, parseInt(e.target.value) || 0)), ampm)}
+                        style={{ width: '52px', textAlign: 'center', fontSize: '1.3rem', fontWeight: 700, border: '2px solid #e2e8f0', borderRadius: '8px', padding: '6px 4px' }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {['AM', 'PM'].map(p => (
+                            <button key={p} onClick={() => setTime(h, m, p)}
+                                style={{ padding: '4px 10px', borderRadius: '8px', border: `2px solid ${ampm === p ? '#5b2ea6' : '#e2e8f0'}`, background: ampm === p ? '#5b2ea6' : '#f8f9fa', color: ampm === p ? '#fff' : '#555', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer' }}>
+                                {p}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <button onClick={onClose} style={{ background: '#5b2ea6', color: '#fff', border: 'none', borderRadius: '10px', padding: '10px 24px', fontWeight: 700, cursor: 'pointer', width: '100%', fontSize: '0.9rem' }}>
+                    ✓ Aceptar
+                </button>
+            </div>
+        </div>
+    );
+};
+
+/* ─────────────────────────────────────────────────
+   CALENDAR PICKER MODAL — Calendario mensual
+──────────────────────────────────────────────────*/
+const CalendarPickerModal = ({ value, onChange, onClose }) => {
+    const today = new Date();
+    const selected = value ? new Date(value + 'T12:00') : today;
+    const [calYear, setCalYear] = useState(selected.getFullYear());
+    const [calMonth, setCalMonth] = useState(selected.getMonth());
+    const firstDay = new Date(calYear, calMonth, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const DAYS = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'];
+    const cells = Array.from({ length: firstDay }, () => null).concat(Array.from({ length: daysInMonth }, (_, i) => i + 1));
+    const prevMonth = () => calMonth === 0 ? (setCalYear(y => y - 1), setCalMonth(11)) : setCalMonth(m => m - 1);
+    const nextMonth = () => calMonth === 11 ? (setCalYear(y => y + 1), setCalMonth(0)) : setCalMonth(m => m + 1);
+    return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+            <div style={{ background: '#fff', borderRadius: '20px', padding: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', width: '290px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <h6 style={{ margin: 0, fontWeight: 700, color: '#1f1f2e', textAlign: 'center', fontSize: '0.95rem' }}>Seleccionar Fecha</h6>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <button onClick={prevMonth} style={{ border: 'none', background: '#ede9fe', borderRadius: '8px', width: '34px', height: '34px', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 700, color: '#5b2ea6' }}>‹</button>
+                    <span style={{ fontWeight: 700, color: '#1f1f2e', fontSize: '0.95rem' }}>{MONTHS[calMonth]} {calYear}</span>
+                    <button onClick={nextMonth} style={{ border: 'none', background: '#ede9fe', borderRadius: '8px', width: '34px', height: '34px', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 700, color: '#5b2ea6' }}>›</button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
+                    {DAYS.map(d => <span key={d} style={{ textAlign: 'center', fontSize: '0.65rem', color: '#94a3b8', fontWeight: 700, padding: '3px 0' }}>{d}</span>)}
+                    {cells.map((d, i) => {
+                        if (!d) return <span key={`e${i}`} />;
+                        const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                        const isSel = value === dateStr;
+                        const isTd = today.getFullYear() === calYear && today.getMonth() === calMonth && today.getDate() === d;
+                        return (
+                            <button key={d} onClick={() => onChange(dateStr)}
+                                style={{ border: `2px solid ${isSel ? '#5b2ea6' : isTd ? '#c4b5fd' : 'transparent'}`, borderRadius: '8px', background: isSel ? '#5b2ea6' : 'transparent', color: isSel ? '#fff' : '#1f1f2e', fontWeight: isSel || isTd ? 700 : 400, padding: '5px 2px', fontSize: '0.8rem', cursor: 'pointer', textAlign: 'center' }}>
+                                {d}
+                            </button>
+                        );
+                    })}
+                </div>
+                <button onClick={onClose} style={{ background: '#5b2ea6', color: '#fff', border: 'none', borderRadius: '10px', padding: '10px', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>
+                    ✓ Aceptar
+                </button>
+            </div>
+        </div>
+    );
+};
+
+/* ─────────────────────────────────────────────────
    Main Component
  ───────────────────────────────────────────────────*/
 const AdminAnnouncements = () => {
@@ -248,7 +363,12 @@ const AdminAnnouncements = () => {
     const [assets, setAssets] = useState({ oasis: null, iasd: null, rrss: null });
     const [showLibrary, setShowLibrary] = useState(false);
     const [showTemplatePicker, setShowTemplatePicker] = useState(false);
-    const [activeRibbonTab, setActiveRibbonTab] = useState('inicio'); // Ribbon tabs: inicio, insertar, diseño, formato
+    const [activeRibbonTab, setActiveRibbonTab] = useState('inicio');
+    // Picker modals
+    const [showClockPicker, setShowClockPicker] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTagEditor, setShowTagEditor] = useState(false);
+    const [shapeMode, setShapeMode] = useState(false); // listening for click on canvas to place shape
 
     // Handle responsive breakpoints
     useEffect(() => {
@@ -1558,27 +1678,51 @@ const AdminAnnouncements = () => {
                     {/* ═══════ INSERTAR ═══════ */}
                     {activeRibbonTab === 'insertar' && (
                         <>
-                            {/* ── Grupo: TEXTO — Click = activar/mostrar ese elemento ── */}
+                            {/* ── Grupo: TEXTO — Click = seleccionar, H1+/H2+/H3+ = agregar más ── */}
                             <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 10px', borderRight: '1px solid #e9ecef', gap: '2px' }}>
                                 <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                    {/* H1 + botón agregar */}
+                                    {[{ id: 'title', icon: 'bi-type-h1', label: 'H1', title: 'Título H1', color: '#5b2ea6', size: '1.1rem', addKey: 'title', defaultText: 'TÍTULO PRINCIPAL' },
+                                    { id: 'title2', icon: 'bi-type-h2', label: 'H2', title: 'Subtítulo H2', color: '#7c3aed', size: '0.9rem', addKey: 'title2', defaultText: 'Subtítulo' },
+                                    { id: 'title3', icon: 'bi-type-h3', label: 'H3', title: 'Línea 3 H3', color: '#9f67ff', size: '0.78rem', addKey: 'title3', defaultText: 'Línea 3' },
+                                    ].map(el => {
+                                        const active = selectedElementId === el.id;
+                                        const hasContent = !!formData[el.addKey];
+                                        return (
+                                            <div key={el.id} style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
+                                                <button
+                                                    onClick={() => setSelectedElementId(el.id)}
+                                                    title={el.title}
+                                                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', border: `2px solid ${active ? '#5b2ea6' : '#e9ecef'}`, borderRadius: '8px', background: active ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', gap: '1px' }}>
+                                                    <i className={`bi ${el.icon}`} style={{ fontSize: el.size, color: active ? '#5b2ea6' : el.color }}></i>
+                                                    <span style={{ fontSize: '0.5rem', fontWeight: 700, color: active ? '#5b2ea6' : el.color, lineHeight: 1 }}>{el.label}</span>
+                                                </button>
+                                                {/* Botón + agregar texto */}
+                                                <button
+                                                    onClick={() => { if (!hasContent) set(el.addKey, el.defaultText); setSelectedElementId(el.id); }}
+                                                    title={hasContent ? `Editar ${el.label}` : `Agregar ${el.label}`}
+                                                    style={{ width: '20px', height: '14px', border: `1px solid ${hasContent ? '#10b981' : '#dee2e6'}`, borderRadius: '4px', background: hasContent ? '#d1fae5' : '#f8f9fa', color: hasContent ? '#059669' : '#888', cursor: 'pointer', fontSize: '0.6rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
+                                                    {hasContent ? '✓' : '+'}
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+
+                                    {/* Botones simples sin sub-botón */}
                                     {[
-                                        { id: 'title', icon: 'bi-type-h1', label: 'H1', title: 'Título principal', color: '#5b2ea6', size: '1.1rem' },
-                                        { id: 'title2', icon: 'bi-type-h2', label: 'H2', title: 'Subtítulo', color: '#7c3aed', size: '0.9rem' },
-                                        { id: 'title3', icon: 'bi-type-h3', label: 'H3', title: 'Línea 3', color: '#9f67ff', size: '0.78rem' },
                                         { id: 'speaker', icon: 'bi-person-fill', label: '', title: 'Orador', color: '#374151' },
-                                        { id: 'tag', icon: 'bi-tag-fill', label: '', title: 'Etiqueta', color: '#2563eb' },
-                                        { id: 'date', icon: 'bi-calendar3', label: '', title: 'Fecha', color: '#059669' },
-                                        { id: 'time', icon: 'bi-clock-fill', label: '', title: 'Hora', color: '#d97706' },
+                                        { id: 'tag', icon: 'bi-tag-fill', label: '', title: 'Etiqueta — clic para editar', color: '#2563eb', action: () => setShowTagEditor(true) },
+                                        { id: 'date', icon: 'bi-calendar3', label: '', title: 'Fecha — clic para abrir calendario', color: '#059669', action: () => setShowDatePicker(true) },
+                                        { id: 'time', icon: 'bi-clock-fill', label: '', title: 'Hora — clic para abrir reloj', color: '#d97706', action: () => setShowClockPicker(true) },
                                         { id: 'location', icon: 'bi-geo-alt-fill', label: '', title: 'Lugar', color: '#dc2626' },
                                     ].map(el => {
                                         const active = selectedElementId === el.id;
                                         return (
                                             <button key={el.id}
-                                                onClick={() => setSelectedElementId(el.id)}
+                                                onClick={() => { setSelectedElementId(el.id); el.action?.(); }}
                                                 title={el.title}
-                                                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', border: `2px solid ${active ? '#5b2ea6' : '#e9ecef'}`, borderRadius: '8px', background: active ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', gap: '1px' }}>
-                                                <i className={`bi ${el.icon}`} style={{ fontSize: el.size || '1rem', color: active ? '#5b2ea6' : el.color }}></i>
-                                                {el.label && <span style={{ fontSize: '0.5rem', fontWeight: 700, color: active ? '#5b2ea6' : el.color, lineHeight: 1 }}>{el.label}</span>}
+                                                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', border: `2px solid ${active ? '#5b2ea6' : '#e9ecef'}`, borderRadius: '8px', background: active ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', gap: '1px', flexShrink: 0 }}>
+                                                <i className={`bi ${el.icon}`} style={{ fontSize: '1rem', color: active ? '#5b2ea6' : el.color }}></i>
                                             </button>
                                         );
                                     })}
@@ -1664,6 +1808,13 @@ const AdminAnnouncements = () => {
                                                 );
                                             })}
                                         </div>
+                                        {/* Botón modo colocar — toca el canvas para insertar */}
+                                        <button
+                                            onClick={() => setShapeMode(m => !m)}
+                                            style={{ height: '20px', fontSize: '0.6rem', fontWeight: 700, border: `1px solid ${shapeMode ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '4px', background: shapeMode ? '#ede9fe' : '#f8f9fa', color: shapeMode ? '#5b2ea6' : '#555', cursor: 'pointer', padding: '0 6px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                            <i className={`bi ${shapeMode ? 'bi-cursor-fill' : 'bi-cursor'}`} style={{ fontSize: '0.7rem' }}></i>
+                                            {shapeMode ? 'Toca canvas…' : 'Colocar aquí'}
+                                        </button>
                                     </div>
                                     {/* Controles de degradado */}
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', borderLeft: '1px solid #e9ecef', paddingLeft: '8px' }}>
@@ -1698,7 +1849,7 @@ const AdminAnnouncements = () => {
                                                 set('shapes', shapes);
                                             }}
                                             style={{ height: '20px', fontSize: '0.6rem', fontWeight: 700, border: 'none', borderRadius: '4px', background: '#5b2ea6', color: '#fff', cursor: 'pointer', padding: '0 8px' }}>
-                                            + Agregar
+                                            + Centro
                                         </button>
                                     </div>
                                 </div>
@@ -1908,6 +2059,40 @@ const AdminAnnouncements = () => {
                     }}
                     onMouseDown={(e) => {
                         if (e.target === e.currentTarget) setSelectedElementId(null);
+                    }}
+                    onClick={(e) => {
+                        // Colocar forma en la posici\u00f3n donde se toc\u00f3/clic\u00f3 el canvas
+                        if (!shapeMode || !previewRef.current) return;
+                        const rect = previewRef.current.getBoundingClientRect();
+                        const px = ((e.clientX - rect.left) / rect.width) * 100;
+                        const py = ((e.clientY - rect.top) / rect.height) * 100;
+                        set('shapes', [...(formData.shapes || []), {
+                            id: Date.now(), type: formData.shapeType || 'rect',
+                            gradFrom: formData.shapeGradFrom || '#5b2ea6',
+                            gradTo: formData.shapeGradTo || '#a78bfa',
+                            angle: formData.shapeGradAngle || 135,
+                            size: formData.shapeSize || 80,
+                            x: Math.max(5, Math.min(95, px)),
+                            y: Math.max(5, Math.min(95, py)),
+                        }]);
+                        setShapeMode(false);
+                    }}
+                    onTouchEnd={(e) => {
+                        if (!shapeMode || !previewRef.current) return;
+                        const touch = e.changedTouches[0];
+                        const rect = previewRef.current.getBoundingClientRect();
+                        const px = ((touch.clientX - rect.left) / rect.width) * 100;
+                        const py = ((touch.clientY - rect.top) / rect.height) * 100;
+                        set('shapes', [...(formData.shapes || []), {
+                            id: Date.now(), type: formData.shapeType || 'rect',
+                            gradFrom: formData.shapeGradFrom || '#5b2ea6',
+                            gradTo: formData.shapeGradTo || '#a78bfa',
+                            angle: formData.shapeGradAngle || 135,
+                            size: formData.shapeSize || 80,
+                            x: Math.max(5, Math.min(95, px)),
+                            y: Math.max(5, Math.min(95, py)),
+                        }]);
+                        setShapeMode(false);
                     }}
                 >
                     {activeMode === 'presentaciones' ? (
@@ -2407,6 +2592,63 @@ const AdminAnnouncements = () => {
                         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
                     }
                 `}</style>
+
+            {/* ── Reloj Analógico ── */}
+            {showClockPicker && (
+                <ClockPickerModal
+                    value={formData.time}
+                    onChange={(t) => set('time', t)}
+                    onClose={() => setShowClockPicker(false)}
+                />
+            )}
+
+            {/* ── Calendario ── */}
+            {showDatePicker && (
+                <CalendarPickerModal
+                    value={formData.date}
+                    onChange={(d) => set('date', d)}
+                    onClose={() => setShowDatePicker(false)}
+                />
+            )}
+
+            {/* ════════════════════════════════
+                MODAL: EDITOR DE ETIQUETA
+            ════════════════════════════════ */}
+            {showTagEditor && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    onClick={(e) => { if (e.target === e.currentTarget) setShowTagEditor(false); }}>
+                    <div style={{ background: '#fff', borderRadius: '16px', padding: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', width: '280px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <h6 style={{ margin: 0, fontWeight: 700, color: '#1f1f2e' }}>Editar Etiqueta</h6>
+                        <input
+                            type="text"
+                            value={formData.tag || ''}
+                            onChange={(e) => set('tag', e.target.value.toUpperCase())}
+                            style={{ border: '2px solid #5b2ea6', borderRadius: '8px', padding: '10px 14px', fontSize: '1rem', fontWeight: 700, letterSpacing: '1px', textAlign: 'center', outline: 'none', textTransform: 'uppercase' }}
+                            placeholder="ETIQUETA"
+                            autoFocus
+                        />
+                        {/* Preview del tag */}
+                        <div style={{ textAlign: 'center', padding: '8px' }}>
+                            <span style={{ background: formData.tagBgColor || '#5b2ea6', color: formData.tagColor || '#fff', padding: '6px 20px', borderRadius: '50px', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '1px' }}>
+                                {formData.tag || 'ETIQUETA'}
+                            </span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            {['GALA', 'CULTO', 'EVENTO', 'JUVENIL', 'COMUNIÓN', 'BAUTISMO', 'ESPECIAL', 'MÚSICA'].map(t => (
+                                <button key={t} onClick={() => set('tag', t)}
+                                    style={{ border: '1px solid #dee2e6', borderRadius: '6px', background: formData.tag === t ? '#ede9fe' : '#f8f9fa', color: formData.tag === t ? '#5b2ea6' : '#555', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600, padding: '3px 8px' }}>
+                                    {t}
+                                </button>
+                            ))}
+                        </div>
+                        <button onClick={() => setShowTagEditor(false)}
+                            style={{ background: '#5b2ea6', color: '#fff', border: 'none', borderRadius: '10px', padding: '8px', fontWeight: 700, cursor: 'pointer' }}>
+                            Listo
+                        </button>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 };
