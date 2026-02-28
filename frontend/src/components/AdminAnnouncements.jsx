@@ -1692,8 +1692,8 @@ const AdminAnnouncements = () => {
             {/* Main Workspace */}
             <div className="canva-workspace flex-grow-1 d-flex flex-column" style={{ position: 'relative' }}>
                 <main
-                    className="workspace-body flex-grow-1 d-flex flex-column align-items-center justify-content-center p-4"
-                    style={{ overflowY: 'auto', background: '#e9ecef', position: 'relative' }}
+                    className="workspace-body flex-grow-1 d-flex flex-column align-items-center justify-content-center"
+                    style={{ overflowY: 'auto', background: '#e9ecef', position: 'relative', padding: '1.5rem' }}
                     onMouseDown={(e) => {
                         if (e.target === e.currentTarget) setSelectedElementId(null);
                     }}
@@ -1703,7 +1703,7 @@ const AdminAnnouncements = () => {
                     ) : (
                         <>
                             {/* Canvas Area */}
-                            <div className="canvas-wrapper d-flex align-items-center justify-content-center w-100" style={{ perspective: '1000px', position: 'relative' }}>
+                            <div className="canvas-wrapper d-flex align-items-center justify-content-center" style={{ perspective: '1000px', position: 'relative', width: '100%', maxWidth: '100%' }}>
                                 
                                 <motion.div
                                     layout
@@ -2134,7 +2134,7 @@ const AdminAnnouncements = () => {
                         #preview-container {
                             width: 90% !important;
                             max-width: 320px !important;
-                            margin-left: 50px !important;
+                            margin: 0 auto !important;
                         }
                         .announcements-list-drawer {
                             max-height: 35vh !important;
