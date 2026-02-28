@@ -1465,25 +1465,49 @@ const AdminAnnouncements = () => {
                                 </div>
                             </div>
 
-                            {/* Grupo: MEDIOS */}
+                            {/* Grupo: IMAGEN */}
                             <div className="d-flex flex-column px-3 border-end">
-                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Medios</span>
-                                <div className="d-flex gap-2">
-                                    <button onClick={() => { setActiveSidebar('media'); setIsSidebarCollapsed(false); }} className="btn btn-light p-2" title="Imagen de fondo">
-                                        <i className="bi bi-image" style={{ fontSize: '1rem' }}></i>
-                                    </button>
+                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Imagen</span>
+                                <div className="d-flex gap-1 align-items-center">
+                                    <label className="btn btn-light p-2" style={{ cursor: 'pointer' }} title="Subir imagen">
+                                        <i className="bi bi-cloud-upload" style={{ fontSize: '1rem' }}></i>
+                                        <input type="file" ref={fileInputRef} hidden onChange={handleFileChange} accept="image/*" />
+                                    </label>
+                                    {formData.bgImage && (
+                                        <>
+                                            <img src={formData.bgImage} style={{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '4px' }} alt="bg" />
+                                            <button className="btn btn-light p-1" onClick={() => setMany({ bgImage: null, bgMode: 'gradient' })} title="Quitar">
+                                                <i className="bi bi-x text-danger"></i>
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Grupo: MARCA */}
+                            {/* Grupo: LOGOS */}
                             <div className="d-flex flex-column px-3">
-                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Marca</span>
-                                <div className="d-flex gap-2">
-                                    <button onClick={() => { setActiveSidebar('brand'); setIsSidebarCollapsed(false); }} className="btn btn-light p-2" title="Logo Oasis">
-                                        <i className="bi bi-shield-check" style={{ fontSize: '1rem' }}></i>
+                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Logos</span>
+                                <div className="d-flex gap-1">
+                                    <button 
+                                        className={`btn p-1 ${formData.showLogoOasis ? 'btn-primary' : 'btn-light'}`}
+                                        style={{ width: '32px', height: '32px' }}
+                                        onClick={() => set('showLogoOasis', !formData.showLogoOasis)}
+                                        title="Logo Oasis">
+                                        <img src={logoOasis} style={{ height: '18px', filter: formData.showLogoOasis ? 'brightness(10)' : 'none' }} alt="Oasis" />
                                     </button>
-                                    <button onClick={() => { setActiveSidebar('brand'); setIsSidebarCollapsed(false); }} className="btn btn-light p-2" title="Redes Sociales">
-                                        <i className="bi bi-share" style={{ fontSize: '1rem' }}></i>
+                                    <button 
+                                        className={`btn p-1 ${formData.showLogoIasd ? 'btn-primary' : 'btn-light'}`}
+                                        style={{ width: '32px', height: '32px' }}
+                                        onClick={() => set('showLogoIasd', !formData.showLogoIasd)}
+                                        title="Logo IASD">
+                                        <img src={logoAdventista} style={{ height: '18px', filter: formData.showLogoIasd ? 'brightness(10)' : 'none' }} alt="IASD" />
+                                    </button>
+                                    <button 
+                                        className={`btn p-1 ${formData.showRrss ? 'btn-primary' : 'btn-light'}`}
+                                        style={{ width: '32px', height: '32px' }}
+                                        onClick={() => set('showRrss', !formData.showRrss)}
+                                        title="Redes Sociales">
+                                        <i className={`bi bi-share ${formData.showRrss ? 'text-white' : ''}`}></i>
                                     </button>
                                 </div>
                             </div>
@@ -1493,29 +1517,18 @@ const AdminAnnouncements = () => {
                     {/* ═══════ DISEÑO ═══════ */}
                     {activeRibbonTab === 'diseño' && (
                         <>
-                            <div className="d-flex flex-column align-items-center px-3 border-end">
-                                <button onClick={() => { setActiveSidebar('design'); setIsSidebarCollapsed(false); }} className="btn btn-light mb-1">
-                                    <i className="bi bi-grid-3x3-gap fs-4"></i>
-                                </button>
-                                <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Plantillas</span>
-                            </div>
-                            <div className="d-flex flex-column align-items-center px-3 border-end">
-                                <div className="d-flex gap-1 mb-1">
-                                    <input type="color" className="form-control form-control-color p-0" style={{ width: 28, height: 28 }} value={formData.gradientStart} onChange={e => set('gradientStart', e.target.value)} title="Color inicial" />
-                                    <input type="color" className="form-control form-control-color p-0" style={{ width: 28, height: 28 }} value={formData.gradientEnd} onChange={e => set('gradientEnd', e.target.value)} title="Color final" />
-                                </div>
-                                <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Fondo</span>
-                            </div>
-                            <div className="d-flex flex-column align-items-center px-3">
-                                <div className="d-flex gap-1 mb-1 overflow-auto" style={{ maxWidth: '300px' }}>
-                                    {TEMPLATES.slice(0, 4).map(tpl => (
+                            {/* Grupo: PLANTILLAS */}
+                            <div className="d-flex flex-column px-3 border-end">
+                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Plantillas</span>
+                                <div className="d-flex gap-1 overflow-auto" style={{ maxWidth: '280px' }}>
+                                    {TEMPLATES.map(tpl => (
                                         <button
                                             key={tpl.id}
                                             onClick={() => applyTemplate(tpl)}
                                             className="btn btn-sm p-0 flex-shrink-0"
                                             style={{
-                                                width: '50px',
-                                                height: '35px',
+                                                width: '40px',
+                                                height: '50px',
                                                 background: `linear-gradient(135deg, ${tpl.gradientStart}, ${tpl.gradientEnd})`,
                                                 border: '2px solid #ddd',
                                                 borderRadius: '4px'
@@ -1524,8 +1537,53 @@ const AdminAnnouncements = () => {
                                         />
                                     ))}
                                 </div>
-                                <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Temas</span>
                             </div>
+
+                            {/* Grupo: FONDO */}
+                            <div className="d-flex flex-column px-3 border-end">
+                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Fondo</span>
+                                <div className="d-flex gap-1 align-items-center">
+                                    <input type="color" className="form-control form-control-color p-0" style={{ width: 28, height: 28, border: '2px solid #ddd', borderRadius: '4px' }} value={formData.gradientStart} onChange={e => set('gradientStart', e.target.value)} title="Color inicial" />
+                                    <input type="color" className="form-control form-control-color p-0" style={{ width: 28, height: 28, border: '2px solid #ddd', borderRadius: '4px' }} value={formData.gradientEnd} onChange={e => set('gradientEnd', e.target.value)} title="Color final" />
+                                    <button className="btn btn-sm btn-outline-primary" onClick={() => setMany({ gradientStart: '#5b2ea6', gradientEnd: '#16213e' })} title="Colores Oasis">
+                                        <i className="bi bi-stars"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Grupo: GALERÍA RÁPIDA */}
+                            <div className="d-flex flex-column px-3 border-end">
+                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Imágenes Stock</span>
+                                <div className="d-flex gap-1 overflow-auto" style={{ maxWidth: '200px' }}>
+                                    {['https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=400&q=80',
+                                      'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=400&q=80',
+                                      'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&q=80',
+                                      'https://images.unsplash.com/photo-1514632595-4944383f2737?w=400&q=80'
+                                    ].map((img, i) => (
+                                        <img key={i} src={img} onClick={() => handleSelectStock(img)} 
+                                            className="flex-shrink-0" 
+                                            style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', cursor: 'pointer', border: '2px solid #ddd' }} 
+                                            alt="stock" />
+                                    ))}
+                                    <button className="btn btn-light flex-shrink-0" onClick={() => setShowLibrary(true)} style={{ width: '40px', height: '40px' }} title="Ver más">
+                                        <i className="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Grupo: MEZCLA */}
+                            {formData.bgImage && (
+                                <div className="d-flex flex-column px-3">
+                                    <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Mezcla</span>
+                                    <div className="d-flex gap-1 align-items-center">
+                                        <input type="checkbox" checked={formData.blendGradient} onChange={e => set('blendGradient', e.target.checked)} id="ribbonBlend" />
+                                        <input type="range" className="form-range" style={{ width: '60px' }} min="0" max="1" step="0.05" 
+                                            value={formData.blendOpacity} onChange={e => set('blendOpacity', parseFloat(e.target.value))} 
+                                            disabled={!formData.blendGradient} />
+                                        <span className="small">{Math.round(formData.blendOpacity * 100)}%</span>
+                                    </div>
+                                </div>
+                            )}
                         </>
                     )}
 
@@ -1630,9 +1688,6 @@ const AdminAnnouncements = () => {
 
             {/* Ribbon Menu */}
             {activeMode === 'anuncios' && renderRibbon()}
-
-            {/* Config Panel (Drawer) - Opens from ribbon */}
-            {renderPanel()}
 
             {/* Main Workspace */}
             <div className="canva-workspace flex-grow-1 d-flex flex-column" style={{ position: 'relative' }}>
