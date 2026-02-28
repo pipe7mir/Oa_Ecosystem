@@ -99,1307 +99,1095 @@ const createDefaultSlide = () => ({
     background: '#ffffff',
     backgroundImage: '',
     elements: [],
+});
 
-const OasisPress = () => {
-    // State
-    const [presentations, setPresentations] = useState([]);
-    const [currentPresentation, setCurrentPresentation] = useState(null);
-    const [selectedSlide, setSelectedSlide] = useState(0);
-    const [selectedElement, setSelectedElement] = useState(null);
-    const [isEditing, setIsEditing] = useState(false);
-    const [isPresentMode, setIsPresentMode] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [editingTextId, setEditingTextId] = useState(null);
-    const [clipboard, setClipboard] = useState(null);
-
-    // Clipboard Functions
-    const copyElement = () => {
-        const slide = getSlide(currentPresentation, selectedSlide);
-        const element = getElements(slide).find(el => el.id === selectedElement);
-        if (element) {
-            setClipboard({ ...element, id: `el-${Date.now()}` });
-        }
-    };
-
-    const cutElement = () => {
-        const slide = getSlide(currentPresentation, selectedSlide);
-        const element = getElements(slide).find(el => el.id === selectedElement);
-        if (element) {
-            setClipboard({ ...element, id: `el-${Date.now()}` });
-            deleteElement(selectedElement);
-        }
-    };
-
-    const pasteElement = () => {
-        if (!clipboard) return;
-        const newEl = { ...clipboard, id: `el-${Date.now()}`, x: clipboard.x + 20, y: clipboard.y + 20 };
-        const slides = getSlides(currentPresentation);
-        const updatedSlides = [...slides];
-        updatedSlides[selectedSlide] = {
-            ...updatedSlides[selectedSlide],
-            elements: [...(updatedSlides[selectedSlide].elements || []), newEl]
-        };
-        setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
-        setSelectedElement(newEl.id);
-    };
-
-    const applyTheme = (themeData) => {
-        const slides = getSlides(currentPresentation);
-        const updatedSlides = slides.map(s => ({
-            ...s,
-            background: themeData.background.includes('gradient') ? '#ffffff' : themeData.background,
-            backgroundGradient: themeData.background.includes('gradient') ? themeData.background : ''
+// ===============================
+// API Functions
+// ===============================
+const fetchPresentations = async () => {
+    try {
+        const data = await apiClient.get('/presentations');
+        const normalized = (Array.isArray(data) ? data : []).map(p => ({
+            ...p,
+            slides: Array.isArray(p.slides) ? p.slides : [createDefaultSlide()]
         }));
-        setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
-    };
+        setPresentations(normalized);
+    } catch (error) {
+        console.error('Error fetching presentations:', error);
+        setPresentations([]);
+    } finally {
+        setLoading(false);
+    }
+};
 
-    // Image Library State
-    const [showImageLibrary, setShowImageLibrary] = useState(false);
-    const [imageLibraryMode, setImageLibraryMode] = useState('element'); // 'element' | 'background'
-    const [imageLibraryCategory, setImageLibraryCategory] = useState('all');
-    const [customImageUrl, setCustomImageUrl] = useState('');
-    const [activeTab, setActiveTab] = useState('inicio'); // 'inicio' | 'insertar' | 'diseño' | 'transiciones'
-
-    // Refs
-    const canvasRef = useRef(null);
-    const touchStartRef = useRef({ x: 0, y: 0 });
-    const fileInputRef = useRef(null);
-    const importInputRef = useRef(null);
-
-    const importPresentation = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        if (file.name.toLowerCase().endsWith('.pptx')) {
-            alert('Soporte para .pptx detectado. Importando contenido... (Funcionalidad experimental)');
-            // Note: Full .pptx parsing requires jszip/pptxgenjs or similar.
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const imported = JSON.parse(event.target.result);
-                setCurrentPresentation(imported);
-                setSelectedSlide(0);
-                alert('Presentación importada con éxito');
-            } catch (err) {
-                alert('Error al importar el archivo JSON');
-            }
-        };
-        reader.readAsText(file);
-    };
-
-    // Liquid Glass styles
-    const glassCard = {
-        background: 'rgba(255, 255, 255, 0.85)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderRadius: '16px',
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-        boxShadow: '0 8px 32px rgba(91, 46, 166, 0.1)',
-    };
-
-    const glassPrimary = {
-        background: `linear-gradient(135deg, ${theme.colors.primary}dd, ${theme.colors.primary}99)`,
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255,255,255,0.2)',
-    };
-
-    // ===============================
-    // API Functions
-    // ===============================
-    const fetchPresentations = async () => {
-        try {
-            const data = await apiClient.get('/presentations');
-            const normalized = (Array.isArray(data) ? data : []).map(p => ({
-                ...p,
-                slides: Array.isArray(p.slides) ? p.slides : [createDefaultSlide()]
-            }));
-            setPresentations(normalized);
-        } catch (error) {
-            console.error('Error fetching presentations:', error);
-            setPresentations([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const createPresentation = async () => {
-        const newPres = createDefaultPresentation();
-        try {
-            const created = await apiClient.post('/presentations', newPres);
-            const normalized = {
-                ...created,
-                slides: Array.isArray(created.slides) ? created.slides : [createDefaultSlide()]
-            };
-            setPresentations(prev => [normalized, ...(prev || [])]);
-            setCurrentPresentation(normalized);
-            setSelectedSlide(0);
-            setIsEditing(true);
-        } catch (error) {
-            console.error('Error creating presentation:', error);
-            // Create locally if API fails
-            const localPres = { ...newPres, id: `local-${Date.now()}` };
-            setPresentations(prev => [localPres, ...(prev || [])]);
-            setCurrentPresentation(localPres);
-            setSelectedSlide(0);
-            setIsEditing(true);
-        }
-    };
-
-    const savePresentation = async () => {
-        if (!currentPresentation) return;
-        setSaving(true);
-        try {
-            const updated = await apiClient.put(`/presentations/${currentPresentation.id}`, currentPresentation);
-            const normalized = {
-                ...updated,
-                slides: Array.isArray(updated.slides) ? updated.slides : getSlides(currentPresentation)
-            };
-            setPresentations(prev => (prev || []).map(p => p.id === normalized.id ? normalized : p));
-            setCurrentPresentation(normalized);
-        } catch (error) {
-            console.error('Error saving:', error);
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const deletePresentation = async (id) => {
-        if (!window.confirm('¿Eliminar esta presentación?')) return;
-        try {
-            await apiClient.del(`/presentations/${id}`);
-            setPresentations(prev => (prev || []).filter(p => p.id !== id));
-            if (currentPresentation?.id === id) {
-                setCurrentPresentation(null);
-                setIsEditing(false);
-            }
-        } catch (error) {
-            console.error('Error deleting:', error);
-        }
-    };
-
-    useEffect(() => {
-        fetchPresentations();
-    }, []);
-
-    // Fullscreen API Handling
-    useEffect(() => {
-        if (isPresentMode) {
-            const elem = document.getElementById('presentation-container');
-            if (elem && elem.requestFullscreen) {
-                elem.requestFullscreen().catch(err => {
-                    console.error(`Error attempting to enable full-screen mode: ${err.message}`);
-                });
-            }
-        } else {
-            if (document.fullscreenElement) {
-                document.exitFullscreen().catch(err => {
-                    console.error(`Error attempting to exit full-screen mode: ${err.message}`);
-                });
-            }
-        }
-    }, [isPresentMode]);
-
-    // ===============================
-    // Slide Management
-    // ===============================
-    const addSlide = () => {
-        if (!currentPresentation) return;
-        const slides = getSlides(currentPresentation);
-        const newSlide = {
-            ...createDefaultSlide(),
-            order: slides.length
-        };
-        const updated = {
-            ...currentPresentation,
-            slides: [...slides, newSlide]
-        };
-        setCurrentPresentation(updated);
-        setSelectedSlide(slides.length);
-    };
-
-    const deleteSlide = (index) => {
-        const slides = getSlides(currentPresentation);
-        if (slides.length <= 1) return;
-        const updated = {
-            ...currentPresentation,
-            slides: slides.filter((_, i) => i !== index)
-        };
-        setCurrentPresentation(updated);
-        setSelectedSlide(Math.max(0, index - 1));
-    };
-
-    const duplicateSlide = (index) => {
-        if (!currentPresentation) return;
-        const slides = getSlides(currentPresentation);
-        const slideToCopy = slides[index];
-        if (!slideToCopy) return;
-        const newSlide = {
-            ...JSON.parse(JSON.stringify(slideToCopy)),
-            id: `slide-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        };
-        const newSlides = [...slides];
-        newSlides.splice(index + 1, 0, newSlide);
-        setCurrentPresentation({ ...currentPresentation, slides: newSlides });
-        setSelectedSlide(index + 1);
-    };
-
-    const updateSlideBackground = (color) => {
-        if (!currentPresentation) return;
-        const slides = getSlides(currentPresentation);
-        const updatedSlides = [...slides];
-        if (updatedSlides[selectedSlide]) {
-            updatedSlides[selectedSlide] = { ...updatedSlides[selectedSlide], background: color };
-            setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
-        }
-    };
-
-    const updateSlideBackgroundImage = (imageUrl, gradient = null) => {
-        if (!currentPresentation) return;
-        const slides = getSlides(currentPresentation);
-        const updatedSlides = [...slides];
-        if (updatedSlides[selectedSlide]) {
-            updatedSlides[selectedSlide] = {
-                ...updatedSlides[selectedSlide],
-                backgroundImage: imageUrl,
-                backgroundGradient: gradient
-            };
-            setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
-        }
-    };
-
-    const clearSlideBackground = () => {
-        if (!currentPresentation) return;
-        const slides = getSlides(currentPresentation);
-        const updatedSlides = [...slides];
-        if (updatedSlides[selectedSlide]) {
-            updatedSlides[selectedSlide] = {
-                ...updatedSlides[selectedSlide],
-                background: '#ffffff',
-                backgroundImage: '',
-                backgroundGradient: null
-            };
-            setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
-        }
-    };
-
-    // ===============================
-    // Image Library Functions
-    // ===============================
-    const openImageLibrary = (mode = 'element') => {
-        setImageLibraryMode(mode);
-        setShowImageLibrary(true);
-        setImageLibraryCategory('all');
-        setCustomImageUrl('');
-    };
-
-    const handleImageSelect = (image) => {
-        if (imageLibraryMode === 'background') {
-            updateSlideBackgroundImage(image.url);
-        } else {
-            addImageElement(image.url);
-        }
-        setShowImageLibrary(false);
-    };
-
-    const handleCustomImageAdd = () => {
-        if (!customImageUrl.trim()) return;
-        if (imageLibraryMode === 'background') {
-            updateSlideBackgroundImage(customImageUrl);
-        } else {
-            addImageElement(customImageUrl);
-        }
-        setShowImageLibrary(false);
-        setCustomImageUrl('');
-    };
-
-    const addImageElement = (src) => {
-        if (!currentPresentation) return;
-        const slides = getSlides(currentPresentation);
-        const currentSlide = slides[selectedSlide];
-        if (!currentSlide) return;
-
-        const newElement = {
-            id: `el-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            type: 'image',
-            x: 100,
-            y: 100,
-            width: 250,
-            height: 200,
-            src: src,
-            rotation: 0,
-            opacity: 1,
-            style: {
-                borderRadius: 8,
-                objectFit: 'cover',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-            }
-        };
-
-        const updatedSlides = [...slides];
-        updatedSlides[selectedSlide] = {
-            ...currentSlide,
-            elements: [...getElements(currentSlide), newElement]
-        };
-        setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
-        setSelectedElement(newElement.id);
-    };
-
-    const handleFileUpload = (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        // Convert to base64 for local use
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const dataUrl = event.target?.result;
-            if (imageLibraryMode === 'background') {
-                updateSlideBackgroundImage(dataUrl);
-            } else {
-                addImageElement(dataUrl);
-            }
-        };
-        reader.readAsDataURL(file);
-        setShowImageLibrary(false);
-    };
-
-    // ===============================
-    // Element Management
-    // ===============================
-    const addElement = (type) => {
-        if (!currentPresentation) return;
-        const slides = getSlides(currentPresentation);
-        const currentSlide = slides[selectedSlide];
-        if (!currentSlide) return;
-
-        const newElement = {
-            id: `el-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            type,
-            x: 50 + Math.random() * 100,
-            y: 50 + Math.random() * 100,
-            width: type === 'text' ? 400 : type === 'heading' ? 600 : 200,
-            height: type === 'text' ? 80 : type === 'heading' ? 100 : 200,
-            content: type === 'text' ? 'Haga clic para editar texto' : type === 'heading' ? 'Título' : '',
-            rotation: 0,
-            opacity: 1,
-            style: {
-                fontSize: type === 'heading' ? 48 : 24,
-                fontFamily: 'AdventSans, sans-serif',
-                fontWeight: type === 'heading' ? 'bold' : 'normal',
-                fontStyle: 'normal',
-                textDecoration: 'none',
-                color: theme.colors.text.primary,
-                backgroundColor: type === 'shape' ? theme.colors.primary : 'transparent',
-                borderRadius: type === 'shape' ? 8 : 0,
-                textAlign: 'center',
-                lineHeight: 1.4,
-                padding: 12,
-                border: 'none',
-                boxShadow: 'none'
-            }
-        };
-
-        const updatedSlides = [...slides];
-        updatedSlides[selectedSlide] = {
-            ...currentSlide,
-            elements: [...getElements(currentSlide), newElement]
-        };
-        setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
-        setSelectedElement(newElement.id);
-    };
-
-    const updateElement = (elementId, updates) => {
-        if (!currentPresentation) return;
-        const slides = getSlides(currentPresentation);
-        const currentSlide = slides[selectedSlide];
-        if (!currentSlide) return;
-
-        const elements = getElements(currentSlide);
-        const updatedElements = elements.map(el =>
-            el.id === elementId ? { ...el, ...updates } : el
-        );
-        const updatedSlides = [...slides];
-        updatedSlides[selectedSlide] = { ...currentSlide, elements: updatedElements };
-        setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
-    };
-
-    const updateElementStyle = (elementId, styleUpdates) => {
-        if (!currentPresentation) return;
-        const slides = getSlides(currentPresentation);
-        const currentSlide = slides[selectedSlide];
-        if (!currentSlide) return;
-
-        const elements = getElements(currentSlide);
-        const updatedElements = elements.map(el =>
-            el.id === elementId ? { ...el, style: { ...el.style, ...styleUpdates } } : el
-        );
-        const updatedSlides = [...slides];
-        updatedSlides[selectedSlide] = { ...currentSlide, elements: updatedElements };
-        setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
-    };
-
-    const deleteElement = (elementId) => {
-        if (!currentPresentation) return;
-        const slides = getSlides(currentPresentation);
-        const currentSlide = slides[selectedSlide];
-        if (!currentSlide) return;
-
-        const elements = getElements(currentSlide);
-        const updatedSlides = [...slides];
-        updatedSlides[selectedSlide] = {
-            ...currentSlide,
-            elements: elements.filter(el => el.id !== elementId)
-        };
-        setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
-        setSelectedElement(null);
-    };
-
-    const moveElement = (elementId, direction) => {
-        if (!currentPresentation) return;
-        const slides = getSlides(currentPresentation);
-        const currentSlide = slides[selectedSlide];
-        if (!currentSlide) return;
-
-        const elements = getElements(currentSlide);
-        const index = elements.findIndex(el => el.id === elementId);
-        if (index === -1) return;
-
-        const newElements = [...elements];
-        if (direction === 'up' && index < elements.length - 1) {
-            [newElements[index], newElements[index + 1]] = [newElements[index + 1], newElements[index]];
-        } else if (direction === 'down' && index > 0) {
-            [newElements[index], newElements[index - 1]] = [newElements[index - 1], newElements[index]];
-        }
-
-        const updatedSlides = [...slides];
-        updatedSlides[selectedSlide] = { ...currentSlide, elements: newElements };
-        setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
-    };
-
-    // ===============================
-    // Touch & Keyboard Navigation
-    // ===============================
-    const handleTouchStart = useCallback((e) => {
-        if (!isPresentMode) return;
-        const touch = e.touches[0];
-        touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-    }, [isPresentMode]);
-
-    const handleTouchEnd = useCallback((e) => {
-        if (!isPresentMode || !currentPresentation) return;
-        const touch = e.changedTouches[0];
-        const deltaX = touch.clientX - touchStartRef.current.x;
-        const threshold = 50;
-        const slides = getSlides(currentPresentation);
-
-        if (Math.abs(deltaX) > threshold) {
-            if (deltaX < 0 && selectedSlide < slides.length - 1) {
-                setSelectedSlide(prev => prev + 1);
-            } else if (deltaX > 0 && selectedSlide > 0) {
-                setSelectedSlide(prev => prev - 1);
-            }
-        }
-    }, [isPresentMode, currentPresentation, selectedSlide]);
-
-    useEffect(() => {
-        if (!isPresentMode) return;
-        const handleKeyDown = (e) => {
-            const slides = getSlides(currentPresentation);
-            if (e.key === 'ArrowRight' || e.key === ' ') {
-                e.preventDefault();
-                setSelectedSlide(prev => Math.min(prev + 1, slides.length - 1));
-            } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                setSelectedSlide(prev => Math.max(prev - 1, 0));
-            } else if (e.key === 'Escape') {
-                setIsPresentMode(false);
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isPresentMode, currentPresentation]);
-
-    // ===============================
-    // Open presentation for editing or presenting
-    // ===============================
-    const openPresentation = (presentation, forPresenting = false) => {
+const createPresentation = async () => {
+    const newPres = createDefaultPresentation();
+    try {
+        const created = await apiClient.post('/presentations', newPres);
         const normalized = {
-            ...presentation,
-            slides: Array.isArray(presentation.slides) ? presentation.slides : [createDefaultSlide()]
+            ...created,
+            slides: Array.isArray(created.slides) ? created.slides : [createDefaultSlide()]
         };
+        setPresentations(prev => [normalized, ...(prev || [])]);
         setCurrentPresentation(normalized);
         setSelectedSlide(0);
-        if (forPresenting) {
-            setIsPresentMode(true);
-        } else {
-            setIsEditing(true);
+        setIsEditing(true);
+    } catch (error) {
+        console.error('Error creating presentation:', error);
+        // Create locally if API fails
+        const localPres = { ...newPres, id: `local-${Date.now()}` };
+        setPresentations(prev => [localPres, ...(prev || [])]);
+        setCurrentPresentation(localPres);
+        setSelectedSlide(0);
+        setIsEditing(true);
+    }
+};
+
+const savePresentation = async () => {
+    if (!currentPresentation) return;
+    setSaving(true);
+    try {
+        const updated = await apiClient.put(`/presentations/${currentPresentation.id}`, currentPresentation);
+        const normalized = {
+            ...updated,
+            slides: Array.isArray(updated.slides) ? updated.slides : getSlides(currentPresentation)
+        };
+        setPresentations(prev => (prev || []).map(p => p.id === normalized.id ? normalized : p));
+        setCurrentPresentation(normalized);
+    } catch (error) {
+        console.error('Error saving:', error);
+    } finally {
+        setSaving(false);
+    }
+};
+
+const deletePresentation = async (id) => {
+    if (!window.confirm('¿Eliminar esta presentación?')) return;
+    try {
+        await apiClient.del(`/presentations/${id}`);
+        setPresentations(prev => (prev || []).filter(p => p.id !== id));
+        if (currentPresentation?.id === id) {
+            setCurrentPresentation(null);
+            setIsEditing(false);
+        }
+    } catch (error) {
+        console.error('Error deleting:', error);
+    }
+};
+
+// ===============================
+// Image Library Functions
+// ===============================
+const openImageLibrary = (mode = 'element') => {
+    setImageLibraryMode(mode);
+    setShowImageLibrary(true);
+    setImageLibraryCategory('all');
+    setCustomImageUrl('');
+};
+
+const handleImageSelect = (image) => {
+    if (imageLibraryMode === 'background') {
+        updateSlideBackgroundImage(image.url);
+    } else {
+        addImageElement(image.url);
+    }
+    setShowImageLibrary(false);
+};
+
+const handleCustomImageAdd = () => {
+    if (!customImageUrl.trim()) return;
+    if (imageLibraryMode === 'background') {
+        updateSlideBackgroundImage(customImageUrl);
+    } else {
+        addImageElement(customImageUrl);
+    }
+    setShowImageLibrary(false);
+    setCustomImageUrl('');
+};
+
+const addImageElement = (src) => {
+    if (!currentPresentation) return;
+    const slides = getSlides(currentPresentation);
+    const currentSlide = slides[selectedSlide];
+    if (!currentSlide) return;
+
+    const newElement = {
+        id: `el-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: 'image',
+        x: 100,
+        y: 100,
+        width: 250,
+        height: 200,
+        src: src,
+        rotation: 0,
+        opacity: 1,
+        style: {
+            borderRadius: 8,
+            objectFit: 'cover',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
         }
     };
 
-    // ===============================
-    // Current slide data helper
-    // ===============================
-    const getCurrentSlideData = () => getSlide(currentPresentation, selectedSlide);
-    const getSelectedElementData = () => {
-        const slide = getCurrentSlideData();
-        if (!slide || !selectedElement) return null;
-        return getElements(slide).find(el => el.id === selectedElement) || null;
+    const updatedSlides = [...slides];
+    updatedSlides[selectedSlide] = {
+        ...currentSlide,
+        elements: [...getElements(currentSlide), newElement]
+    };
+    setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+    setSelectedElement(newElement.id);
+};
+
+const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Convert to base64 for local use
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const dataUrl = event.target?.result;
+        if (imageLibraryMode === 'background') {
+            updateSlideBackgroundImage(dataUrl);
+        } else {
+            addImageElement(dataUrl);
+        }
+    };
+    reader.readAsDataURL(file);
+    setShowImageLibrary(false);
+};
+
+// ===============================
+// Element Management
+// ===============================
+const addElement = (type) => {
+    if (!currentPresentation) return;
+    const slides = getSlides(currentPresentation);
+    const currentSlide = slides[selectedSlide];
+    if (!currentSlide) return;
+
+    const newElement = {
+        id: `el-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type,
+        x: 50 + Math.random() * 100,
+        y: 50 + Math.random() * 100,
+        width: type === 'text' ? 400 : type === 'heading' ? 600 : 200,
+        height: type === 'text' ? 80 : type === 'heading' ? 100 : 200,
+        content: type === 'text' ? 'Haga clic para editar texto' : type === 'heading' ? 'Título' : '',
+        rotation: 0,
+        opacity: 1,
+        style: {
+            fontSize: type === 'heading' ? 48 : 24,
+            fontFamily: 'AdventSans, sans-serif',
+            fontWeight: type === 'heading' ? 'bold' : 'normal',
+            fontStyle: 'normal',
+            textDecoration: 'none',
+            color: theme.colors.text.primary,
+            backgroundColor: type === 'shape' ? theme.colors.primary : 'transparent',
+            borderRadius: type === 'shape' ? 8 : 0,
+            textAlign: 'center',
+            lineHeight: 1.4,
+            padding: 12,
+            border: 'none',
+            boxShadow: 'none'
+        }
     };
 
-    // ===============================
-    // Image Library Modal
-    // ===============================
-    const ImageLibraryModal = () => {
-        const allImages = [
-            ...IMAGE_LIBRARY.logos,
-            ...IMAGE_LIBRARY.social,
-            ...IMAGE_LIBRARY.backgrounds,
-            ...IMAGE_LIBRARY.decorative
-        ];
+    const updatedSlides = [...slides];
+    updatedSlides[selectedSlide] = {
+        ...currentSlide,
+        elements: [...getElements(currentSlide), newElement]
+    };
+    setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+    setSelectedElement(newElement.id);
+};
 
-        const filteredImages = imageLibraryCategory === 'all'
-            ? allImages
-            : IMAGE_LIBRARY[imageLibraryCategory] || [];
+const updateElement = (elementId, updates) => {
+    if (!currentPresentation) return;
+    const slides = getSlides(currentPresentation);
+    const currentSlide = slides[selectedSlide];
+    if (!currentSlide) return;
 
-        const categories = [
-            { id: 'all', name: 'Todos', icon: 'bi-grid-3x3-gap' },
-            { id: 'logos', name: 'Logos Oasis', icon: 'bi-award' },
-            { id: 'social', name: 'Redes Sociales', icon: 'bi-share' },
-            { id: 'backgrounds', name: 'Fondos', icon: 'bi-image' },
-            { id: 'decorative', name: 'Decorativos', icon: 'bi-stars' }
-        ];
+    const elements = getElements(currentSlide);
+    const updatedElements = elements.map(el =>
+        el.id === elementId ? { ...el, ...updates } : el
+    );
+    const updatedSlides = [...slides];
+    updatedSlides[selectedSlide] = { ...currentSlide, elements: updatedElements };
+    setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+};
 
-        return (
+const updateElementStyle = (elementId, styleUpdates) => {
+    if (!currentPresentation) return;
+    const slides = getSlides(currentPresentation);
+    const currentSlide = slides[selectedSlide];
+    if (!currentSlide) return;
+
+    const elements = getElements(currentSlide);
+    const updatedElements = elements.map(el =>
+        el.id === elementId ? { ...el, style: { ...el.style, ...styleUpdates } } : el
+    );
+    const updatedSlides = [...slides];
+    updatedSlides[selectedSlide] = { ...currentSlide, elements: updatedElements };
+    setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+};
+
+const deleteElement = (elementId) => {
+    if (!currentPresentation) return;
+    const slides = getSlides(currentPresentation);
+    const currentSlide = slides[selectedSlide];
+    if (!currentSlide) return;
+
+    const elements = getElements(currentSlide);
+    const updatedSlides = [...slides];
+    updatedSlides[selectedSlide] = {
+        ...currentSlide,
+        elements: elements.filter(el => el.id !== elementId)
+    };
+    setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+    setSelectedElement(null);
+};
+
+const moveElement = (elementId, direction) => {
+    if (!currentPresentation) return;
+    const slides = getSlides(currentPresentation);
+    const currentSlide = slides[selectedSlide];
+    if (!currentSlide) return;
+
+    const elements = getElements(currentSlide);
+    const index = elements.findIndex(el => el.id === elementId);
+    if (index === -1) return;
+
+    const newElements = [...elements];
+    if (direction === 'up' && index < elements.length - 1) {
+        [newElements[index], newElements[index + 1]] = [newElements[index + 1], newElements[index]];
+    } else if (direction === 'down' && index > 0) {
+        [newElements[index], newElements[index - 1]] = [newElements[index - 1], newElements[index]];
+    }
+
+    const updatedSlides = [...slides];
+    updatedSlides[selectedSlide] = { ...currentSlide, elements: newElements };
+    setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+};
+
+// ===============================
+// Touch & Keyboard Navigation
+// ===============================
+const handleTouchStart = useCallback((e) => {
+    if (!isPresentMode) return;
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+}, [isPresentMode]);
+
+const handleTouchEnd = useCallback((e) => {
+    if (!isPresentMode || !currentPresentation) return;
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const threshold = 50;
+    const slides = getSlides(currentPresentation);
+
+    if (Math.abs(deltaX) > threshold) {
+        if (deltaX < 0 && selectedSlide < slides.length - 1) {
+            setSelectedSlide(prev => prev + 1);
+        } else if (deltaX > 0 && selectedSlide > 0) {
+            setSelectedSlide(prev => prev - 1);
+        }
+    }
+}, [isPresentMode, currentPresentation, selectedSlide]);
+
+useEffect(() => {
+    if (!isPresentMode) return;
+    const handleKeyDown = (e) => {
+        const slides = getSlides(currentPresentation);
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            setSelectedSlide(prev => Math.min(prev + 1, slides.length - 1));
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            setSelectedSlide(prev => Math.max(prev - 1, 0));
+        } else if (e.key === 'Escape') {
+            setIsPresentMode(false);
+        }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+}, [isPresentMode, currentPresentation]);
+
+// ===============================
+// Open presentation for editing or presenting
+// ===============================
+const openPresentation = (presentation, forPresenting = false) => {
+    const normalized = {
+        ...presentation,
+        slides: Array.isArray(presentation.slides) ? presentation.slides : [createDefaultSlide()]
+    };
+    setCurrentPresentation(normalized);
+    setSelectedSlide(0);
+    if (forPresenting) {
+        setIsPresentMode(true);
+    } else {
+        setIsEditing(true);
+    }
+};
+
+// ===============================
+// Current slide data helper
+// ===============================
+const getCurrentSlideData = () => getSlide(currentPresentation, selectedSlide);
+const getSelectedElementData = () => {
+    const slide = getCurrentSlideData();
+    if (!slide || !selectedElement) return null;
+    return getElements(slide).find(el => el.id === selectedElement) || null;
+};
+
+// ===============================
+// Image Library Modal
+// ===============================
+const ImageLibraryModal = () => {
+    const allImages = [
+        ...IMAGE_LIBRARY.logos,
+        ...IMAGE_LIBRARY.social,
+        ...IMAGE_LIBRARY.backgrounds,
+        ...IMAGE_LIBRARY.decorative
+    ];
+
+    const filteredImages = imageLibraryCategory === 'all'
+        ? allImages
+        : IMAGE_LIBRARY[imageLibraryCategory] || [];
+
+    const categories = [
+        { id: 'all', name: 'Todos', icon: 'bi-grid-3x3-gap' },
+        { id: 'logos', name: 'Logos Oasis', icon: 'bi-award' },
+        { id: 'social', name: 'Redes Sociales', icon: 'bi-share' },
+        { id: 'backgrounds', name: 'Fondos', icon: 'bi-image' },
+        { id: 'decorative', name: 'Decorativos', icon: 'bi-stars' }
+    ];
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+                position: 'fixed',
+                top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(0,0,0,0.7)',
+                backdropFilter: 'blur(8px)',
+                zIndex: 9998,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px'
+            }}
+            onClick={() => setShowImageLibrary(false)}
+        >
             <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
                 style={{
-                    position: 'fixed',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.7)',
-                    backdropFilter: 'blur(8px)',
-                    zIndex: 9998,
+                    ...glassCard,
+                    width: '90%',
+                    maxWidth: '900px',
+                    maxHeight: '85vh',
+                    overflow: 'hidden',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '20px'
+                    flexDirection: 'column'
                 }}
-                onClick={() => setShowImageLibrary(false)}
             >
-                <motion.div
-                    initial={{ scale: 0.9, y: 20 }}
-                    animate={{ scale: 1, y: 0 }}
-                    exit={{ scale: 0.9, y: 20 }}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                        ...glassCard,
-                        width: '90%',
-                        maxWidth: '900px',
-                        maxHeight: '85vh',
-                        overflow: 'hidden',
-                        display: 'flex',
-                        flexDirection: 'column'
-                    }}
-                >
-                    {/* Header */}
-                    <div className="p-4 border-bottom d-flex align-items-center justify-content-between">
-                        <h5 className="mb-0 fw-bold" style={{ color: theme.colors.primary }}>
-                            <i className="bi bi-images me-2"></i>
-                            {imageLibraryMode === 'background' ? 'Seleccionar Fondo' : 'Biblioteca de Imágenes'}
-                        </h5>
-                        <button
-                            onClick={() => setShowImageLibrary(false)}
-                            className="btn btn-sm btn-outline-secondary rounded-circle"
-                            style={{ width: 36, height: 36 }}
-                        >
-                            <i className="bi bi-x-lg"></i>
-                        </button>
-                    </div>
+                {/* Header */}
+                <div className="p-4 border-bottom d-flex align-items-center justify-content-between">
+                    <h5 className="mb-0 fw-bold" style={{ color: theme.colors.primary }}>
+                        <i className="bi bi-images me-2"></i>
+                        {imageLibraryMode === 'background' ? 'Seleccionar Fondo' : 'Biblioteca de Imágenes'}
+                    </h5>
+                    <button
+                        onClick={() => setShowImageLibrary(false)}
+                        className="btn btn-sm btn-outline-secondary rounded-circle"
+                        style={{ width: 36, height: 36 }}
+                    >
+                        <i className="bi bi-x-lg"></i>
+                    </button>
+                </div>
 
-                    {/* Categories */}
-                    <div className="px-4 py-3 border-bottom" style={{ background: 'rgba(91,46,166,0.03)' }}>
-                        <div className="d-flex flex-wrap gap-2">
-                            {categories.map(cat => (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => setImageLibraryCategory(cat.id)}
-                                    className={`btn btn-sm rounded-pill ${imageLibraryCategory === cat.id ? 'btn-primary' : 'btn-outline-secondary'}`}
-                                >
-                                    <i className={`bi ${cat.icon} me-1`}></i>
-                                    {cat.name}
-                                </button>
-                            ))}
-                        </div>
+                {/* Categories */}
+                <div className="px-4 py-3 border-bottom" style={{ background: 'rgba(91,46,166,0.03)' }}>
+                    <div className="d-flex flex-wrap gap-2">
+                        {categories.map(cat => (
+                            <button
+                                key={cat.id}
+                                onClick={() => setImageLibraryCategory(cat.id)}
+                                className={`btn btn-sm rounded-pill ${imageLibraryCategory === cat.id ? 'btn-primary' : 'btn-outline-secondary'}`}
+                            >
+                                <i className={`bi ${cat.icon} me-1`}></i>
+                                {cat.name}
+                            </button>
+                        ))}
                     </div>
+                </div>
 
-                    {/* Custom URL / Upload */}
-                    <div className="px-4 py-3 border-bottom">
-                        <div className="row g-2 align-items-center">
-                            <div className="col">
-                                <div className="input-group input-group-sm">
-                                    <span className="input-group-text"><i className="bi bi-link-45deg"></i></span>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        placeholder="Pegar URL de imagen..."
-                                        value={customImageUrl}
-                                        onChange={(e) => setCustomImageUrl(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleCustomImageAdd()}
-                                    />
-                                    <button
-                                        className="btn btn-primary"
-                                        onClick={handleCustomImageAdd}
-                                        disabled={!customImageUrl.trim()}
-                                    >
-                                        Agregar
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="col-auto">
+                {/* Custom URL / Upload */}
+                <div className="px-4 py-3 border-bottom">
+                    <div className="row g-2 align-items-center">
+                        <div className="col">
+                            <div className="input-group input-group-sm">
+                                <span className="input-group-text"><i className="bi bi-link-45deg"></i></span>
                                 <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    accept="image/*"
-                                    onChange={handleFileUpload}
-                                    style={{ display: 'none' }}
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="Pegar URL de imagen..."
+                                    value={customImageUrl}
+                                    onChange={(e) => setCustomImageUrl(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleCustomImageAdd()}
                                 />
                                 <button
-                                    className="btn btn-sm btn-outline-primary"
-                                    onClick={() => fileInputRef.current?.click()}
+                                    className="btn btn-primary"
+                                    onClick={handleCustomImageAdd}
+                                    disabled={!customImageUrl.trim()}
                                 >
-                                    <i className="bi bi-upload me-1"></i>
-                                    Subir imagen
+                                    Agregar
                                 </button>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Gradients section (only for backgrounds) */}
-                    {imageLibraryMode === 'background' && (
-                        <div className="px-4 py-3 border-bottom">
-                            <h6 className="small fw-bold text-muted mb-2">
-                                <i className="bi bi-palette me-1"></i> Degradados
-                            </h6>
-                            <div className="d-flex flex-wrap gap-2">
-                                {GRADIENT_PRESETS.map(grad => (
-                                    <button
-                                        key={grad.id}
-                                        onClick={() => {
-                                            updateSlideBackgroundImage('', grad.value);
-                                            setShowImageLibrary(false);
-                                        }}
-                                        className="btn btn-sm p-0 rounded"
-                                        style={{
-                                            width: 60,
-                                            height: 40,
-                                            background: grad.value,
-                                            border: '2px solid #fff',
-                                            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                                        }}
-                                        title={grad.name}
-                                    />
-                                ))}
-                            </div>
+                        <div className="col-auto">
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                accept="image/*"
+                                onChange={handleFileUpload}
+                                style={{ display: 'none' }}
+                            />
+                            <button
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <i className="bi bi-upload me-1"></i>
+                                Subir imagen
+                            </button>
                         </div>
-                    )}
+                    </div>
+                </div>
 
-                    {/* Image Grid */}
-                    <div className="flex-grow-1 overflow-auto p-4">
-                        <div className="row g-3">
-                            {filteredImages.map(img => (
-                                <div key={img.id} className="col-6 col-sm-4 col-md-3">
-                                    <motion.div
-                                        whileHover={{ scale: 1.03, boxShadow: '0 8px 25px rgba(91,46,166,0.25)' }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => handleImageSelect(img)}
-                                        style={{
-                                            aspectRatio: img.category === 'backgrounds' ? '16/9' : '1/1',
-                                            borderRadius: 12,
-                                            overflow: 'hidden',
-                                            cursor: 'pointer',
-                                            background: '#f8f9fa',
-                                            border: '2px solid transparent',
-                                            position: 'relative'
-                                        }}
-                                        className="shadow-sm"
-                                    >
-                                        <img
-                                            src={img.url}
-                                            alt={img.name}
-                                            style={{
-                                                width: '100%',
-                                                height: '100%',
-                                                objectFit: img.category === 'backgrounds' ? 'cover' : 'contain',
-                                                padding: img.category === 'backgrounds' ? 0 : 12
-                                            }}
-                                        />
-                                        <div
-                                            className="position-absolute bottom-0 start-0 end-0 p-2 text-white text-center small"
-                                            style={{
-                                                background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
-                                                fontSize: '0.7rem'
-                                            }}
-                                        >
-                                            {img.name}
-                                        </div>
-                                    </motion.div>
-                                </div>
+                {/* Gradients section (only for backgrounds) */}
+                {imageLibraryMode === 'background' && (
+                    <div className="px-4 py-3 border-bottom">
+                        <h6 className="small fw-bold text-muted mb-2">
+                            <i className="bi bi-palette me-1"></i> Degradados
+                        </h6>
+                        <div className="d-flex flex-wrap gap-2">
+                            {GRADIENT_PRESETS.map(grad => (
+                                <button
+                                    key={grad.id}
+                                    onClick={() => {
+                                        updateSlideBackgroundImage('', grad.value);
+                                        setShowImageLibrary(false);
+                                    }}
+                                    className="btn btn-sm p-0 rounded"
+                                    style={{
+                                        width: 60,
+                                        height: 40,
+                                        background: grad.value,
+                                        border: '2px solid #fff',
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                                    }}
+                                    title={grad.name}
+                                />
                             ))}
                         </div>
-
-                        {filteredImages.length === 0 && (
-                            <div className="text-center py-5 text-muted">
-                                <i className="bi bi-image display-4 mb-3 d-block opacity-50"></i>
-                                <p>No hay imágenes en esta categoría</p>
-                            </div>
-                        )}
                     </div>
-                </motion.div>
+                )}
+
+                {/* Image Grid */}
+                <div className="flex-grow-1 overflow-auto p-4">
+                    <div className="row g-3">
+                        {filteredImages.map(img => (
+                            <div key={img.id} className="col-6 col-sm-4 col-md-3">
+                                <motion.div
+                                    whileHover={{ scale: 1.03, boxShadow: '0 8px 25px rgba(91,46,166,0.25)' }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => handleImageSelect(img)}
+                                    style={{
+                                        aspectRatio: img.category === 'backgrounds' ? '16/9' : '1/1',
+                                        borderRadius: 12,
+                                        overflow: 'hidden',
+                                        cursor: 'pointer',
+                                        background: '#f8f9fa',
+                                        border: '2px solid transparent',
+                                        position: 'relative'
+                                    }}
+                                    className="shadow-sm"
+                                >
+                                    <img
+                                        src={img.url}
+                                        alt={img.name}
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: img.category === 'backgrounds' ? 'cover' : 'contain',
+                                            padding: img.category === 'backgrounds' ? 0 : 12
+                                        }}
+                                    />
+                                    <div
+                                        className="position-absolute bottom-0 start-0 end-0 p-2 text-white text-center small"
+                                        style={{
+                                            background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+                                            fontSize: '0.7rem'
+                                        }}
+                                    >
+                                        {img.name}
+                                    </div>
+                                </motion.div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {filteredImages.length === 0 && (
+                        <div className="text-center py-5 text-muted">
+                            <i className="bi bi-image display-4 mb-3 d-block opacity-50"></i>
+                            <p>No hay imágenes en esta categoría</p>
+                        </div>
+                    )}
+                </div>
             </motion.div>
-        );
-    };
+        </motion.div>
+    );
+};
 
-    // ===============================
-    // Presentation Mode
-    // ===============================
-    const PresentationMode = () => {
-        const slides = getSlides(currentPresentation);
-        const currentSlideData = slides[selectedSlide] || createDefaultSlide();
-        const elements = getElements(currentSlideData);
+// ===============================
+// Presentation Mode
+// ===============================
+const PresentationMode = () => {
+    const slides = getSlides(currentPresentation);
+    const currentSlideData = slides[selectedSlide] || createDefaultSlide();
+    const elements = getElements(currentSlideData);
 
-        return (
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+                position: 'fixed',
+                top: 0, left: 0, right: 0, bottom: 0,
+                background: '#0a0a0a',
+                zIndex: 9999,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden'
+            }}
+            id="presentation-container"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+        >
+            {/* Exit button */}
+            <button
+                onClick={() => setIsPresentMode(false)}
                 style={{
-                    position: 'fixed',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    background: '#0a0a0a',
-                    zIndex: 9999,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden'
+                    position: 'absolute',
+                    top: 20,
+                    right: 20,
+                    background: 'rgba(255,255,255,0.2)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: 50,
+                    height: 50,
+                    color: '#fff',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    zIndex: 10000
                 }}
-                id="presentation-container"
-                onTouchStart={handleTouchStart}
-                onTouchEnd={handleTouchEnd}
             >
-                {/* Exit button */}
+                <i className="bi bi-x-lg"></i>
+            </button>
+
+            {/* Slide counter */}
+            <div style={{
+                position: 'absolute',
+                bottom: 20,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                color: '#fff',
+                fontSize: '1rem',
+                opacity: 0.7
+            }}>
+                {selectedSlide + 1} / {slides.length}
+            </div>
+
+            {/* Slide content */}
+            <AnimatePresence mode="popLayout" initial={false}>
+                <motion.div
+                    key={currentSlideData.id || selectedSlide}
+                    initial={
+                        currentSlideData.transitionType === 'infinite' ? { opacity: 0, scale: 0.5, x: 200 } :
+                            currentSlideData.transitionType === 'slide' ? { x: '100%' } :
+                                currentSlideData.transitionType === 'zoom' ? { scale: 0.8, opacity: 0 } :
+                                    { opacity: 0 }
+                    }
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={
+                        currentSlideData.transitionType === 'infinite' ? { opacity: 0, scale: 2, x: -200 } :
+                            currentSlideData.transitionType === 'slide' ? { x: '-100%' } :
+                                currentSlideData.transitionType === 'zoom' ? { scale: 1.2, opacity: 0 } :
+                                    { opacity: 0 }
+                    }
+                    transition={{
+                        duration: currentSlideData.transitionType === 'infinite' ? 0.8 : 0.4,
+                        ease: "easeInOut"
+                    }}
+                    style={{
+                        width: '90vw',
+                        maxWidth: '1200px',
+                        aspectRatio: '16/9',
+                        background: currentSlideData.backgroundGradient || currentSlideData.background || '#fff',
+                        borderRadius: '12px',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+                    }}
+                >
+                    <SlideContent
+                        slide={currentSlideData}
+                        scale={Math.min(window.innerWidth * 0.9, 1200) / VIRTUAL_WIDTH}
+                        isPresenting={true}
+                    />
+                </motion.div>
+            </AnimatePresence>
+
+            {/* Navigation arrows */}
+            {selectedSlide > 0 && (
                 <button
-                    onClick={() => setIsPresentMode(false)}
+                    onClick={() => setSelectedSlide(prev => prev - 1)}
                     style={{
                         position: 'absolute',
-                        top: 20,
-                        right: 20,
+                        left: 20,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
                         background: 'rgba(255,255,255,0.2)',
                         border: 'none',
                         borderRadius: '50%',
-                        width: 50,
-                        height: 50,
+                        width: 60,
+                        height: 60,
                         color: '#fff',
-                        fontSize: '1.5rem',
-                        cursor: 'pointer',
-                        zIndex: 10000
+                        fontSize: '2rem',
+                        cursor: 'pointer'
                     }}
                 >
-                    <i className="bi bi-x-lg"></i>
+                    <i className="bi bi-chevron-left"></i>
                 </button>
-
-                {/* Slide counter */}
-                <div style={{
-                    position: 'absolute',
-                    bottom: 20,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    color: '#fff',
-                    fontSize: '1rem',
-                    opacity: 0.7
-                }}>
-                    {selectedSlide + 1} / {slides.length}
-                </div>
-
-                {/* Slide content */}
-                <AnimatePresence mode="popLayout" initial={false}>
-                    <motion.div
-                        key={currentSlideData.id || selectedSlide}
-                        initial={
-                            currentSlideData.transitionType === 'infinite' ? { opacity: 0, scale: 0.5, x: 200 } :
-                                currentSlideData.transitionType === 'slide' ? { x: '100%' } :
-                                    currentSlideData.transitionType === 'zoom' ? { scale: 0.8, opacity: 0 } :
-                                        { opacity: 0 }
-                        }
-                        animate={{ opacity: 1, scale: 1, x: 0 }}
-                        exit={
-                            currentSlideData.transitionType === 'infinite' ? { opacity: 0, scale: 2, x: -200 } :
-                                currentSlideData.transitionType === 'slide' ? { x: '-100%' } :
-                                    currentSlideData.transitionType === 'zoom' ? { scale: 1.2, opacity: 0 } :
-                                        { opacity: 0 }
-                        }
-                        transition={{
-                            duration: currentSlideData.transitionType === 'infinite' ? 0.8 : 0.4,
-                            ease: "easeInOut"
-                        }}
-                        style={{
-                            width: '90vw',
-                            maxWidth: '1200px',
-                            aspectRatio: '16/9',
-                            background: currentSlideData.backgroundGradient || currentSlideData.background || '#fff',
-                            borderRadius: '12px',
-                            position: 'relative',
-                            overflow: 'hidden',
-                            boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
-                        }}
-                    >
-                        <SlideContent
-                            slide={currentSlideData}
-                            scale={Math.min(window.innerWidth * 0.9, 1200) / VIRTUAL_WIDTH}
-                            isPresenting={true}
-                        />
-                    </motion.div>
-                </AnimatePresence>
-
-                {/* Navigation arrows */}
-                {selectedSlide > 0 && (
-                    <button
-                        onClick={() => setSelectedSlide(prev => prev - 1)}
-                        style={{
-                            position: 'absolute',
-                            left: 20,
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            background: 'rgba(255,255,255,0.2)',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: 60,
-                            height: 60,
-                            color: '#fff',
-                            fontSize: '2rem',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        <i className="bi bi-chevron-left"></i>
-                    </button>
-                )}
-                {selectedSlide < slides.length - 1 && (
-                    <button
-                        onClick={() => setSelectedSlide(prev => prev + 1)}
-                        style={{
-                            position: 'absolute',
-                            right: 20,
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            background: 'rgba(255,255,255,0.2)',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: 60,
-                            height: 60,
-                            color: '#fff',
-                            fontSize: '2rem',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        <i className="bi bi-chevron-right"></i>
-                    </button>
-                )}
-            </motion.div>
-        );
-    };
-
-    // ===============================
-    // Text Formatting Toolbar
-    // ===============================
-    const TextFormattingToolbar = ({ element }) => {
-        const isDisabled = element.disabled || (element.type !== 'text' && element.type !== 'heading');
-
-        return (
-            <div className={`d-flex flex-wrap align-items-center gap-2 p-2 mb-3 ${isDisabled ? 'opacity-50' : ''}`}
-                style={{ ...glassCard, padding: '8px', pointerEvents: isDisabled ? 'none' : 'auto' }}>
-                {/* Font Family */}
-                <select
-                    className="form-select form-select-sm"
-                    style={{ width: '140px' }}
-                    value={element.style?.fontFamily?.split(',')[0] || 'AdventSans'}
-                    onChange={(e) => updateElementStyle(element.id, { fontFamily: `${e.target.value}, sans-serif` })}
-                >
-                    {FONTS.map(font => (
-                        <option key={font.name} value={font.name}>{font.label}</option>
-                    ))}
-                </select>
-
-                {/* Font Size */}
-                <select
-                    className="form-select form-select-sm"
-                    style={{ width: '80px' }}
-                    value={element.style?.fontSize || 24}
-                    onChange={(e) => updateElementStyle(element.id, { fontSize: parseInt(e.target.value) })}
-                >
-                    {[12, 14, 16, 18, 20, 24, 28, 32, 36, 42, 48, 56, 64, 72, 96].map(size => (
-                        <option key={size} value={size}>{size}</option>
-                    ))}
-                </select>
-
-                {/* Bold */}
+            )}
+            {selectedSlide < slides.length - 1 && (
                 <button
-                    className={`btn btn-sm ${element.style?.fontWeight === 'bold' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    onClick={() => updateElementStyle(element.id, { fontWeight: element.style?.fontWeight === 'bold' ? 'normal' : 'bold' })}
-                    title="Negrita"
+                    onClick={() => setSelectedSlide(prev => prev + 1)}
+                    style={{
+                        position: 'absolute',
+                        right: 20,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'rgba(255,255,255,0.2)',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: 60,
+                        height: 60,
+                        color: '#fff',
+                        fontSize: '2rem',
+                        cursor: 'pointer'
+                    }}
                 >
-                    <i className="bi bi-type-bold"></i>
+                    <i className="bi bi-chevron-right"></i>
                 </button>
+            )}
+        </motion.div>
+    );
+};
 
-                {/* Italic */}
+// ===============================
+// Text Formatting Toolbar
+// ===============================
+const TextFormattingToolbar = ({ element }) => {
+    const isDisabled = element.disabled || (element.type !== 'text' && element.type !== 'heading');
+
+    return (
+        <div className={`d-flex flex-wrap align-items-center gap-2 p-2 mb-3 ${isDisabled ? 'opacity-50' : ''}`}
+            style={{ ...glassCard, padding: '8px', pointerEvents: isDisabled ? 'none' : 'auto' }}>
+            {/* Font Family */}
+            <select
+                className="form-select form-select-sm"
+                style={{ width: '140px' }}
+                value={element.style?.fontFamily?.split(',')[0] || 'AdventSans'}
+                onChange={(e) => updateElementStyle(element.id, { fontFamily: `${e.target.value}, sans-serif` })}
+            >
+                {FONTS.map(font => (
+                    <option key={font.name} value={font.name}>{font.label}</option>
+                ))}
+            </select>
+
+            {/* Font Size */}
+            <select
+                className="form-select form-select-sm"
+                style={{ width: '80px' }}
+                value={element.style?.fontSize || 24}
+                onChange={(e) => updateElementStyle(element.id, { fontSize: parseInt(e.target.value) })}
+            >
+                {[12, 14, 16, 18, 20, 24, 28, 32, 36, 42, 48, 56, 64, 72, 96].map(size => (
+                    <option key={size} value={size}>{size}</option>
+                ))}
+            </select>
+
+            {/* Bold */}
+            <button
+                className={`btn btn-sm ${element.style?.fontWeight === 'bold' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                onClick={() => updateElementStyle(element.id, { fontWeight: element.style?.fontWeight === 'bold' ? 'normal' : 'bold' })}
+                title="Negrita"
+            >
+                <i className="bi bi-type-bold"></i>
+            </button>
+
+            {/* Italic */}
+            <button
+                className={`btn btn-sm ${element.style?.fontStyle === 'italic' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                onClick={() => updateElementStyle(element.id, { fontStyle: element.style?.fontStyle === 'italic' ? 'normal' : 'italic' })}
+                title="Cursiva"
+            >
+                <i className="bi bi-type-italic"></i>
+            </button>
+
+            {/* Underline */}
+            <button
+                className={`btn btn-sm ${element.style?.textDecoration === 'underline' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                onClick={() => updateElementStyle(element.id, { textDecoration: element.style?.textDecoration === 'underline' ? 'none' : 'underline' })}
+                title="Subrayado"
+            >
+                <i className="bi bi-type-underline"></i>
+            </button>
+
+            {/* Text Align */}
+            <div className="btn-group">
                 <button
-                    className={`btn btn-sm ${element.style?.fontStyle === 'italic' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    onClick={() => updateElementStyle(element.id, { fontStyle: element.style?.fontStyle === 'italic' ? 'normal' : 'italic' })}
-                    title="Cursiva"
+                    className={`btn btn-sm ${element.style?.textAlign === 'left' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                    onClick={() => updateElementStyle(element.id, { textAlign: 'left' })}
                 >
-                    <i className="bi bi-type-italic"></i>
+                    <i className="bi bi-text-left"></i>
                 </button>
-
-                {/* Underline */}
                 <button
-                    className={`btn btn-sm ${element.style?.textDecoration === 'underline' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                    onClick={() => updateElementStyle(element.id, { textDecoration: element.style?.textDecoration === 'underline' ? 'none' : 'underline' })}
-                    title="Subrayado"
+                    className={`btn btn-sm ${element.style?.textAlign === 'center' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                    onClick={() => updateElementStyle(element.id, { textAlign: 'center' })}
                 >
-                    <i className="bi bi-type-underline"></i>
+                    <i className="bi bi-text-center"></i>
                 </button>
-
-                {/* Text Align */}
-                <div className="btn-group">
-                    <button
-                        className={`btn btn-sm ${element.style?.textAlign === 'left' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                        onClick={() => updateElementStyle(element.id, { textAlign: 'left' })}
-                    >
-                        <i className="bi bi-text-left"></i>
-                    </button>
-                    <button
-                        className={`btn btn-sm ${element.style?.textAlign === 'center' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                        onClick={() => updateElementStyle(element.id, { textAlign: 'center' })}
-                    >
-                        <i className="bi bi-text-center"></i>
-                    </button>
-                    <button
-                        className={`btn btn-sm ${element.style?.textAlign === 'right' ? 'btn-primary' : 'btn-outline-secondary'}`}
-                        onClick={() => updateElementStyle(element.id, { textAlign: 'right' })}
-                    >
-                        <i className="bi bi-text-right"></i>
-                    </button>
-                </div>
-
-                {/* Text Color */}
-                <div className="d-flex align-items-center gap-1">
-                    <span className="small text-muted">Color:</span>
-                    <input
-                        type="color"
-                        className="form-control form-control-color p-0"
-                        style={{ width: 30, height: 30 }}
-                        value={element.style?.color || '#000000'}
-                        onChange={(e) => updateElementStyle(element.id, { color: e.target.value })}
-                    />
-                </div>
-
-                {/* Quick colors */}
-                <div className="d-flex gap-1">
-                    {COLORS.slice(0, 6).map(color => (
-                        <button
-                            key={color}
-                            className="btn btn-sm p-0"
-                            style={{
-                                                        width: 24,
-                                                        height: 24,
-                                                        background: color,
-                                                        border: currentSlideData.background === color ? `2px solid ${theme.colors.primary}` : '2px solid #ddd',
-                                                        borderRadius: 4
-                                                    }}
-                                                    onClick={() => {
-                                                        updateSlideBackground(color);
-                                                        updateSlideBackgroundImage('', null);
-                                                    }}
-                        />
-                    ))}
-                </div>
+                <button
+                    className={`btn btn-sm ${element.style?.textAlign === 'right' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                    onClick={() => updateElementStyle(element.id, { textAlign: 'right' })}
+                >
+                    <i className="bi bi-text-right"></i>
+                </button>
             </div>
-        );
-    };
 
-    // ===============================
-    // Editor View
-    // ===============================
-    const EditorView = () => {
-        const slides = getSlides(currentPresentation);
-        const currentSlideData = getCurrentSlideData() || createDefaultSlide();
-        const elements = getElements(currentSlideData);
-        const selectedEl = getSelectedElementData();
+            {/* Text Color */}
+            <div className="d-flex align-items-center gap-1">
+                <span className="small text-muted">Color:</span>
+                <input
+                    type="color"
+                    className="form-control form-control-color p-0"
+                    style={{ width: 30, height: 30 }}
+                    value={element.style?.color || '#000000'}
+                    onChange={(e) => updateElementStyle(element.id, { color: e.target.value })}
+                />
+            </div>
 
-        return (
-            <div className="row g-2">
-                {/* Ribbon Interface - PowerPoint Style */}
-                <div className="col-12 mb-2">
-                    <div style={{ ...glassCard, borderRadius: '12px 12px 4px 4px' }} className="overflow-hidden">
-                        {/* Tabs Navigation */}
-                        <div className="d-flex border-bottom bg-light px-2" style={{ gap: '2px' }}>
-                            {['Inicio', 'Insertar', 'Diseño', 'Transiciones'].map(tab => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab.toLowerCase())}
-                                    style={{
-                                        border: 'none',
-                                        background: activeTab === tab.toLowerCase() ? '#fff' : 'transparent',
-                                        borderBottom: activeTab === tab.toLowerCase() ? `3px solid ${theme.colors.primary}` : 'none',
-                                        padding: '6px 20px',
-                                        fontSize: '0.85rem',
-                                        fontWeight: activeTab === tab.toLowerCase() ? 'bold' : 'normal',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    {tab}
-                                </button>
-                            ))}
-                            <div className="ms-auto d-flex align-items-center gap-2 px-3">
-                                <input type="file" ref={importInputRef} onChange={importPresentation} style={{ display: 'none' }} accept=".json" />
-                                <button onClick={() => importInputRef.current.click()} className="btn btn-sm btn-outline-secondary" style={{ fontSize: '0.75rem' }}>
-                                    <i className="bi bi-file-earmark-arrow-up me-1"></i> Importar
-                                </button>
-                                <button onClick={savePresentation} disabled={saving} className="btn btn-sm btn-success px-4" style={{ borderRadius: '6px' }}>
-                                    <i className={`bi ${saving ? 'bi-hourglass-split' : 'bi-save'} me-1`}></i> Guardar
-                                </button>
-                                <button onClick={() => setIsPresentMode(true)} className="btn btn-sm btn-primary px-4" style={{ borderRadius: '6px' }}>
-                                    <i className="bi bi-play-fill me-1"></i> Proyectar
-                                </button>
-                                <button onClick={handleExportPDF} className="btn btn-sm btn-outline-danger px-3" style={{ borderRadius: '6px' }}>
-                                    <i className="bi bi-file-earmark-pdf me-1"></i> Exportar PDF
-                                </button>
-                                <button onClick={handleExportPPTX} className="btn btn-sm btn-outline-warning px-3" style={{ borderRadius: '6px' }}>
-                                    <i className="bi bi-file-earmark-slides me-1"></i> Exportar PPTX
-                                </button>
-                            </div>
+            {/* Quick colors */}
+            <div className="d-flex gap-1">
+                {COLORS.slice(0, 6).map(color => (
+                    <button
+                        key={color}
+                        className="btn btn-sm p-0"
+                        style={{
+                                                    width: 24,
+                                                    height: 24,
+                                                    background: color,
+                                                    border: currentSlideData.background === color ? `2px solid ${theme.colors.primary}` : '2px solid #ddd',
+                                                    borderRadius: 4
+                                                }}
+                                                onClick={() => {
+                                                    updateSlideBackground(color);
+                                                    updateSlideBackgroundImage('', null);
+                                                }}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+};
+
+// ===============================
+// Editor View
+// ===============================
+const EditorView = () => {
+    const slides = getSlides(currentPresentation);
+    const currentSlideData = getCurrentSlideData() || createDefaultSlide();
+    const elements = getElements(currentSlideData);
+    const selectedEl = getSelectedElementData();
+
+    return (
+        <div className="row g-2">
+            {/* Ribbon Interface - PowerPoint Style */}
+            <div className="col-12 mb-2">
+                <div style={{ ...glassCard, borderRadius: '12px 12px 4px 4px' }} className="overflow-hidden">
+                    {/* Tabs Navigation */}
+                    <div className="d-flex border-bottom bg-light px-2" style={{ gap: '2px' }}>
+                        {['Inicio', 'Insertar', 'Diseño', 'Transiciones'].map(tab => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab.toLowerCase())}
+                                style={{
+                                    border: 'none',
+                                    background: activeTab === tab.toLowerCase() ? '#fff' : 'transparent',
+                                    borderBottom: activeTab === tab.toLowerCase() ? `3px solid ${theme.colors.primary}` : 'none',
+                                    padding: '6px 20px',
+                                    fontSize: '0.85rem',
+                                    fontWeight: activeTab === tab.toLowerCase() ? 'bold' : 'normal',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                        <div className="ms-auto d-flex align-items-center gap-2 px-3">
+                            <input type="file" ref={importInputRef} onChange={importPresentation} style={{ display: 'none' }} accept=".json" />
+                            <button onClick={() => importInputRef.current.click()} className="btn btn-sm btn-outline-secondary" style={{ fontSize: '0.75rem' }}>
+                                <i className="bi bi-file-earmark-arrow-up me-1"></i> Importar
+                            </button>
+                            <button onClick={savePresentation} disabled={saving} className="btn btn-sm btn-success px-4" style={{ borderRadius: '6px' }}>
+                                <i className={`bi ${saving ? 'bi-hourglass-split' : 'bi-save'} me-1`}></i> Guardar
+                            </button>
+                            <button onClick={() => setIsPresentMode(true)} className="btn btn-sm btn-primary px-4" style={{ borderRadius: '6px' }}>
+                                <i className="bi bi-play-fill me-1"></i> Proyectar
+                            </button>
+                            <button onClick={handleExportPDF} className="btn btn-sm btn-outline-danger px-3" style={{ borderRadius: '6px' }}>
+                                <i className="bi bi-file-earmark-pdf me-1"></i> Exportar PDF
+                            </button>
+                            <button onClick={handleExportPPTX} className="btn btn-sm btn-outline-warning px-3" style={{ borderRadius: '6px' }}>
+                                <i className="bi bi-file-earmark-slides me-1"></i> Exportar PPTX
+                            </button>
                         </div>
+                    </div>
 
-                        {/* ribbon Content */}
-                        <div className="p-3 bg-white d-flex align-items-center gap-4 flex-wrap" style={{ minHeight: '80px' }}>
-                            {activeTab === 'inicio' && (
-                                <>
-                                    {/* Grupo: Portapapeles */}
-                                    <div className="d-flex flex-column align-items-center px-3 border-end">
-                                        <div className="d-flex gap-2 mb-1">
-                                            <button onClick={pasteElement} className="btn btn-light d-flex flex-column align-items-center py-1 px-3" style={{ fontSize: '0.7rem' }}>
-                                                <i className="bi bi-clipboard fs-4"></i>
-                                                <span style={{ marginTop: '2px' }}>Pegar</span>
-                                            </button>
-                                            <div className="d-flex flex-column gap-1">
-                                                <button onClick={cutElement} className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }}><i className="bi bi-scissors me-1"></i>Cortar</button>
-                                                <button onClick={copyElement} className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }}><i className="bi bi-files me-1"></i>Copiar</button>
-                                            </div>
+                    {/* ribbon Content */}
+                    <div className="p-3 bg-white d-flex align-items-center gap-4 flex-wrap" style={{ minHeight: '80px' }}>
+                        {activeTab === 'inicio' && (
+                            <>
+                                {/* Grupo: Portapapeles */}
+                                <div className="d-flex flex-column align-items-center px-3 border-end">
+                                    <div className="d-flex gap-2 mb-1">
+                                        <button onClick={pasteElement} className="btn btn-light d-flex flex-column align-items-center py-1 px-3" style={{ fontSize: '0.7rem' }}>
+                                            <i className="bi bi-clipboard fs-4"></i>
+                                            <span style={{ marginTop: '2px' }}>Pegar</span>
+                                        </button>
+                                        <div className="d-flex flex-column gap-1">
+                                            <button onClick={cutElement} className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }}><i className="bi bi-scissors me-1"></i>Cortar</button>
+                                            <button onClick={copyElement} className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }}><i className="bi bi-files me-1"></i>Copiar</button>
                                         </div>
-                                        <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Portapapeles</span>
                                     </div>
+                                    <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Portapapeles</span>
+                                </div>
 
-                                    {/* Grupo: Diapositivas */}
-                                    <div className="d-flex flex-column align-items-center px-3 border-end">
-                                        <div className="d-flex gap-2 mb-1">
-                                            <button onClick={addSlide} className="btn btn-light d-flex flex-column align-items-center py-1 px-3" style={{ fontSize: '0.7rem' }}>
-                                                <i className="bi bi-plus-square fs-4 text-success"></i>
-                                                <span style={{ marginTop: '2px' }}>Nueva</span>
-                                            </button>
-                                            <div className="d-flex flex-column gap-1 justify-content-center">
-                                                <button className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }}><i className="bi bi-layout-text-sidebar me-1"></i>Diseño</button>
-                                                <button className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }}><i className="bi bi-arrow-repeat me-1"></i>Restablecer</button>
-                                            </div>
+                                {/* Grupo: Diapositivas */}
+                                <div className="d-flex flex-column align-items-center px-3 border-end">
+                                    <div className="d-flex gap-2 mb-1">
+                                        <button onClick={addSlide} className="btn btn-light d-flex flex-column align-items-center py-1 px-3" style={{ fontSize: '0.7rem' }}>
+                                            <i className="bi bi-plus-square fs-4 text-success"></i>
+                                            <span style={{ marginTop: '2px' }}>Nueva</span>
+                                        </button>
+                                        <div className="d-flex flex-column gap-1 justify-content-center">
+                                            <button className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }}><i className="bi bi-layout-text-sidebar me-1"></i>Diseño</button>
+                                            <button className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }}><i className="bi bi-arrow-repeat me-1"></i>Restablecer</button>
                                         </div>
-                                        <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Diapositivas</span>
                                     </div>
+                                    <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Diapositivas</span>
+                                </div>
 
-                                    {/* Grupo: Fuente */}
-                                    <div className="d-flex flex-column align-items-center px-3 border-end">
-                                        <div className="d-flex flex-column gap-1 mb-1">
-                                            <div className="d-flex gap-1">
-                                                <select
-                                                    className="form-select form-select-sm py-0"
-                                                    style={{ fontSize: '0.75rem', width: '130px', height: '24px' }}
-                                                    value={selectedEl?.style?.fontFamily || 'Arial'}
-                                                    onChange={(e) => updateElementStyle(selectedEl?.id, { fontFamily: e.target.value })}
-                                                    disabled={!selectedEl}
-                                                >
-                                                    {FONTS.map(f => <option key={f.name} value={f.name}>{f.label}</option>)}
-                                                </select>
-                                                <select
-                                                    className="form-select form-select-sm py-0"
-                                                    style={{ fontSize: '0.75rem', width: '60px', height: '24px' }}
-                                                    value={selectedEl?.style?.fontSize?.replace('px', '') || '24'}
-                                                    onChange={(e) => updateElementStyle(selectedEl?.id, { fontSize: `${e.target.value}px` })}
-                                                    disabled={!selectedEl}
-                                                >
-                                                    {[12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72, 84, 96].map(s => <option key={s} value={s}>{s}</option>)}
-                                                </select>
-                                            </div>
-                                            <div className="d-flex gap-1">
-                                                <button onClick={() => updateElementStyle(selectedEl?.id, { fontWeight: selectedEl?.style?.fontWeight === 'bold' ? 'normal' : 'bold' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.fontWeight === 'bold' ? 'active' : ''}`} style={{ fontSize: '0.75rem' }} disabled={!selectedEl}><b>N</b></button>
-                                                <button onClick={() => updateElementStyle(selectedEl?.id, { fontStyle: selectedEl?.style?.fontStyle === 'italic' ? 'normal' : 'italic' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.fontStyle === 'italic' ? 'active' : ''}`} style={{ fontSize: '0.75rem' }} disabled={!selectedEl}><i>K</i></button>
-                                                <button onClick={() => updateElementStyle(selectedEl?.id, { textDecoration: selectedEl?.style?.textDecoration === 'underline' ? 'none' : 'underline' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.textDecoration === 'underline' ? 'active' : ''}`} style={{ fontSize: '0.75rem' }} disabled={!selectedEl}><u>S</u></button>
-                                                <div className="vr mx-1"></div>
-                                                <input
-                                                    type="color"
-                                                    className="form-control form-control-color p-0 border-0"
-                                                    style={{ width: 20, height: 20, background: 'none' }}
-                                                    value={selectedEl?.style?.color || '#000000'}
-                                                    onChange={(e) => updateElementStyle(selectedEl?.id, { color: e.target.value })}
-                                                    disabled={!selectedEl}
-                                                />
-                                            </div>
-                                        </div>
-                                        <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Fuente</span>
-                                    </div>
-
-                                    {/* Grupo: Párrafo */}
-                                    <div className="d-flex flex-column align-items-center px-3 border-end">
-                                        <div className="d-flex flex-column gap-1 mb-1 justify-content-center h-100">
-                                            <div className="d-flex gap-1">
-                                                <button onClick={() => updateElementStyle(selectedEl?.id, { textAlign: 'left' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.textAlign === 'left' ? 'active' : ''}`} disabled={!selectedEl}><i className="bi bi-text-left"></i></button>
-                                                <button onClick={() => updateElementStyle(selectedEl?.id, { textAlign: 'center' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.textAlign === 'center' ? 'active' : ''}`} disabled={!selectedEl}><i className="bi bi-text-center"></i></button>
-                                                <button onClick={() => updateElementStyle(selectedEl?.id, { textAlign: 'right' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.textAlign === 'right' ? 'active' : ''}`} disabled={!selectedEl}><i className="bi bi-text-right"></i></button>
-                                            </div>
-                                            <div className="d-flex gap-1">
-                                                <button className="btn btn-sm btn-light py-0 px-2" disabled={!selectedEl}><i className="bi bi-list-ul"></i></button>
-                                                <button className="btn btn-sm btn-light py-0 px-2" disabled={!selectedEl}><i className="bi bi-list-ol"></i></button>
-                                                <button className="btn btn-sm btn-light py-0 px-2" disabled={!selectedEl}><i className="bi bi-distribute-vertical"></i></button>
-                                            </div>
-                                        </div>
-                                        <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Párrafo</span>
-                                    </div>
-
-                                    {/* Grupo: Dibujo */}
-                                    <div className="d-flex flex-column align-items-center px-3">
-                                        <div className="d-flex gap-2 mb-1">
-                                            <div className="d-flex flex-wrap gap-1" style={{ width: '80px' }}>
-                                                {['square', 'circle', 'triangle'].map(shape => (
-                                                    <button key={shape} onClick={() => addElement('shape', { shapeType: shape })} className="btn btn-sm btn-light p-1" style={{ width: '24px', height: '24px' }}>
-                                                        <i className={`bi bi-${shape === 'square' ? 'square' : shape === 'circle' ? 'circle' : 'triangle'}`}></i>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            <div className="d-flex flex-column gap-1">
-                                                <button onClick={() => moveElement(selectedEl?.id, 'up')} className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }} disabled={!selectedEl}><i className="bi bi-layer-forward me-1"></i>Organizar</button>
-                                                <button className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }} disabled={!selectedEl}><i className="bi bi-palette me-1"></i>Estilos</button>
-                                            </div>
-                                        </div>
-                                        <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Dibujo</span>
-                                    </div>
-                                </>
-                            )}
-
-                            {activeTab === 'insertar' && (
-                                <>
-                                    <div className="d-flex gap-3">
-                                        <div className="d-flex flex-column align-items-center">
-                                            <button onClick={() => addElement('heading')} className="btn btn-light mb-1"><i className="bi bi-type-h1 fs-4"></i></button>
-                                            <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Título</span>
-                                        </div>
-                                        <div className="d-flex flex-column align-items-center">
-                                            <button onClick={() => addElement('text')} className="btn btn-light mb-1"><i className="bi bi-fonts fs-4"></i></button>
-                                            <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Texto</span>
-                                        </div>
-                                        <div className="d-flex flex-column align-items-center">
-                                            <button onClick={() => addElement('shape')} className="btn btn-light mb-1"><i className="bi bi-square fs-4"></i></button>
-                                            <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Forma</span>
-                                        </div>
-                                        <div className="vr mx-2"></div>
-                                        <div className="d-flex flex-column align-items-center">
-                                            <button onClick={() => openImageLibrary('element')} className="btn btn-light mb-1"><i className="bi bi-image fs-4"></i></button>
-                                            <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Imagen</span>
-                                        </div>
-                                        <div className="d-flex flex-column align-items-center">
-                                            <button
-                                                onClick={() => addImageElement(IMAGE_LIBRARY.logos[0].url)}
-                                                className="btn btn-light mb-1"
+                                {/* Grupo: Fuente */}
+                                <div className="d-flex flex-column align-items-center px-3 border-end">
+                                    <div className="d-flex flex-column gap-1 mb-1">
+                                        <div className="d-flex gap-1">
+                                            <select
+                                                className="form-select form-select-sm py-0"
+                                                style={{ fontSize: '0.75rem', width: '130px', height: '24px' }}
+                                                value={selectedEl?.style?.fontFamily || 'Arial'}
+                                                onChange={(e) => updateElementStyle(selectedEl?.id, { fontFamily: e.target.value })}
+                                                disabled={!selectedEl}
                                             >
-                                                <img src={IMAGE_LIBRARY.logos[0].url} alt="" style={{ width: 24, height: 24 }} />
-                                            </button>
-                                            <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Logo Oasis</span>
-                                        </div>
-                                        <div className="d-flex flex-column align-items-center">
-                                            <button
-                                                onClick={() => { setImageLibraryCategory('social'); openImageLibrary('element'); }}
-                                                className="btn btn-light mb-1"
+                                                {FONTS.map(f => <option key={f.name} value={f.name}>{f.label}</option>)}
+                                            </select>
+                                            <select
+                                                className="form-select form-select-sm py-0"
+                                                style={{ fontSize: '0.75rem', width: '60px', height: '24px' }}
+                                                value={selectedEl?.style?.fontSize?.replace('px', '') || '24'}
+                                                onChange={(e) => updateElementStyle(selectedEl?.id, { fontSize: `${e.target.value}px` })}
+                                                disabled={!selectedEl}
                                             >
-                                                <i className="bi bi-share fs-4"></i>
-                                            </button>
-                                            <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Redes</span>
+                                                {[12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 60, 72, 84, 96].map(s => <option key={s} value={s}>{s}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="d-flex gap-1">
+                                            <button onClick={() => updateElementStyle(selectedEl?.id, { fontWeight: selectedEl?.style?.fontWeight === 'bold' ? 'normal' : 'bold' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.fontWeight === 'bold' ? 'active' : ''}`} style={{ fontSize: '0.75rem' }} disabled={!selectedEl}><b>N</b></button>
+                                            <button onClick={() => updateElementStyle(selectedEl?.id, { fontStyle: selectedEl?.style?.fontStyle === 'italic' ? 'normal' : 'italic' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.fontStyle === 'italic' ? 'active' : ''}`} style={{ fontSize: '0.75rem' }} disabled={!selectedEl}><i>K</i></button>
+                                            <button onClick={() => updateElementStyle(selectedEl?.id, { textDecoration: selectedEl?.style?.textDecoration === 'underline' ? 'none' : 'underline' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.textDecoration === 'underline' ? 'active' : ''}`} style={{ fontSize: '0.75rem' }} disabled={!selectedEl}><u>S</u></button>
+                                            <div className="vr mx-1"></div>
+                                            <input
+                                                type="color"
+                                                className="form-control form-control-color p-0 border-0"
+                                                style={{ width: 20, height: 20, background: 'none' }}
+                                                value={selectedEl?.style?.color || '#000000'}
+                                                onChange={(e) => updateElementStyle(selectedEl?.id, { color: e.target.value })}
+                                                disabled={!selectedEl}
+                                            />
                                         </div>
                                     </div>
-                                </>
-                            )}
+                                    <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Fuente</span>
+                                </div>
 
-                            {activeTab === 'diseño' && (
-                                <>
-                                    <div className="d-flex flex-column align-items-center px-3 border-end">
-                                        <button onClick={() => openImageLibrary('background')} className="btn btn-light mb-1"><i className="bi bi-card-image fs-4"></i></button>
-                                        <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Fondo</span>
+                                {/* Grupo: Párrafo */}
+                                <div className="d-flex flex-column align-items-center px-3 border-end">
+                                    <div className="d-flex flex-column gap-1 mb-1 justify-content-center h-100">
+                                        <div className="d-flex gap-1">
+                                            <button onClick={() => updateElementStyle(selectedEl?.id, { textAlign: 'left' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.textAlign === 'left' ? 'active' : ''}`} disabled={!selectedEl}><i className="bi bi-text-left"></i></button>
+                                            <button onClick={() => updateElementStyle(selectedEl?.id, { textAlign: 'center' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.textAlign === 'center' ? 'active' : ''}`} disabled={!selectedEl}><i className="bi bi-text-center"></i></button>
+                                            <button onClick={() => updateElementStyle(selectedEl?.id, { textAlign: 'right' })} className={`btn btn-sm btn-light py-0 px-2 ${selectedEl?.style?.textAlign === 'right' ? 'active' : ''}`} disabled={!selectedEl}><i className="bi bi-text-right"></i></button>
+                                        </div>
+                                        <div className="d-flex gap-1">
+                                            <button className="btn btn-sm btn-light py-0 px-2" disabled={!selectedEl}><i className="bi bi-list-ul"></i></button>
+                                            <button className="btn btn-sm btn-light py-0 px-2" disabled={!selectedEl}><i className="bi bi-list-ol"></i></button>
+                                            <button className="btn btn-sm btn-light py-0 px-2" disabled={!selectedEl}><i className="bi bi-distribute-vertical"></i></button>
+                                        </div>
                                     </div>
-                                    <div className="d-flex flex-column align-items-center px-3">
-                                        <div className="d-flex gap-2 mb-1 overflow-auto" style={{ maxWidth: '400px', paddingBottom: '5px' }}>
-                                            {THEMES.map(theme => (
-                                                <button
-                                                    key={theme.id}
-                                                    onClick={() => applyTheme(theme)}
-                                                    className="btn btn-sm p-0 flex-shrink-0"
-                                                    style={{
-                                                        width: '70px',
-                                                        height: '40px',
-                                                        background: theme.background,
-                                                        border: '2px solid #ddd',
-                                                        borderRadius: '4px',
-                                                        position: 'relative'
-                                                    }}
-                                                    title={theme.name}
-                                                >
-                                                    <span style={{ fontSize: '0.5rem', color: theme.textColor, position: 'absolute', top: 2, left: 4 }}>Aa</span>
-                                                    <div style={{ position: 'absolute', bottom: 2, right: 4, width: '10px', height: '10px', background: theme.accent, borderRadius: '50%' }}></div>
+                                    <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Párrafo</span>
+                                </div>
+
+                                {/* Grupo: Dibujo */}
+                                <div className="d-flex flex-column align-items-center px-3">
+                                    <div className="d-flex gap-2 mb-1">
+                                        <div className="d-flex flex-wrap gap-1" style={{ width: '80px' }}>
+                                            {['square', 'circle', 'triangle'].map(shape => (
+                                                <button key={shape} onClick={() => addElement('shape', { shapeType: shape })} className="btn btn-sm btn-light p-1" style={{ width: '24px', height: '24px' }}>
+                                                    <i className={`bi bi-${shape === 'square' ? 'square' : shape === 'circle' ? 'circle' : 'triangle'}`}></i>
                                                 </button>
                                             ))}
                                         </div>
-                                        <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Temas</span>
+                                        <div className="d-flex flex-column gap-1">
+                                            <button onClick={() => moveElement(selectedEl?.id, 'up')} className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }} disabled={!selectedEl}><i className="bi bi-layer-forward me-1"></i>Organizar</button>
+                                            <button className="btn btn-sm btn-light py-0 px-2 text-start" style={{ fontSize: '0.65rem' }} disabled={!selectedEl}><i className="bi bi-palette me-1"></i>Estilos</button>
+                                        </div>
+                                    </div>
+                                    <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Dibujo</span>
+                                </div>
+                            </>
+                        )}
+
+                        {activeTab === 'insertar' && (
+                            <>
+                                <div className="d-flex gap-3">
+                                    <div className="d-flex flex-column align-items-center">
+                                        <button onClick={() => addElement('heading')} className="btn btn-light mb-1"><i className="bi bi-type-h1 fs-4"></i></button>
+                                        <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Título</span>
+                                    </div>
+                                    <div className="d-flex flex-column align-items-center">
+                                        <button onClick={() => addElement('text')} className="btn btn-light mb-1"><i className="bi bi-fonts fs-4"></i></button>
+                                        <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Texto</span>
+                                    </div>
+                                    <div className="d-flex flex-column align-items-center">
+                                        <button onClick={() => addElement('shape')} className="btn btn-light mb-1"><i className="bi bi-square fs-4"></i></button>
+                                        <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Forma</span>
                                     </div>
                                     <div className="vr mx-2"></div>
-                                    <div className="d-flex flex-wrap gap-1 align-content-center" style={{ maxWidth: '200px' }}>
-                                        {COLORS.map(color => (
-                                            <button key={color} onClick={() => updateSlideBackground(color)} style={{ width: 20, height: 20, background: color, border: '1px solid #ddd', borderRadius: '2px' }} />
+                                    <div className="d-flex flex-column align-items-center">
+                                        <button onClick={() => openImageLibrary('element')} className="btn btn-light mb-1"><i className="bi bi-image fs-4"></i></button>
+                                        <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Imagen</span>
+                                    </div>
+                                    <div className="d-flex flex-column align-items-center">
+                                        <button
+                                            onClick={() => addImageElement(IMAGE_LIBRARY.logos[0].url)}
+                                            className="btn btn-light mb-1"
+                                        >
+                                            <img src={IMAGE_LIBRARY.logos[0].url} alt="" style={{ width: 24, height: 24 }} />
+                                        </button>
+                                        <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Logo Oasis</span>
+                                    </div>
+                                    <div className="d-flex flex-column align-items-center">
+                                        <button
+                                            onClick={() => { setImageLibraryCategory('social'); openImageLibrary('element'); }}
+                                            className="btn btn-light mb-1"
+                                        >
+                                            <i className="bi bi-share fs-4"></i>
+                                        </button>
+                                        <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Redes</span>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {activeTab === 'diseño' && (
+                            <>
+                                <div className="d-flex flex-column align-items-center px-3 border-end">
+                                    <button onClick={() => openImageLibrary('background')} className="btn btn-light mb-1"><i className="bi bi-card-image fs-4"></i></button>
+                                    <span className="small text-muted" style={{ fontSize: '0.7rem' }}>Fondo</span>
+                                </div>
+                                <div className="d-flex flex-column align-items-center px-3">
+                                    <div className="d-flex gap-2 mb-1 overflow-auto" style={{ maxWidth: '400px', paddingBottom: '5px' }}>
+                                        {THEMES.map(theme => (
+                                            <button
+                                                key={theme.id}
+                                                onClick={() => applyTheme(theme)}
+                                                className="btn btn-sm p-0 flex-shrink-0"
+                                                style={{
+                                                    width: '70px',
+                                                    height: '40px',
+                                                    background: theme.background,
+                                                    border: '2px solid #ddd',
+                                                    borderRadius: '4px',
+                                                    position: 'relative'
+                                                }}
+                                                title={theme.name}
+                                            >
+                                                <span style={{ fontSize: '0.5rem', color: theme.textColor, position: 'absolute', top: 2, left: 4 }}>Aa</span>
+                                                <div style={{ position: 'absolute', bottom: 2, right: 4, width: '10px', height: '10px', background: theme.accent, borderRadius: '50%' }}></div>
+                                            </button>
                                         ))}
                                     </div>
-                                </>
-                            )}
+                                    <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Temas</span>
+                                </div>
+                                <div className="vr mx-2"></div>
+                                <div className="d-flex flex-wrap gap-1 align-content-center" style={{ maxWidth: '200px' }}>
+                                    {COLORS.map(color => (
+                                        <button key={color} onClick={() => updateSlideBackground(color)} style={{ width: 20, height: 20, background: color, border: '1px solid #ddd', borderRadius: '2px' }} />
+                                    ))}
+                                </div>
+                            </>
+                        )}
 
-                            {activeTab === 'transiciones' && (
-                                <>
-                                    <div className="d-flex gap-3 align-items-center">
-                                        <select
-                                            className="form-select form-select-sm"
-                                            style={{ width: '220px' }}
-                                            value={currentSlideData.transitionType || 'fade'}
-                                            onChange={(e) => {
-                                                const slides = getSlides(currentPresentation);
-                                                const updatedSlides = [...slides];
-                                                updatedSlides[selectedSlide] = { ...updatedSlides[selectedSlide], transitionType: e.target.value };
-                                                setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
-                                            }}
-                                        >
-                                            <option value="fade">Desvanecer (Estándar)</option>
-                                            <option value="morph">Transformar (PowerPoint Morph)</option>
-                                            <option value="infinite">Movimiento Infinito (Prezi)</option>
-                                            <option value="slide">Deslizar</option>
-                                            <option value="zoom">Zoom</option>
-                                        </select>
-                                        <span className="small text-muted">Aplica a esta diapositiva</span>
-                                    </div>
-                                </>
-                            )}
-                        </div>
+                        {activeTab === 'transiciones' && (
+                            <>
+                                <div className="d-flex gap-3 align-items-center">
+                                    <select
+                                        className="form-select form-select-sm"
+                                        style={{ width: '220px' }}
+                                        value={currentSlideData.transitionType || 'fade'}
+                                        onChange={(e) => {
+                                            const slides = getSlides(currentPresentation);
+                                            const updatedSlides = [...slides];
+                                            updatedSlides[selectedSlide] = { ...updatedSlides[selectedSlide], transitionType: e.target.value };
+                                            setCurrentPresentation({ ...currentPresentation, slides: updatedSlides });
+                                        }}
+                                    >
+                                        <option value="fade">Desvanecer (Estándar)</option>
+                                        <option value="morph">Transformar (PowerPoint Morph)</option>
+                                        <option value="infinite">Movimiento Infinito (Prezi)</option>
+                                        <option value="slide">Deslizar</option>
+                                        <option value="zoom">Zoom</option>
+                                    </select>
+                                    <span className="small text-muted">Aplica a esta diapositiva</span>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -1764,7 +1552,7 @@ const OasisPress = () => {
                                                         width: 40,
                                                         height: 28,
                                                         background: grad.value,
-                                                        border: currentSlideData.backgroundGradient === grad.value ? `2px solid ${theme.colors.primary}` : '2px solid #ddd',
+                                                        border: currentSlideData.backgroundGradient === grad.value ? `2px solid ${theme.colors.primary}` : '1px solid #ddd',
                                                         borderRadius: 4
                                                     }}
                                                     onClick={() => updateSlideBackgroundImage('', grad.value)}
