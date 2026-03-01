@@ -80,14 +80,24 @@ const DesktopNavbar = () => {
                                     color: active ? '#5b2ea6' : '#435566', 
                                     fontWeight: active ? 700 : 500,
                                     fontSize: '0.9rem',
-                                    transition: 'all 0.2s',
+                                    transition: 'all 0.2s ease-in-out',
                                     borderBottom: active ? '2px solid #5b2ea6' : '2px solid transparent',
+                                    transform: 'translateY(0)',
+                                    boxShadow: 'none',
                                 }}
                                 onMouseEnter={(e) => {
-                                    if (!active) e.currentTarget.style.background = 'rgba(91,46,166,0.05)';
+                                    if (!active) {
+                                        e.currentTarget.style.background = 'rgba(91,46,166,0.05)';
+                                        e.currentTarget.style.transform = 'translateY(-2px)';
+                                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(91,46,166,0.15)';
+                                    }
                                 }}
                                 onMouseLeave={(e) => {
-                                    if (!active) e.currentTarget.style.background = 'transparent';
+                                    if (!active) {
+                                        e.currentTarget.style.background = 'transparent';
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                    }
                                 }}
                             >
                                 <Icon size={18} strokeWidth={active ? 2.5 : 2} />
@@ -106,14 +116,24 @@ const DesktopNavbar = () => {
                                 color: pathname.startsWith('/admin') ? '#5b2ea6' : '#435566', 
                                 fontWeight: pathname.startsWith('/admin') ? 700 : 500,
                                 fontSize: '0.9rem',
-                                transition: 'all 0.2s',
+                                transition: 'all 0.2s ease-in-out',
                                 borderBottom: pathname.startsWith('/admin') ? '2px solid #5b2ea6' : '2px solid transparent',
+                                transform: 'translateY(0)',
+                                boxShadow: 'none',
                             }}
                             onMouseEnter={(e) => {
-                                if (!pathname.startsWith('/admin')) e.currentTarget.style.background = 'rgba(91,46,166,0.05)';
+                                if (!pathname.startsWith('/admin')) {
+                                    e.currentTarget.style.background = 'rgba(91,46,166,0.05)';
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(91,46,166,0.15)';
+                                }
                             }}
                             onMouseLeave={(e) => {
-                                if (!pathname.startsWith('/admin')) e.currentTarget.style.background = 'transparent';
+                                if (!pathname.startsWith('/admin')) {
+                                    e.currentTarget.style.background = 'transparent';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = 'none';
+                                }
                             }}
                         >
                             <ShieldCheck size={18} strokeWidth={pathname.startsWith('/admin') ? 2.5 : 2} />
@@ -154,10 +174,20 @@ const DesktopNavbar = () => {
                                     background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', 
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', 
                                     gap: '6px', fontWeight: 700, cursor: 'pointer',
-                                    padding: '0 12px', fontSize: '0.8rem'
+                                    padding: '0 12px', fontSize: '0.8rem',
+                                    transition: 'all 0.2s ease-in-out',
+                                    transform: 'translateY(0)', boxShadow: 'none'
                                 }}
-                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.16)'}
-                                onMouseLeave={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = 'none';
+                                }}
                             >
                                 <LogOut size={16} />
                                 <span>Salir</span>
@@ -173,7 +203,9 @@ const DesktopNavbar = () => {
                                 color: '#fff',
                                 fontWeight: 700,
                                 fontSize: '0.85rem',
-                                transition: 'transform 0.2s, box-shadow 0.2s',
+                                transition: 'all 0.2s ease-in-out',
+                                transform: 'translateY(0)',
+                                boxShadow: 'none',
                             }}
                             onMouseEnter={e => {
                                 e.currentTarget.style.transform = 'translateY(-2px)';
