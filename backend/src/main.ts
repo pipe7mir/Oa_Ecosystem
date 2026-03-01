@@ -43,13 +43,32 @@ async function bootstrap() {
     res.json({ status: 'ok', message: 'OASIS API is running' });
   });
 
-  // CORS configuration
+  // ✅ CORS configuration - FIXED for production
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000').split(',').map(o => o.trim());
+  
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`🔒 CORS enabled for: ${allowedOrigins.join(', ')}`);
+  } else {
+    console.log(`🔓 Development mode - CORS enabled for: ${allowedOrigins.join(', ')}`);
+  }
+
   app.enableCors({
-    origin: true, // Allow all origins for now
+    origin: allowedOrigins,
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
   });
+
+  // ✅ Global pipes for validation (class-validator)
+  const { ValidationPipe } = await import('@nestjs/common');
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // Remove properties not in DTO
+      forbidNonWhitelisted: true, // Throw error for extra properties
+      transform: true, // Automatically transform payloads to DTO instances
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  );
 
   await app.listen(port, '0.0.0.0');
   console.log(`✅ Server is running on http://0.0.0.0:${port}`);

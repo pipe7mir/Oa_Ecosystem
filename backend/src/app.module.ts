@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -33,6 +34,15 @@ import { HealthController } from './health.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    
+    // ✅ Rate Limiting: 10 requests per minute per IP
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1 minute in milliseconds
+        limit: 60, // 60 requests per minute
+      },
+    ]),
+    
     TypeOrmModule.forRootAsync({
       useFactory: () => {
         const dbUrl = process.env.DATABASE_URL;

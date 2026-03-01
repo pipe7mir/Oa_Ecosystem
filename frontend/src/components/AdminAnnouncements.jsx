@@ -6,6 +6,15 @@ import apiClient from '../api/client';  // API client for backend requests
 import { uploadCanvasToCloudinary } from '../api/cloudinary';  // Cloudinary upload
 import OasisPress from './OasisPress';  // Presentation editor
 
+// Refactored components
+import AnnouncementPreview from './AdminAnnouncements/AnnouncementPreview';
+import AnnouncementsList from './AdminAnnouncements/AnnouncementsList';
+import RibbonMenu from './AdminAnnouncements/RibbonMenu';
+import DesignPanel from './AdminAnnouncements/DesignPanel';
+import TextPanel from './AdminAnnouncements/TextPanel';
+import BrandPanel from './AdminAnnouncements/BrandPanel';
+import { canvasToBase64, loadImage, composeCanvas } from './AdminAnnouncements/CanvasUtilities';
+
 // Logo assets
 import logoOasis from '../img/logos/LOGO1.png';
 import logoAdventista from '../img/logos/IASD1.png';
@@ -371,6 +380,31 @@ const AdminAnnouncements = () => {
     const [shapeMode, setShapeMode] = useState(false); // listening for click on canvas to place shape
     const [editingElement, setEditingElement] = useState(null); // which element is being inline-edited
     const [editingValue, setEditingValue] = useState('');
+    
+    // New extracted component states
+    const [showDesignPanel, setShowDesignPanel] = useState(false);
+    const [showTextPanel, setShowTextPanel] = useState(false);
+    const [showBrandPanel, setShowBrandPanel] = useState(false);
+    const [activeFormat, setActiveFormat] = useState('normal');
+    const [fontSize, setFontSize] = useState(18);
+    const [selectedColor, setSelectedColor] = useState('#000000');
+    const [textAlign, setTextAlign] = useState('left');
+    const [isBold, setIsBold] = useState(false);
+    const [isItalic, setIsItalic] = useState(false);
+    const [isUnderline, setIsUnderline] = useState(false);
+    const [fontFamily, setFontFamily] = useState('Arial');
+    const [textColor, setTextColor] = useState('#000000');
+    const [textOpacity, setTextOpacity] = useState(1);
+    const [textShadow, setTextShadow] = useState('none');
+    const [letterSpacing, setLetterSpacing] = useState(0);
+    const [lineHeight, setLineHeight] = useState(1.5);
+    const [backgroundColor, setBackgroundColor] = useState('#FFFFFF');
+    const [backgroundGradient, setBackgroundGradient] = useState(null);
+    const [backgroundImage, setBackgroundImage] = useState(null);
+    const [logoSize, setLogoSize] = useState(100);
+    const [logoPosition, setLogoPosition] = useState('top-left');
+    const [logoOpacity, setLogoOpacity] = useState(1);
+    const [selectedLogo, setSelectedLogo] = useState(null);
 
     // Handle responsive breakpoints
     useEffect(() => {
@@ -1498,47 +1532,52 @@ const AdminAnnouncements = () => {
         const fontKey = `${target}Font`;
 
         return (
-            <div className="ribbon-container bg-white border-bottom shadow-sm flex-shrink-0" style={{ borderRadius: '0' }}>
+            <div className="ribbon-container bg-white border-bottom shadow-sm flex-shrink-0" style={{ borderRadius: '0', width: '100%' }}>
 
                 {/* ── Tab row: tabs + acciones derecha (sin barra oscura) ── */}
-                <div className="d-flex border-bottom px-1" style={{ gap: '0', background: '#f8f9fa', alignItems: 'stretch' }}>
-                    {['Inicio', 'Insertar', 'Diseño', 'Formato'].map(tab => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveRibbonTab(tab.toLowerCase())}
-                            style={{
-                                border: 'none',
-                                borderBottom: activeRibbonTab === tab.toLowerCase() ? '3px solid #5b2ea6' : '3px solid transparent',
-                                background: 'transparent',
-                                padding: '5px 16px',
-                                fontSize: '0.82rem',
-                                fontWeight: activeRibbonTab === tab.toLowerCase() ? 700 : 400,
-                                color: activeRibbonTab === tab.toLowerCase() ? '#5b2ea6' : '#555',
-                                cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap',
-                            }}
-                        >{tab}</button>
-                    ))}
+                <div className="d-flex border-bottom px-1" style={{ gap: '0', background: '#f8f9fa', alignItems: 'stretch', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '0' }}>
+                        {['Inicio', 'Insertar', 'Diseño', 'Formato'].map(tab => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveRibbonTab(tab.toLowerCase())}
+                                style={{
+                                    border: 'none',
+                                    borderBottom: activeRibbonTab === tab.toLowerCase() ? '3px solid #5b2ea6' : '3px solid transparent',
+                                    background: 'transparent',
+                                    padding: '5px 12px',
+                                    fontSize: '0.78rem',
+                                    fontWeight: activeRibbonTab === tab.toLowerCase() ? 700 : 400,
+                                    color: activeRibbonTab === tab.toLowerCase() ? '#5b2ea6' : '#555',
+                                    cursor: 'pointer', 
+                                    transition: 'all 0.15s', 
+                                    whiteSpace: 'nowrap',
+                                    minWidth: 'auto'
+                                }}
+                            >{tab}</button>
+                        ))}
+                    </div>
 
                     {/* Acciones al lado derecho — sin barra oscura */}
-                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', paddingRight: '8px', flexShrink: 0 }}>
+                    <div style={{ marginLeft: isMobile ? '0' : 'auto', display: 'flex', alignItems: 'center', gap: '2px', paddingRight: '4px', flexShrink: 0, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
                         <button onClick={() => setShowForm(!showForm)} title="Mis Anuncios"
-                            style={{ border: '1px solid #dee2e6', borderRadius: '6px', background: showForm ? '#ede9fe' : '#fff', color: showForm ? '#5b2ea6' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 9px', cursor: 'pointer', gap: '0', minWidth: '46px', fontSize: '0.55rem', fontWeight: 600 }}>
-                            <i className="bi bi-folder2-open" style={{ fontSize: '0.95rem' }}></i>
+                            style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: showForm ? '#ede9fe' : '#fff', color: showForm ? '#5b2ea6' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 6px', cursor: 'pointer', gap: '0', minWidth: '40px', fontSize: isMobile ? '0.5rem' : '0.55rem', fontWeight: 600 }}>
+                            <i className="bi bi-folder2-open" style={{ fontSize: '0.85rem' }}></i>
                             <span style={{ whiteSpace: 'nowrap' }}>Mis Anuncios</span>
                         </button>
                         <button onClick={handleDownloadPNG} title="Descargar PNG"
-                            style={{ border: '1px solid #dee2e6', borderRadius: '6px', background: '#fff', color: '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 9px', cursor: 'pointer', gap: '0', minWidth: '38px', fontSize: '0.55rem', fontWeight: 600 }}>
-                            <i className="bi bi-image" style={{ fontSize: '0.95rem' }}></i>
+                            style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: '#fff', color: '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 6px', cursor: 'pointer', gap: '0', minWidth: '36px', fontSize: isMobile ? '0.5rem' : '0.55rem', fontWeight: 600 }}>
+                            <i className="bi bi-image" style={{ fontSize: '0.85rem' }}></i>
                             <span>PNG</span>
                         </button>
                         <button onClick={handleSubmit} disabled={isSubmitting} title="Guardar y Publicar"
-                            style={{ border: 'none', borderRadius: '6px', background: isSubmitting ? '#6ee7b7' : '#10b981', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 12px', cursor: isSubmitting ? 'not-allowed' : 'pointer', gap: '0', minWidth: '50px', fontSize: '0.55rem', fontWeight: 700 }}>
-                            <i className={`bi ${isSubmitting ? 'bi-hourglass-split' : 'bi-cloud-arrow-up'}`} style={{ fontSize: '0.95rem' }}></i>
+                            style={{ border: 'none', borderRadius: '4px', background: isSubmitting ? '#6ee7b7' : '#10b981', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 8px', cursor: isSubmitting ? 'not-allowed' : 'pointer', gap: '0', minWidth: '46px', fontSize: isMobile ? '0.5rem' : '0.55rem', fontWeight: 700 }}>
+                            <i className={`bi ${isSubmitting ? 'bi-hourglass-split' : 'bi-cloud-arrow-up'}`} style={{ fontSize: '0.85rem' }}></i>
                             <span>{isSubmitting ? 'Guardando…' : 'Guardar'}</span>
                         </button>
                         <button onClick={handleFullscreen} title="Pantalla completa"
-                            style={{ border: '1px solid #dee2e6', borderRadius: '6px', background: '#fff', color: '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 9px', cursor: 'pointer', gap: '0', minWidth: '46px', fontSize: '0.55rem', fontWeight: 600 }}>
-                            <i className="bi bi-arrows-fullscreen" style={{ fontSize: '0.95rem' }}></i>
+                            style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: '#fff', color: '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 6px', cursor: 'pointer', gap: '0', minWidth: '40px', fontSize: isMobile ? '0.5rem' : '0.55rem', fontWeight: 600 }}>
+                            <i className="bi bi-arrows-fullscreen" style={{ fontSize: '0.85rem' }}></i>
                             <span>Compartir</span>
                         </button>
                     </div>
@@ -1550,20 +1589,21 @@ const AdminAnnouncements = () => {
                     alignItems: 'stretch',
                     padding: isMobile ? '2px 4px' : '4px 6px',
                     minHeight: isMobile ? 'auto' : '62px',
-                    overflowX: 'auto',
+                    overflowX: isMobile ? 'auto' : 'visible',
                     background: '#fff',
-                    flexWrap: isMobile ? 'nowrap' : 'nowrap',
-                    scrollbarWidth: 'none'
+                    flexWrap: 'nowrap',
+                    scrollbarWidth: 'none',
+                    gap: isMobile ? '2px' : '0px'
                 }}>
 
                     {/* ═══════ INICIO ═══════ */}
                     {activeRibbonTab === 'inicio' && (
                         <>
                             {/* ── Grupo: Elemento ── */}
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px', borderRight: '1px solid #e9ecef', justifyContent: 'space-between', gap: '3px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 6px', borderRight: '1px solid #e9ecef', justifyContent: 'space-between', gap: '2px', minWidth: isMobile ? '90px' : '100px' }}>
                                 <select
                                     className="form-select form-select-sm"
-                                    style={{ fontSize: '0.73rem', width: '112px', height: '26px', padding: '0 6px' }}
+                                    style={{ fontSize: '0.65rem', width: '100%', height: '24px', padding: '0 4px' }}
                                     value={selectedElementId || 'title'}
                                     onChange={(e) => setSelectedElementId(e.target.value === 'title' ? null : e.target.value)}
                                 >
@@ -1577,36 +1617,32 @@ const AdminAnnouncements = () => {
                                     <option value="location">Ubicación</option>
                                     <option value="content">Contenido</option>
                                 </select>
-                                <span style={{ fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px' }}>Elemento</span>
+                                <span style={{ fontSize: '0.52rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.2px' }}>Elemento</span>
                             </div>
 
                             {/* ── Grupo: Fuente (unificado: familia + tamaño + N K S tachado sombra) ── */}
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '2px 10px', borderRight: '1px solid #e9ecef', justifyContent: 'center', gap: '3px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '2px 6px', borderRight: '1px solid #e9ecef', justifyContent: 'center', gap: '2px', minWidth: isMobile ? 'auto' : '220px' }}>
                                 {/* Fila 1: selector tipografía + A- tamaño A+ */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexWrap: 'wrap' }}>
                                     <select
                                         className="form-select form-select-sm"
-                                        style={{ fontSize: '0.7rem', width: '108px', height: '24px', padding: '0 4px' }}
+                                        style={{ fontSize: '0.63rem', width: isMobile ? '90px' : '95px', height: '22px', padding: '0 3px' }}
                                         value={formData[fontKey] || 'MoonRising'}
                                         onChange={(e) => set(fontKey, e.target.value)}
                                     >
                                         {FONTS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
                                         <option value="Arial">Arial</option>
                                         <option value="Georgia">Georgia</option>
-                                        <option value="Times New Roman">Times New Roman</option>
-                                        <option value="Courier New">Courier New</option>
-                                        <option value="Verdana">Verdana</option>
-                                        <option value="Trebuchet MS">Trebuchet MS</option>
                                     </select>
                                     <button onClick={() => set(fontSizeKey, Math.max(isLogo ? 10 : 0.1, (formData[fontSizeKey] || 1) - (isLogo ? 5 : 0.1)))}
-                                        style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: '#f8f9fa', width: '22px', height: '24px', fontSize: '0.7rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}
-                                        title="Reducir fuente">A<sup style={{ fontSize: '0.4rem' }}>-</sup></button>
-                                    <span style={{ minWidth: '28px', textAlign: 'center', fontSize: '0.7rem', fontWeight: 700, background: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '4px', padding: '2px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        style={{ border: '1px solid #dee2e6', borderRadius: '3px', background: '#f8f9fa', width: '20px', height: '22px', fontSize: '0.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, padding: '0' }}
+                                        title="Reducir fuente">A<sup style={{ fontSize: '0.35rem' }}>−</sup></button>
+                                    <span style={{ minWidth: '24px', textAlign: 'center', fontSize: '0.6rem', fontWeight: 700, background: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '3px', padding: '0 2px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         {isLogo ? Math.round(formData[fontSizeKey] || 60) : (formData[fontSizeKey] || 1).toFixed(1)}
                                     </span>
                                     <button onClick={() => set(fontSizeKey, Math.min(600, (formData[fontSizeKey] || 1) + (isLogo ? 5 : 0.1)))}
-                                        style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: '#f8f9fa', width: '22px', height: '24px', fontSize: '0.7rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}
-                                        title="Agrandar fuente">A<sup style={{ fontSize: '0.4rem' }}>+</sup></button>
+                                        style={{ border: '1px solid #dee2e6', borderRadius: '3px', background: '#f8f9fa', width: '20px', height: '22px', fontSize: '0.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, padding: '0' }}
+                                        title="Agrandar fuente">A<sup style={{ fontSize: '0.35rem' }}>+</sup></button>
                                 </div>
                                 {/* Fila 2: estilos (N K S tachado sombra) */}
                                 {!isLogo && (
@@ -2049,7 +2085,7 @@ const AdminAnnouncements = () => {
             <FontPreloader />
 
             {/* ── Header: solo el selector de modo ── */}
-            <header className="d-flex align-items-center px-3 bg-white border-bottom flex-shrink-0" style={{ height: '36px', minHeight: '36px', gap: '8px' }}>
+            <header className="d-flex align-items-center px-3 bg-white border-bottom flex-shrink-0" style={{ height: '36px', minHeight: '36px', gap: '8px', position: 'sticky', top: 0, zIndex: 1000 }}>
                 <img src={logoOasis} style={{ height: '22px', cursor: 'pointer' }} alt="Oasis" onClick={() => navigate('/admin')} title="Volver al inicio" />
                 <div style={{ width: '1px', height: '16px', background: '#ddd' }} />
                 <div className="nav nav-pills p-0" style={{ background: '#f8f9fa', borderRadius: '20px', padding: '2px', fontSize: '0.7rem' }}>
@@ -2066,8 +2102,8 @@ const AdminAnnouncements = () => {
                 </div>
             </header>
 
-            {/* Ribbon Menu */}
-            {activeMode === 'anuncios' && renderRibbon()}
+            {/* Ribbon Menu - Always visible and sticky */}
+            {activeMode === 'anuncios' && <div style={{ position: 'sticky', top: '36px', zIndex: 999, backgroundColor: '#fff', borderBottomWidth: '1px', borderBottomColor: '#e9ecef' }}>{renderRibbon()}</div>}
 
             {/* Main Workspace */}
             <div className="canva-workspace" style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: '1 1 0%', minHeight: 0, overflow: 'hidden' }}>
@@ -2460,82 +2496,18 @@ const AdminAnnouncements = () => {
                     )}
                 </main>
 
-                {/* Side Panel: Mis Anuncios (Right Drawer) */}
-                <AnimatePresence>
-                    {showForm && (
-                        <motion.div
-                            initial={{ x: '100%' }}
-                            animate={{ x: 0 }}
-                            exit={{ x: '100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="announcements-list-drawer bg-white border-start shadow-lg"
-                            style={{
-                                position: 'fixed',
-                                top: activeMode === 'anuncios' ? '140px' : '40px',
-                                right: 0,
-                                bottom: 0,
-                                width: isMobile ? '100%' : '280px',
-                                zIndex: 1150,
-                                overflowY: 'auto',
-                                borderRadius: '0'
-                            }}
-                        >
-                            <div className="p-2 px-3 border-bottom d-flex justify-content-between align-items-center sticky-top bg-white">
-                                <h6 className="fw-bold mb-0" style={{ fontSize: '0.8rem' }}>MIS ANUNCIOS</h6>
-                                <button className="btn-close" style={{ fontSize: '0.6rem' }} onClick={() => setShowForm(false)}></button>
-                            </div>
-                            <div className="p-0">
-                                {announcements.length === 0 ? (
-                                    <div className="text-center text-muted py-4" style={{ fontSize: '0.75rem' }}>No hay anuncios guardados</div>
-                                ) : (
-                                    <div className="list-group list-group-flush">
-                                        {announcements.map(ann => {
-                                            const imgUrl = (ann.imageUrl || ann.image_url)
-                                                ? ((ann.imageUrl || ann.image_url).startsWith('http')
-                                                    ? (ann.imageUrl || ann.image_url)
-                                                    : `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${ann.imageUrl || ann.image_url}`)
-                                                : null;
-                                            return (
-                                                <div key={ann.id} className="list-group-item d-flex align-items-center justify-content-between py-2 px-2 border-bottom">
-                                                    <div className="d-flex align-items-center gap-2" style={{ minWidth: 0, flex: 1 }}>
-                                                        <img
-                                                            src={imgUrl || logoOasis}
-                                                            className="rounded shadow-sm flex-shrink-0"
-                                                            style={{ width: '40px', height: '50px', objectFit: 'cover', border: '1px solid #e9ecef', borderRadius: '4px' }}
-                                                            alt={ann.title}
-                                                        />
-                                                        <div style={{ minWidth: 0, flex: 1 }}>
-                                                            <div className="fw-semibold text-truncate" style={{ fontSize: '0.7rem' }}>{ann.title || 'Sin título'}</div>
-                                                            <span className="badge" style={{ fontSize: '0.5rem', background: theme.colors.primary, color: 'white' }}>{ann.tag}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="d-flex gap-1 flex-shrink-0">
-                                                        <button
-                                                            className="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center"
-                                                            style={{ width: '26px', height: '26px', borderRadius: '4px', fontSize: '0.65rem' }}
-                                                            onClick={(e) => { e.stopPropagation(); handleEdit(ann); }}
-                                                            title="Editar anuncio"
-                                                        >
-                                                            <i className="bi bi-pencil"></i>
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center"
-                                                            style={{ width: '26px', height: '26px', borderRadius: '4px', fontSize: '0.65rem' }}
-                                                            onClick={(e) => { e.stopPropagation(); handleDelete(ann.id); }}
-                                                            title="Eliminar anuncio"
-                                                        >
-                                                            <i className="bi bi-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                {/* Side Panel: Mis Anuncios (Right Drawer) - NEW REFACTORED COMPONENT */}
+                <AnnouncementsList
+                    showForm={showForm}
+                    setShowForm={setShowForm}
+                    announcements={announcements}
+                    handleEdit={handleEdit}
+                    handleDelete={handleDelete}
+                    logoOasis={logoOasis}
+                    isMobile={isMobile}
+                    activeMode={activeMode}
+                    theme={theme}
+                />
             </div>
 
             {/* Library Modal */}
