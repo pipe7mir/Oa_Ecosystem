@@ -1,13 +1,9 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
-import { theme } from './styles/theme';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 // ── Layouts ──────────────────────────────────────────
 import LayoutMaestro from './components/LayoutMaestro';  // nuevo: sidebar / bottom-nav
 import AdminLayout from '../components/AdminLayout';    // admin: sin cambios
-
-// ── Gateway inteligente PWA/Web ───────────────────────
-import PWAGateway from './components/PWAGateway';
 
 // ── Módulos Públicos ──────────────────────────────────
 import Home from './modules/Home';
@@ -40,12 +36,12 @@ const App = () => {
                 {/* ╔══════════════════════════════════╗
                     ║  RUTAS PÚBLICAS — LayoutMaestro  ║
                     ╚══════════════════════════════════╝
-                    En Desktop → sidebar lateral fija
+                    En Desktop → navbar horizontal arriba
                     En Mobile  → header sticky + BottomNav */}
                 <Route element={<LayoutMaestro />}>
 
-                    {/* ── Raíz inteligente: Landing (web) o redirect (PWA) ── */}
-                    <Route path="/" element={<PWAGateway />} />
+                    {/* ── Página de inicio ── */}
+                    <Route path="/" element={<Home />} />
 
                     {/* ── Páginas públicas ── */}
                     <Route path="/live" element={<Live />} />
