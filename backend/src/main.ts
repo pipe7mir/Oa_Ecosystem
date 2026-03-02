@@ -23,9 +23,9 @@ async function bootstrap() {
     logger: ['error', 'warn', 'log'],
   });
 
-  // Configure body parser with 10MB limit for base64 images
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  // Configure body parser with 50MB limit for base64 images
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
   // Health check endpoints BEFORE global prefix
   const httpAdapter = app.getHttpAdapter();
