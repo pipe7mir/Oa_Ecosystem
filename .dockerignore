@@ -1,0 +1,59 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Node
+node_modules
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*.iml
+.DS_Store
+
+# Build artifacts
+dist
+build
+.next
+.nuxt
+out
+
+# Testing
+.coverage
+.nyc_output
+junit.xml
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+
+# CI/CD
+.github
+.gitlab-ci.yml
+Jenkinsfile
+.travis.yml
+
+# Development
+.husky
+.lintstagedrc
+.eslintignore
+.prettierignore
+
+# Railway
+Procfile
+
+# OS
+Thumbs.db
+.DS_Store
