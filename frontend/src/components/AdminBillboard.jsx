@@ -89,12 +89,46 @@ const AdminBillboard = () => {
     };
 
     /**
-     * Convierte un archivo de imagen a Base64 de alta calidad
+     * Convierte un archivo de imagen a Base64 comprimido
+     * Redimensiona a máximo 1920x1080 y comprime con calidad 0.75
      */
     const convertImageToBase64 = (file) => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
+            reader.onload = (e) => {
+                const img = new window.Image();
+                img.onload = () => {
+                    // Crear canvas y redimensionar
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Máximas dimensiones: 1920x1080
+                    const maxWidth = 1920;
+                    const maxHeight = 1080;
+                    let { width, height } = img;
+                    
+                    // Calcular las nuevas dimensiones manteniendo la relación de aspecto
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+                    if (height > maxHeight) {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Exportar como JPEG con compresión (calidad 0.75 = 75%)
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+                    console.log(`🗜️  Imagen comprimida: ${(compressedBase64.length / 1024).toFixed(1)}KB (${width}x${height}px)`);
+                    resolve(compressedBase64);
+                };
+                img.onerror = () => reject(new Error('No se pudo cargar la imagen'));
+                img.src = e.target.result;
+            };
             reader.onerror = reject;
             reader.readAsDataURL(file);
         });
@@ -407,19 +441,15 @@ const AdminBillboard = () => {
                                             setSelectedFile(file);
                                             setFormData({ ...formData, media_type: 'image' });
                                             
-                                            // Crear vista previa temporal con el archivo seleccionado
-                                            const reader = new FileReader();
-                                            reader.onload = (ev) => {
-                                                setFormData(prev => ({ ...prev, media_url: ev.target.result }));
-                                            };
-                                            reader.readAsDataURL(file);
+                                            // Crear vista previa comprimida (igual a la que se subirá)
+                                            const compressedBase64 = await convertImageToBase64(file);
+                                            setFormData(prev => ({ ...prev, media_url: compressedBase64 }));
                                         }
                                     }}
                                 />
                                 <small className="text-primary d-block mt-1">
                                     <i className="bi bi-info-circle me-1"></i>
-                                    Dimensiones recomendadas: <strong>1920x1080px</strong> (Relación 16:9). 
-                                    Se usará <strong>Base64</strong> para mejor calidad.
+                                    Max <strong>1920x1080px</strong> (16:9). Se comprime automáticamente a <strong>JPEG 75%</strong>.
                                 </small>
                             </div>
                             <div>
