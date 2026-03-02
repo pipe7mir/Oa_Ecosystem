@@ -193,12 +193,20 @@ const AdminBillboard = () => {
                 }
             }
 
+            // Validar que media_url no esté vacía
+            if (!mediaUrl) {
+                alert('⚠️ Debes seleccionar una imagen para el billboard');
+                setUploading(false);
+                return;
+            }
+
             const itemToSave = { 
                 ...formData, 
                 media_url: mediaUrl,
-                styles: styleEditor // Guardar estilos personalizados
+                styles: styleEditor
             };
             console.log('💾 Guardando billboard en DB:', itemToSave);
+            console.log('📸 URL de imagen:', mediaUrl);
             
             if (editingItem) {
                 await apiClient.put(`/admin/billboards/${editingItem.id}`, itemToSave);
@@ -228,16 +236,21 @@ const AdminBillboard = () => {
     };
 
     const normalizeMediaUrl = (url) => {
-        if (!url) return url;
-        if (url.startsWith('http://') || url.startsWith('https://')) {
+        if (!url) return null;
+        
+        // Si ya es una URL completa (http/https), devuélvela tal cual
+        if (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) {
             return url;
         }
-        if (url.startsWith('/uploads/')) {
+        
+        // Si es una ruta relativa de uploads
+        if (typeof url === 'string' && url.startsWith('/uploads/')) {
             const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000';
             const backendUrl = apiBase.replace(/\/api\/?$/, '');
             return `${backendUrl}${url}`;
         }
-        return url;
+        
+        return url || null;
     };
 
     // Seleccionar imagen de la galería
@@ -391,6 +404,135 @@ const AdminBillboard = () => {
                     </div>
                 )}
             </motion.div>
+        );
+    };
+
+    // Renderizar vista previa fullscreen del Hero
+    const renderPreview = () => {
+        const displayUrl = previewUrl || normalizeMediaUrl(formData.media_url);
+        
+        return (
+            <AnimatePresence>
+                <motion.div 
+                    onClick={() => setShowPreview(false)}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        background: 'rgba(0,0,0,0.95)', zIndex: 9999,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: '20px',
+                        backdropFilter: 'blur(10px)'
+                    }}
+                >
+                    <motion.div 
+                        onClick={e => e.stopPropagation()}
+                        initial={{ scale: 0.9, y: 50 }}
+                        animate={{ scale: 1, y: 0 }}
+                        transition={{ type: 'spring', damping: 25 }}
+                        style={{
+                            width: '100%', maxWidth: '1400px', height: '80vh',
+                            position: 'relative', borderRadius: '20px', overflow: 'hidden',
+                            boxShadow: '0 25px 80px rgba(102, 126, 234, 0.4)',
+                            border: `2px solid ${theme.colors.primary}`
+                        }}
+                    >
+                    {/* Botón cerrar */}
+                    <button
+                        onClick={() => setShowPreview(false)}
+                        style={{
+                            position: 'absolute', top: '20px', right: '20px', zIndex: 10,
+                            background: 'rgba(255,255,255,0.2)', border: 'none',
+                            borderRadius: '50%', width: '40px', height: '40px',
+                            color: '#fff', fontSize: '1.5rem', cursor: 'pointer',
+                            backdropFilter: 'blur(10px)'
+                        }}
+                    >
+                        ×
+                    </button>
+
+                    {/* Fondo */}
+                    <div style={{
+                        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                        backgroundImage: displayUrl ? `url(${displayUrl})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        backgroundSize: 'cover', backgroundPosition: 'center'
+                    }} />
+
+                    {/* Overlay */}
+                    <div style={{
+                        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                        background: 'linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%)'
+                    }} />
+
+                    {/* Contenido */}
+                    <div style={{
+                        position: 'relative', zIndex: 1, color: '#fff',
+                        height: '100%', display: 'flex', alignItems: 'center',
+                        padding: '0 60px'
+                    }}>
+                        <div style={{ maxWidth: '700px' }}>
+                            <h1 style={{
+                                fontFamily: 'ModernAge, sans-serif',
+                                fontSize: 'clamp(2.5rem, 8vw, 4.5rem)',
+                                fontWeight: 'bold',
+                                marginBottom: '1.5rem',
+                                lineHeight: 1.1,
+                                textShadow: '0 4px 15px rgba(0,0,0,0.5)',
+                                background: `linear-gradient(135deg, #ffffff 0%, ${theme.colors.secondary} 100%)`,
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent'
+                            }}>
+                                {formData.title || 'Título del Hero'}
+                            </h1>
+                            <p style={{
+                                fontSize: 'clamp(1rem, 2.5vw, 1.25rem)',
+                                marginBottom: '2rem',
+                                opacity: 0.9,
+                                lineHeight: 1.6,
+                                textShadow: '0 2px 8px rgba(0,0,0,0.5)'
+                            }}>
+                                {formData.description || 'Descripción de la diapositiva del hero'}
+                            </p>
+                            {formData.button_text && (
+                                <button style={{
+                                    padding: '14px 32px',
+                                    borderRadius: '16px',
+                                    border: 'none',
+                                    background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
+                                    color: '#fff',
+                                    fontWeight: 'bold',
+                                    fontSize: '1.1rem',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 8px 24px rgba(91,46,166,0.4)',
+                                    transition: 'all 0.3s'
+                                }}>
+                                    {formData.button_text}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Badge de vista previa */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        style={{
+                            position: 'absolute', bottom: '20px', right: '20px',
+                        background: 'rgba(255,255,255,0.2)',
+                        backdropFilter: 'blur(10px)',
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        color: '#fff',
+                        fontSize: '0.85rem',
+                        fontWeight: '600'
+                    }}>
+                            <i className="bi bi-eye me-2"></i>Vista Previa
+                    </motion.div>
+                    </motion.div>
+                </motion.div>
+            </AnimatePresence>
         );
     };
 
@@ -1011,19 +1153,39 @@ const AdminBillboard = () => {
                                             overflow: 'hidden', 
                                             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
                                             flexShrink: 0,
-                                            position: 'relative'
+                                            position: 'relative',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
                                         }}>
-                                            {item.media_type === 'image' ? (
+                                            {item.media_type === 'image' && item.media_url ? (
                                                 <img 
                                                     src={normalizeMediaUrl(item.media_url)} 
-                                                    alt="" 
-                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                                    alt="thumbnail" 
+                                                    style={{ 
+                                                        width: '100%', 
+                                                        height: '100%', 
+                                                        objectFit: 'cover',
+                                                        display: 'block'
+                                                    }} 
                                                     onError={(e) => {
+                                                        console.warn('⚠️ Error cargando imagen:', e.target.src);
                                                         e.target.style.display = 'none';
-                                                        e.target.nextSibling.style.display = 'flex';
                                                     }}
                                                 />
                                             ) : null}
+                                            {(!item.media_url || !item.media_type === 'image') && (
+                                                <div style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    color: '#fff'
+                                                }}>
+                                                    <i className="bi bi-image" style={{ fontSize: '1.5rem', opacity: 0.5 }}></i>
+                                                </div>
+                                            )}
                                             <div 
                                                 className="w-100 h-100 d-flex align-items-center justify-content-center text-white position-absolute top-0 start-0"
                                                 style={{ display: item.media_type === 'video' ? 'flex' : 'none', background: 'rgba(0,0,0,0.5)' }}
