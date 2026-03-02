@@ -39,6 +39,10 @@ const Hero = () => {
         try {
             const { data } = await apiClient.get('/billboards');
             const activeItems = data || [];
+            console.log('🎬 Billboards recibidos:', activeItems);
+            activeItems.forEach((item, idx) => {
+                console.log(`   Slide ${idx + 1}: "${item.title}" - URL: ${item.media_url}`);
+            });
             setBillboards(activeItems);
         } catch (e) {
             console.error('Error al cargar la cartelera:', e);
@@ -100,10 +104,12 @@ const Hero = () => {
      * Si la URL es relativa (/uploads/...), la convierte a URL absoluta del backend
      */
     const normalizeMediaUrl = (url) => {
+        console.log('🔍 Normalizando URL:', url);
         if (!url) return url;
         
         // Si ya es una URL completa (http/https), retornarla tal cual
         if (url.startsWith('http://') || url.startsWith('https://')) {
+            console.log('   ✅ URL completa detectada:', url);
             return url;
         }
         
@@ -112,9 +118,12 @@ const Hero = () => {
             const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000';
             // Remover /api del final si existe
             const backendUrl = apiBase.replace(/\/api\/?$/, '');
-            return `${backendUrl}${url}`;
+            const fullUrl = `${backendUrl}${url}`;
+            console.log('   🔧 URL relativa convertida a:', fullUrl);
+            return fullUrl;
         }
         
+        console.log('   ⚠️ URL no reconocida, devolviendo tal cual:', url);
         return url;
     };
 

@@ -7,6 +7,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v2 as cloudinary } from 'cloudinary';
 
+// Configure Cloudinary if CLOUDINARY_URL is set
+if (process.env.CLOUDINARY_URL) {
+  console.log('☁️ Cloudinary configured for billboards');
+} else {
+  console.log('⚠️ CLOUDINARY_URL not set, billboards will use local storage');
+}
+
 // Admin RESTful resource: /admin/billboards
 @Controller('admin/billboards')
 @UseGuards(JwtAuthGuard)
@@ -67,6 +74,7 @@ export class AdminBillboardsController {
       // Return full URL
       const apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:3000';
       const fullUrl = `${apiBaseUrl}/uploads/${filename}`;
+      console.log(`✅ Local billboard saved, returning URL: ${fullUrl}`);
       
       return { success: true, imageUrl: fullUrl };
     } catch (error: any) {

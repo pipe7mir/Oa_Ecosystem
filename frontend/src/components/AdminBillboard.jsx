@@ -112,8 +112,12 @@ const AdminBillboard = () => {
 
             // Si hay archivo seleccionado, convertirlo a base64 y subirlo
             if (selectedFile) {
+                console.log('📤 Subiendo imagen:', selectedFile.name);
                 const imageBase64 = await convertImageToBase64(selectedFile);
+                console.log('📸 Base64 generado, tamaño:', (imageBase64.length / 1024).toFixed(1) + 'KB');
+                
                 const { data } = await apiClient.post('/admin/billboards/upload-image', { imageBase64 });
+                console.log('📥 Respuesta del servidor:', data);
                 
                 if (data.success) {
                     mediaUrl = data.imageUrl;
@@ -124,6 +128,7 @@ const AdminBillboard = () => {
             }
 
             const itemToSave = { ...formData, media_url: mediaUrl };
+            console.log('💾 Guardando billboard en DB:', itemToSave);
             
             if (editingItem) {
                 await apiClient.put(`/admin/billboards/${editingItem.id}`, itemToSave);
