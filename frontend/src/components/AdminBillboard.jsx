@@ -4,6 +4,7 @@ import apiClient from '../api/client';
 import GlassCard from '../react-ui/components/GlassCard';
 import Button from '../react-ui/components/Button';
 import { theme } from '../react-ui/styles/theme';
+import useImageCompression from '../hooks/useImageCompression';
 
 /**
  * Componente AdminBillboard
@@ -19,6 +20,7 @@ const AdminBillboard = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
+    const { compressImage, validateCompressedImage } = useImageCompression();
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -90,50 +92,29 @@ const AdminBillboard = () => {
 
     /**
      * Convierte un archivo de imagen a Base64 altamente comprimido
-     * Redimensiona a máximo 1280x720 y comprime con calidad 0.5 (muy agresivo)
-     * Minimiza tamaño para evitar errores 413 en servidores con límites de payload
+     * Usa browser-image-compression para reducción más agresiva y profesional
+     * Objetivo: < 900KB en Base64 para evitar Error 413
      */
-    const convertImageToBase64 = (file) => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new window.Image();
-                img.onload = () => {
-                    // Crear canvas y redimensionar
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    
-                    // Máximas dimensiones: 1280x720 (reduce tamaño significativamente)
-                    const maxWidth = 1280;
-                    const maxHeight = 720;
-                    let { width, height } = img;
-                    
-                    // Calcular las nuevas dimensiones manteniendo la relación de aspecto
-                    if (width > maxWidth) {
-                        height = Math.round((height * maxWidth) / width);
-                        width = maxWidth;
-                    }
-                    if (height > maxHeight) {
-                        width = Math.round((width * maxHeight) / height);
-                        height = maxHeight;
-                    }
-                    
-                    canvas.width = width;
-                    canvas.height = height;
-                    ctx.drawImage(img, 0, 0, width, height);
-                    
-                    // Exportar como JPEG altamente comprimido (calidad 0.5 = 50%)
-                    // Reduce tamaño en base64 a ~40-60KB para imágenes típicas
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
-                    console.log(`🗜️  Imagen ultra-comprimida: ${(compressedBase64.length / 1024).toFixed(1)}KB (${width}x${height}px)`);
-                    resolve(compressedBase64);
-                };
-                img.onerror = () => reject(new Error('No se pudo cargar la imagen'));
-                img.src = e.target.result;
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
+    const convertImageToBase64 = async (file) => {
+        const result = await compressImage(file, {
+            maxSizeMB: 0.9,           // < 900KB
+            maxWidthOrHeight: 1280,   // 1280x720 Hero resolution
+            initialQuality: 0.75,     // JPEG quality
+            useWebWorker: true,       // Non-blocking
         });
+
+        if (!result.success) {
+            throw new Error('Compression failed');
+        }
+
+        // Validar que está dentro de límites seguros
+        const validation = validateCompressedImage(result.base64);
+        if (!validation.valid) {
+            console.warn(`⚠️ ${validation.reason}`);
+        }
+
+        console.log(`✅ Imagen comprimida: ${result.compressedSizeKB}KB (reducción: ${result.reductionPercent}%)`);
+        return result.base64;
     };
 
     /**
