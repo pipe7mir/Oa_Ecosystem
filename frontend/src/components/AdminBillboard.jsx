@@ -217,6 +217,15 @@ const AdminBillboard = () => {
             const itemToSave = {
                 ...formData,
                 media_url: mediaUrl,
+                mediaUrl,
+                media_type: formData.media_type,
+                mediaType: formData.media_type,
+                button_text: formData.button_text,
+                buttonText: formData.button_text,
+                button_link: formData.button_link,
+                buttonLink: formData.button_link,
+                is_active: formData.is_active,
+                isActive: formData.is_active,
                 styles: styleEditor
             };
             console.log('💾 Guardando billboard en DB:', itemToSave);
