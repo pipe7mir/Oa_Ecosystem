@@ -13,30 +13,65 @@ export class AdminBillboardsController {
     private readonly repo: Repository<Billboard>,
   ) {}
 
+  private toApiBillboard(item: Billboard | null) {
+    if (!item) return null;
+    return {
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      media_url: item.mediaUrl,
+      media_type: item.mediaType,
+      button_text: item.buttonText,
+      button_link: item.buttonLink,
+      order: item.order,
+      is_active: item.isActive,
+      created_at: item.createdAt,
+      updated_at: item.updatedAt,
+    };
+  }
+
+  private fromApiBillboard(body: Partial<Billboard> & Record<string, any>): Partial<Billboard> {
+    return {
+      title: body.title ?? null,
+      description: body.description ?? null,
+      mediaUrl: body.mediaUrl ?? body.media_url ?? null,
+      mediaType: body.mediaType ?? body.media_type ?? 'image',
+      buttonText: body.buttonText ?? body.button_text ?? null,
+      buttonLink: body.buttonLink ?? body.button_link ?? null,
+      order: body.order ?? 0,
+      isActive: body.isActive ?? body.is_active ?? true,
+    };
+  }
+
   @Get()
-  findAll() {
-    return this.repo.find({ order: { order: 'ASC', createdAt: 'DESC' } });
+  async findAll() {
+    const items = await this.repo.find({ order: { order: 'ASC', createdAt: 'DESC' } });
+    return items.map((item) => this.toApiBillboard(item));
   }
 
   @Post()
-  create(@Body() body: Partial<Billboard>) {
-    const entity = this.repo.create(body);
+  async create(@Body() body: Partial<Billboard> & Record<string, any>) {
+    const normalizedBody = this.fromApiBillboard(body);
+    const entity = this.repo.create(normalizedBody);
     return this.repo.save(entity);
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.repo.findOne({ where: { id } });
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    const item = await this.repo.findOne({ where: { id } });
+    return this.toApiBillboard(item);
   }
 
   @Put(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() body: Partial<Billboard>) {
-    return this.repo.update(id, body);
+  async update(@Param('id', ParseIntPipe) id: number, @Body() body: Partial<Billboard> & Record<string, any>) {
+    const normalizedBody = this.fromApiBillboard(body);
+    return this.repo.update(id, normalizedBody);
   }
 
   @Patch(':id')
-  patch(@Param('id', ParseIntPipe) id: number, @Body() body: Partial<Billboard>) {
-    return this.repo.update(id, body);
+  async patch(@Param('id', ParseIntPipe) id: number, @Body() body: Partial<Billboard> & Record<string, any>) {
+    const normalizedBody = this.fromApiBillboard(body);
+    return this.repo.update(id, normalizedBody);
   }
 
   @Delete(':id')

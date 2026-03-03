@@ -3,8 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Billboard } from './billboard.entity';
 import { JwtAuthGuard } from '../common/jwt-auth.guard';
-import * as path from 'path';
-import * as fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
 
 // Public GET /billboards
@@ -15,9 +13,51 @@ export class BillboardsController {
     private readonly repo: Repository<Billboard>,
   ) { }
 
+  private toApiBillboard(item: Billboard) {
+    return {
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      media_url: item.mediaUrl,
+      media_type: item.mediaType,
+      button_text: item.buttonText,
+      button_link: item.buttonLink,
+      order: item.order,
+      is_active: item.isActive,
+      created_at: item.createdAt,
+      updated_at: item.updatedAt,
+    };
+  }
+
+  private configureCloudinary() {
+    if (process.env.CLOUDINARY_URL) {
+      cloudinary.config({
+        secure: true,
+      });
+      return true;
+    }
+
+    if (
+      process.env.CLOUDINARY_CLOUD_NAME &&
+      process.env.CLOUDINARY_API_KEY &&
+      process.env.CLOUDINARY_API_SECRET
+    ) {
+      cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
+        secure: true,
+      });
+      return true;
+    }
+
+    return false;
+  }
+
   @Get()
   async index() {
-    return this.repo.find({ where: { isActive: true }, order: { order: 'ASC', createdAt: 'DESC' } });
+    const items = await this.repo.find({ where: { isActive: true }, order: { order: 'ASC', createdAt: 'DESC' } });
+    return items.map((item) => this.toApiBillboard(item));
   }
 
   // Base64 image upload endpoint (JWT protected)
@@ -37,40 +77,22 @@ export class BillboardsController {
 
       console.log(`📸 Billboard image size: ${(imageBase64.length / 1024).toFixed(1)}KB`);
 
-      // Try Cloudinary upload first if configured
-      if (process.env.CLOUDINARY_URL) {
-        try {
-          console.log('☁️ Uploading billboard to Cloudinary...');
-          const result = await cloudinary.uploader.upload(imageBase64, {
-            folder: 'oasis-billboards',
-            resource_type: 'image',
-          });
-
-          console.log(`✅ Cloudinary billboard upload success: ${result.secure_url}`);
-          return { success: true, imageUrl: result.secure_url };
-        } catch (cloudErr: any) {
-          console.error('⚠️ Cloudinary billboard upload failed, using local fallback:', cloudErr.message);
-          // Continue to local fallback
-        }
+      const cloudinaryConfigured = this.configureCloudinary();
+      if (!cloudinaryConfigured) {
+        throw new HttpException(
+          'Cloudinary no está configurado en el servidor',
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
-      // Local fallback: save to uploads folder
-      const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-      const buffer = Buffer.from(base64Data, 'base64');
-      const filename = `billboard-${Date.now()}.jpg`;
-      const uploadsDir = path.join(process.cwd(), 'uploads');
+      console.log('☁️ Uploading billboard to Cloudinary...');
+      const result = await cloudinary.uploader.upload(imageBase64, {
+        folder: 'oasis-billboards',
+        resource_type: 'image',
+      });
 
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
-
-      const filePath = path.join(uploadsDir, filename);
-      fs.writeFileSync(filePath, buffer);
-
-      const relativeUrl = `/uploads/${filename}`;
-      console.log(`💾 Local billboard saved, returning relative path: ${relativeUrl}`);
-
-      return { success: true, imageUrl: relativeUrl };
+      console.log(`✅ Cloudinary billboard upload success: ${result.secure_url}`);
+      return { success: true, imageUrl: result.secure_url };
     } catch (error: any) {
       console.error('❌ Error in /billboards/upload-image:', error.message);
       throw new HttpException(

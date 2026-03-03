@@ -4,7 +4,6 @@ import apiClient from '../api/client';
 import GlassCard from '../react-ui/components/GlassCard';
 import Button from '../react-ui/components/Button';
 import { theme } from '../react-ui/styles/theme';
-import { uploadToCloudinary } from '../api/cloudinary';
 
 /**
  * Componente AdminBillboard - Versión Visual Mejorada
@@ -109,7 +108,15 @@ const AdminBillboard = () => {
         try {
             setLoading(true);
             const { data } = await apiClient.get('/admin/billboards');
-            setBillboards(data || []);
+            const normalizedItems = (data || []).map((item) => ({
+                ...item,
+                media_url: item.media_url || item.mediaUrl || '',
+                media_type: item.media_type || item.mediaType || 'image',
+                button_text: item.button_text || item.buttonText || '',
+                button_link: item.button_link || item.buttonLink || '',
+                is_active: item.is_active ?? item.isActive ?? true,
+            }));
+            setBillboards(normalizedItems);
         } catch (e) {
             console.error('Error al cargar la cartelera:', e);
         } finally {
@@ -122,12 +129,12 @@ const AdminBillboard = () => {
         setFormData({
             title: item.title || '',
             description: item.description || '',
-            media_url: item.media_url || '',
-            media_type: item.media_type || 'image',
-            button_text: item.button_text || '',
-            button_link: item.button_link || '',
+            media_url: item.media_url || item.mediaUrl || '',
+            media_type: item.media_type || item.mediaType || 'image',
+            button_text: item.button_text || item.buttonText || '',
+            button_link: item.button_link || item.buttonLink || '',
             order: item.order || 1,
-            is_active: item.is_active,
+            is_active: item.is_active ?? item.isActive ?? true,
             styles: item.styles || {}
         });
 
@@ -183,36 +190,20 @@ const AdminBillboard = () => {
             if (selectedFile) {
                 console.log('📤 Preparando imagen para subida...');
 
-                // Convertir archivo a base64 (necesario tanto para Cloudinary como para el Backend)
+                // Convertir archivo a base64 para enviarlo al backend
                 const base64Data = await fileToBase64(selectedFile);
                 console.log('📸 Imagen convertida a Base64, tamaño:', (base64Data.length / 1024).toFixed(1), 'KB');
 
-                try {
-                    console.log('☁️ Intentando subida directa a Cloudinary...');
+                console.log('☁️ Subiendo imagen a Cloudinary vía backend...');
+                const { data } = await apiClient.post('/billboards/upload-image', {
+                    imageBase64: base64Data
+                });
 
-                    // Subir directamente a Cloudinary usando el servicio configurado
-                    const uploadResult = await uploadToCloudinary(base64Data, 'hero-billboards');
-
-                    if (uploadResult.success) {
-                        mediaUrl = uploadResult.imageUrl;
-                        console.log('✅ Cloudinary URL:', mediaUrl);
-                    } else {
-                        throw new Error(uploadResult.error || 'Fallo en Cloudinary');
-                    }
-                } catch (err) {
-                    console.error('❌ Error en subida directa, intentando backend fallback:', err);
-
-                    // Fallback al backend usando Base64 si Cloudinary directo falla
-                    const { data } = await apiClient.post('/billboards/upload-image', {
-                        imageBase64: base64Data
-                    });
-
-                    if (data.success) {
-                        mediaUrl = data.imageUrl;
-                        console.log('✅ Backend URL (fallback):', mediaUrl);
-                    } else {
-                        throw new Error('Error en ambos sistemas de subida');
-                    }
+                if (data.success) {
+                    mediaUrl = data.imageUrl;
+                    console.log('✅ Cloudinary URL:', mediaUrl);
+                } else {
+                    throw new Error(data.message || 'No fue posible subir la imagen a Cloudinary');
                 }
             }
 

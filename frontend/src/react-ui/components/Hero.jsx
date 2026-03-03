@@ -38,7 +38,14 @@ const Hero = () => {
     const fetchBillboards = async () => {
         try {
             const { data } = await apiClient.get('/billboards');
-            const activeItems = data || [];
+            const activeItems = (data || []).map((item) => ({
+                ...item,
+                media_url: item.media_url || item.mediaUrl || '',
+                media_type: item.media_type || item.mediaType || 'image',
+                button_text: item.button_text || item.buttonText || '',
+                button_link: item.button_link || item.buttonLink || '',
+                is_active: item.is_active ?? item.isActive ?? true,
+            }));
             console.log('🎬 Billboards recibidos:', activeItems);
             activeItems.forEach((item, idx) => {
                 console.log(`   Slide ${idx + 1}: "${item.title}" - URL: ${item.media_url}`);
