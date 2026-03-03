@@ -104,26 +104,29 @@ const Hero = () => {
      * Si la URL es relativa (/uploads/...), la convierte a URL absoluta del backend
      */
     const normalizeMediaUrl = (url) => {
-        console.log('🔍 Normalizando URL:', url);
         if (!url) return url;
-        
+
         // Si ya es una URL completa (http/https), retornarla tal cual
         if (url.startsWith('http://') || url.startsWith('https://')) {
-            console.log('   ✅ URL completa detectada:', url);
             return url;
         }
-        
-        // Si es una ruta relativa de uploads, construir URL completa con el backend
+
+        // Determinar la base de la API (por defecto localhost:3000)
+        let apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+        // Normalizar la base: quitar /api y asegurar que no termine en /
+        const backendUrl = apiBase.replace(/\/api\/?$/, '').replace(/\/$/, '');
+
+        // Si es una ruta relativa que empieza con /uploads, concatenar
         if (url.startsWith('/uploads/')) {
-            const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-            // Remover /api del final si existe
-            const backendUrl = apiBase.replace(/\/api\/?$/, '');
-            const fullUrl = `${backendUrl}${url}`;
-            console.log('   🔧 URL relativa convertida a:', fullUrl);
-            return fullUrl;
+            return `${backendUrl}${url}`;
         }
-        
-        console.log('   ⚠️ URL no reconocida, devolviendo tal cual:', url);
+
+        // Si es solo el nombre del archivo (ej: "billboard-123.jpg")
+        if (!url.includes('/') && (url.endsWith('.jpg') || url.endsWith('.png') || url.endsWith('.jpeg'))) {
+            return `${backendUrl}/uploads/${url}`;
+        }
+
         return url;
     };
 
@@ -133,9 +136,9 @@ const Hero = () => {
      */
     const renderBackground = (slide) => {
         const mediaUrl = normalizeMediaUrl(slide.media_url);
-        
+
         if (slide.media_type === 'video') {
-            const isYoutube = mediaUrl.includes('youtube.com') || mediaUrl.includes('youtu.be');
+            const isYoutube = mediaUrl?.includes('youtube.com') || mediaUrl?.includes('youtu.be');
 
             if (isYoutube) {
                 let videoId = '';
@@ -160,18 +163,23 @@ const Hero = () => {
             return (
                 <video
                     autoPlay muted loop playsInline
-                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: -3 }}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: -3, background: '#0a0a0a' }}
                 >
                     <source src={mediaUrl} type="video/mp4" />
                 </video>
             );
         }
 
+        // Para imágenes, usamos un div con background-image y un fondo de respaldo oscuro
         return (
             <div style={{
                 position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                backgroundImage: `url(${mediaUrl})`, backgroundSize: 'cover',
-                backgroundPosition: 'center', zIndex: -3, transition: 'background-image 1s ease-in-out'
+                backgroundColor: '#0a0a0a', // Color de respaldo si la imagen no carga
+                backgroundImage: mediaUrl ? `url(${mediaUrl})` : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                zIndex: -3,
+                transition: 'background-image 1s ease-in-out'
             }} />
         );
     };

@@ -266,11 +266,20 @@ const AdminBillboard = () => {
             return url;
         }
 
-        // Si es una ruta relativa de uploads
+        // Determinar la base de la API (por defecto localhost:3000)
+        let apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+        // Normalizar la base: quitar /api y asegurar que no termine en /
+        const backendUrl = apiBase.replace(/\/api\/?$/, '').replace(/\/$/, '');
+
+        // Si es una ruta relativa que empieza con /uploads, concatenar
         if (typeof url === 'string' && url.startsWith('/uploads/')) {
-            const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-            const backendUrl = apiBase.replace(/\/api\/?$/, '');
             return `${backendUrl}${url}`;
+        }
+
+        // Si es solo el nombre del archivo (ej: "billboard-123.jpg")
+        if (typeof url === 'string' && !url.includes('/') && (url.endsWith('.jpg') || url.endsWith('.png') || url.endsWith('.jpeg'))) {
+            return `${backendUrl}/uploads/${url}`;
         }
 
         return url || null;
