@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { theme } from '../styles/theme';
+import { useTheme } from '../ThemeContext';
 import GlassCard from '../components/GlassCard';
 import apiClient from '../../api/client';
 import useAppMode from '../../hooks/useAppMode';
 
 const About = () => {
     const { isMobile } = useAppMode();
+    const { theme } = useTheme();
     const [data, setData] = useState({
         about_hero_title: 'Nuestra Identidad',
         about_hero_content: 'Somos una comunidad dedicada a transformar vidas a través del amor, el servicio y la innovación. Creemos en construir un futuro donde todos tengan un lugar.',
