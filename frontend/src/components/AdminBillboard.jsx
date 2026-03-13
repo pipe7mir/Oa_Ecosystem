@@ -8,6 +8,7 @@ import { useToast } from '../react-ui/components/Toast';
 import * as LucideIcons from 'lucide-react';
 import ConfirmationModal from '../react-ui/components/ConfirmationModal';
 import { useTheme } from '../react-ui/ThemeContext';
+import useAppMode from '../hooks/useAppMode';
 
 const {
     Check, Trash2, ListChecks, Square, CheckSquare, X, Play, Image, Pencil, Plus, Trash, ExternalLink, Move
@@ -15,6 +16,7 @@ const {
 
 const AdminBillboard = () => {
     const { theme } = useTheme();
+    const { isMobile } = useAppMode();
 
     const billboardStyles = `
     @keyframes oasisFadeIn {
