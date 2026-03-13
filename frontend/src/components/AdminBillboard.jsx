@@ -829,14 +829,20 @@ const AdminBillboard = () => {
                                         <div style={{
                                             width: '90px', height: '55px',
                                             borderRadius: '12px', overflow: 'hidden',
-                                            background: '#eee',
-                                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                                            background: 'rgba(0,0,0,0.05)',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center'
                                         }}>
-                                            <img
-                                                src={normalizeMediaUrl(item.media_url)}
-                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                                alt="thumb"
-                                            />
+                                            {item.media_url ? (
+                                                <img
+                                                    src={normalizeMediaUrl(item.media_url)}
+                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                    alt="thumb"
+                                                    onError={(e) => { e.target.style.opacity = '0'; }}
+                                                />
+                                            ) : (
+                                                <Image size={24} className="opacity-25" />
+                                            )}
                                         </div>
 
                                         <div className="flex-grow-1" style={{ minWidth: 0 }}>
