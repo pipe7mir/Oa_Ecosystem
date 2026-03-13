@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/client';
-import { theme } from '../react-ui/styles/theme';
+import { useTheme } from '../react-ui/ThemeContext';
 import useAppMode from '../hooks/useAppMode';
 
 const Recursos = () => {
+    const { theme } = useTheme();
     const { isMobile } = useAppMode();
     const [resources, setResources] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -43,7 +44,7 @@ const Recursos = () => {
     return (
         <div className={`container px-3 animate__animated animate__fadeIn ${isMobile ? 'py-4' : 'pt-0 pb-4'}`}>
             <header className={`text-center ${isMobile ? 'py-4' : 'pt-2 pb-3'}`}>
-                <h2 className="fw-bold mb-2" style={{ fontFamily: theme.fonts.logo, color: theme.colors.primary, letterSpacing: '4px', fontSize: 'clamp(1.5rem, 5vw, 2.5rem)' }}>
+                <h2 className="fw-bold mb-2" style={{ fontFamily: theme.fonts.brand, color: theme.colors.primary, letterSpacing: '4px', fontSize: 'clamp(1.5rem, 5vw, 2.5rem)' }}>
                     RECURSOS OASIS
                 </h2>
                 <div className="mx-auto rounded-pill mb-3" style={{ width: '60px', height: '4px', background: theme.colors.primary }}></div>

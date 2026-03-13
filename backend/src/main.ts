@@ -63,7 +63,8 @@ async function bootstrap() {
     origin: true,
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: '*',
+    allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Cache-Control, cache-control, Pragma, pragma, X-CSRF-Token',
+    exposedHeaders: 'Content-Range, X-Content-Range',
   });
 
   // Global pipes

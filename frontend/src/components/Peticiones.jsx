@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
-import { theme } from '../react-ui/styles/theme';
+import { useTheme } from '../react-ui/ThemeContext';
 import { useToast } from '../react-ui/components/Toast';
 
 const Peticiones = () => {
+    const { theme } = useTheme();
+    const navigate = useNavigate();
     const [privacyAccepted, setPrivacyAccepted] = useState(false);
     const [category, setCategory] = useState(null);
     const [isAnonymous, setIsAnonymous] = useState(false);
@@ -63,16 +66,12 @@ const Peticiones = () => {
             <div className="container py-5 text-center animate__animated animate__bounceIn">
                 <div style={{ ...glassStyle, padding: theme.spacing(6), maxWidth: '600px', margin: '0 auto' }}>
                     <i className="bi bi-check-circle-fill" style={{ fontSize: '5rem', color: theme.colors.success }}></i>
-                    <h2 className="mt-4 fw-bold" style={{ fontFamily: theme.fonts.logo }}>¡Petición de {category} enviada!</h2>
+                    <h2 className="mt-4 fw-bold" style={{ fontFamily: theme.fonts.brand }}>¡Petición de {category} enviada!</h2>
                     <p className="text-muted">Hemos recibido tu solicitud. Un líder de OASIS se pondrá en contacto contigo si así lo solicitaste.</p>
                     <button
                         className="btn text-white px-5 mt-3 rounded-pill fw-bold"
                         style={{ background: `linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.secondary})` }}
-                        onClick={() => {
-                            setSuccess(false);
-                            setCategory(null);
-                            setFormData({ nombre: '', celular: '', descripcion: '' });
-                        }}
+                        onClick={() => navigate('/')}
                     >
                         Volver al inicio
                     </button>
@@ -86,7 +85,7 @@ const Peticiones = () => {
             <section className="container py-5 animate__animated animate__fadeIn">
                 <div style={{ ...glassStyle, padding: theme.spacing(6), maxWidth: '600px', margin: '0 auto' }} className="text-center">
                     <i className="bi bi-shield-lock text-primary mb-4" style={{ fontSize: '4rem', color: theme.colors.primary }}></i>
-                    <h2 className="fw-bold mb-3" style={{ fontFamily: theme.fonts.logo }}>Protección de Datos</h2>
+                    <h2 className="fw-bold mb-3" style={{ fontFamily: theme.fonts.brand }}>Protección de Datos</h2>
                     <p className="text-muted mb-4">
                         En la Iglesia OASIS valoramos tu privacidad. Para procesar tu solicitud, necesitamos tu autorización para el tratamiento de datos personales conforme a la Ley 1581 de 2012.
                     </p>
@@ -98,7 +97,10 @@ const Peticiones = () => {
                         >
                             AUTORIZO EL TRATAMIENTO
                         </button>
-                        <button className="btn btn-light py-2 rounded-pill text-muted">
+                        <button 
+                            className="btn btn-light py-2 rounded-pill text-muted"
+                            onClick={() => navigate('/')}
+                        >
                             No acepto, volver al inicio
                         </button>
                     </div>
@@ -111,7 +113,7 @@ const Peticiones = () => {
         return (
             <section className="container py-4 px-3">
                 <div className="text-center mb-4 animate__animated animate__fadeInDown">
-                    <h2 style={{ fontFamily: theme.fonts.logo, color: theme.colors.primary, fontSize: 'clamp(1.5rem, 5vw, 2rem)' }} className="fw-bold">
+                    <h2 style={{ fontFamily: theme.fonts.brand, color: theme.colors.primary, fontSize: 'clamp(1.5rem, 5vw, 2rem)' }} className="fw-bold">
                         ¿En qué podemos apoyarte hoy?
                     </h2>
                     <p className="text-muted" style={{ fontSize: 'clamp(0.9rem, 2vw, 1rem)' }}>Selecciona una categoría para iniciar tu solicitud</p>

@@ -55,11 +55,12 @@ const PWAGateway = () => {
         );
     }
 
-    // Forzar siempre mostrar Home al entrar por primera vez
-    // Esto garantiza que el usuario vea la Landing Page del ecosistema
-    return <Home />;
+    // Regla PWA (app instalada): redirigir a admin o login
+    if (isPWA) {
+        return session ? <Navigate to="/admin" replace /> : <Navigate to="/login" replace />;
+    }
 
-    // Modo Web: mostrar la LandingPage
+    // Modo Web convencional: mostrar la LandingPage (Home)
     return <Home />;
 };
 
