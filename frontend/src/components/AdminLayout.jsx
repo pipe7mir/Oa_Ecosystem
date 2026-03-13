@@ -23,7 +23,8 @@ import {
     Moon,
     Sun,
     Calendar,
-    Home
+    Home,
+    FolderOpen
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -49,8 +50,9 @@ const AdminLayout = () => {
         { to: '/admin/cartelera', label: 'Cartelera', Icon: ImageIcon },
         { to: '/admin/live', label: 'En Vivo', Icon: Radio },
         { to: '/admin/culto', label: 'Orden de Culto', Icon: Layers },
-        { to: '/admin/recursos', label: 'Archivos', Icon: Layers, adminOnly: true },
+        { to: '/admin/recursos', label: 'Archivos', Icon: FolderOpen, adminOnly: true },
         { to: '/admin/users', label: 'Equipo', Icon: Users, adminOnly: true },
+        { to: '/admin/ajustes', label: 'Ajustes', Icon: Settings, adminOnly: true },
     ];
 
     // Verificación robusta de rol de administrador

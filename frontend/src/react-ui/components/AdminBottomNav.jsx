@@ -12,7 +12,8 @@ import {
     Layers,
     Calendar,
     Inbox,
-    LogOut
+    LogOut,
+    FolderOpen
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../ThemeContext';
@@ -36,8 +37,9 @@ const AdminBottomNav = () => {
     const moreItems = [
         { to: '/admin/inscripciones', label: 'Eventos', Icon: Calendar },
         { to: '/admin/culto', label: 'Culto', Icon: Layers },
-        { to: '/admin/recursos', label: 'Archivos', Icon: Layers, adminOnly: true },
+        { to: '/admin/recursos', label: 'Archivos', Icon: FolderOpen, adminOnly: true },
         { to: '/admin/users', label: 'Equipo', Icon: Users, adminOnly: true },
+        { to: '/admin/ajustes', label: 'Ajustes', Icon: Settings, adminOnly: true },
         { to: '/admin/live', label: 'En Vivo', Icon: Radio },
     ].filter(item => !item.adminOnly || isAdmin);
 
