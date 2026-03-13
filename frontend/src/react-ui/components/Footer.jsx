@@ -1,8 +1,9 @@
 import React from 'react';
-import { theme } from '../styles/theme';
+import { useTheme } from '../ThemeContext';
 import logoImg from '../../img/logos/LOGO1.png';
 
 const Footer = () => {
+    const { theme } = useTheme();
     return (
         <footer style={{
             background: 'white',

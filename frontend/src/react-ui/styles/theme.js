@@ -55,4 +55,4 @@ export const createTheme = (mode = 'dark') => {
     };
 };
 
-export const theme = createTheme('light'); // Cambiado a light por defecto como se acordó previamente.
+// export const theme = createTheme('light'); // Eliminado para evitar ciclos. Usar useTheme() o createTheme() directamente.

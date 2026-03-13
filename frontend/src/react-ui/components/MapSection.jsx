@@ -1,9 +1,10 @@
 import React from 'react';
-import { theme } from '../styles/theme';
+import { useTheme } from '../ThemeContext';
 import GlassCard from './GlassCard';
 import Button from './Button';
 
 const MapSection = () => {
+    const { theme } = useTheme();
     // Hemos pegado la URL exacta del src que proporcionaste
     const mapEmbedUrl = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.1964311065785!2d-75.5979098892048!3d6.237820726390662!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e4429bd22d620b5%3A0xdf3574c2f8237ca!2sIglesia%20Adventista%20del%20S%C3%A9ptimo%20D%C3%ADa%20-%20Oasis!5e0!3m2!1ses!2sco!4v1771882597884!5m2!1ses!2sco";
 

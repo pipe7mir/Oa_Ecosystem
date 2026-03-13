@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import apiClient from '../../api/client';
-import { theme } from '../styles/theme';
+import { useTheme } from '../ThemeContext';
 import GlassCard from './GlassCard';
 
 /* ─── Helper: Build full image URL safely ─────────────────────── */
@@ -24,6 +24,7 @@ const buildUrl = (image_url) => {
    Projector Mode: True fullscreen with image filling width
 ──────────────────────────────────────────────────────────────── */
 const FullscreenModal = ({ announcement, onClose, onNext, onPrev, hasNext, hasPrev, transitionDir }) => {
+    const { theme } = useTheme();
     const [visible, setVisible] = useState(false);
     const [imgVisible, setImgVisible] = useState(false);
     const [isProjectorMode, setIsProjectorMode] = useState(false);
@@ -307,6 +308,7 @@ const FullscreenModal = ({ announcement, onClose, onNext, onPrev, hasNext, hasPr
 
 /* ─── Main Component ─────────────────────────────────────────── */
 const Announcements = () => {
+    const { theme } = useTheme();
     const [announcements, setAnnouncements] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);

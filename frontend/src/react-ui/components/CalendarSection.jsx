@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { theme } from '../styles/theme';
+import { useTheme } from '../ThemeContext';
 import GlassCard from './GlassCard';
 import apiClient from '../../api/client';
 
 const CalendarSection = () => {
+    const { theme } = useTheme();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [events, setEvents] = useState([]);
     const [selectedDate, setSelectedDate] = useState(null);

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { theme } from '../styles/theme';
+import { useTheme } from '../ThemeContext';
 import logoImg from '../../img/logos/LOGO1.png';
 
 const Navbar = () => {
+    const { theme } = useTheme();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 992);
     const location = useLocation();

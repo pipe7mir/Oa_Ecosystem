@@ -1,5 +1,5 @@
 import React from 'react';
-import { theme } from '../styles/theme';
+import { useTheme } from '../ThemeContext';
 
 /**
  * Flat 2.0 Button Component
@@ -8,6 +8,7 @@ import { theme } from '../styles/theme';
  * @param {function} onClick - Click handler
  */
 const Button = ({ children, variant = 'primary', onClick, style }) => {
+    const { theme } = useTheme();
     // Updated visual: white button with slight shadow, dark purple text/icon
     const btnBase = {
         padding: `${theme.spacing(1)} ${theme.spacing(3)}`,

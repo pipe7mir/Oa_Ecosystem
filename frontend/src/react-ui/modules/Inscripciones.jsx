@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useTheme } from '../ThemeContext';
+import Button from '../components/Button';
 import apiClient from '../../api/client';
-import { theme } from '../styles/theme';
 import GlassCard from '../components/GlassCard';
 import FormViewer from '../components/FormViewer';
 
@@ -12,6 +13,7 @@ import FormViewer from '../components/FormViewer';
  * 2. Permite seleccionar un evento y renderiza el FormViewer para completar el registro.
  */
 const Inscripciones = () => {
+    const { theme } = useTheme();
     // ESTADOS: Lista de eventos, evento seleccionado, y estados de flujo (carga/finalizado)
     const [forms, setForms] = useState([]);
     const [selectedForm, setSelectedForm] = useState(null);

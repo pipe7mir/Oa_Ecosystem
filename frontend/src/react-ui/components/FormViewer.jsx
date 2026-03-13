@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { useTheme } from '../ThemeContext';
 import apiClient from '../../api/client';
-import { theme } from '../styles/theme';
 import Button from './Button';
 
 const FormViewer = ({ form, onComplete }) => {
+    const { theme } = useTheme();
     const [formData, setFormData] = useState({});
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
