@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../ThemeContext';
 import GlassCard from '../components/GlassCard';
 import Button from '../components/Button';
@@ -8,6 +9,7 @@ import { useToast } from '../components/Toast';
 
 const Live = () => {
     const { theme } = useTheme();
+    const navigate = useNavigate();
     const { isMobile } = useAppMode();
     const { showToast } = useToast();
     const [settings, setSettings] = useState({
@@ -169,6 +171,10 @@ const Live = () => {
         }
     };
 
+    const handlePrayerRequest = () => {
+        navigate('/peticiones');
+    };
+
     const isLive = settings.stream_is_live == true || settings.stream_is_live == '1';
     let videoSrc = null;
 
@@ -258,12 +264,16 @@ const Live = () => {
                                 <Button 
                                     onClick={handleShare}
                                     variant="primary" 
-                                    style={{ background: theme.colors.primary, border: 'none', padding: '10px 20px', borderRadius: '12px' }}
+                                    style={{ background: theme.colors.primary, color: '#ffffff', border: 'none', padding: '12px 24px', borderRadius: '14px', fontSize: '1rem' }}
                                 >
-                                    <i className="bi bi-share me-2"></i> Compartir
+                                    <i className="bi bi-share-fill me-2"></i> Compartir
                                 </Button>
-                                <Button variant="outline" style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white', padding: '10px 20px', borderRadius: '12px' }}>
-                                    <i className="bi bi-bell me-2"></i> Recordarme
+                                <Button 
+                                    onClick={handlePrayerRequest}
+                                    variant="outline" 
+                                    style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.4)', color: '#ffffff', padding: '12px 24px', borderRadius: '14px', fontSize: '1rem', backdropFilter: 'blur(5px)' }}
+                                >
+                                    <i className="bi bi-heart-fill me-2 text-danger"></i> Pedir Oración
                                 </Button>
                             </div>
                         </div>
