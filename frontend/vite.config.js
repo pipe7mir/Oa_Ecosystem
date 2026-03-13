@@ -116,6 +116,7 @@ export default defineConfig({
       // ──────────────────────────────────────────────
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // Aumentar límite a 5MB
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
@@ -154,12 +155,15 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     minify: 'esbuild',
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       external: [],
       output: {
         manualChunks: {
-          'vendor': ['bootstrap', 'react', 'react-dom'],
+          'vendor': ['bootstrap', 'react', 'react-dom', 'react-router-dom'],
           'motion': ['framer-motion'],
+          'utils': ['jspdf', 'html2canvas', 'xlsx', 'pptxgenjs'],
+          'icons': ['lucide-react']
         },
       },
     },
