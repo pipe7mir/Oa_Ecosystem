@@ -36,11 +36,12 @@ export async function uploadToCloudinary(base64Image, folder = 'oasis-announceme
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
         formData.append('folder', folder);
 
+        const imageLength = base64Image instanceof File ? base64Image.size : (base64Image?.length || 0);
         console.log('☁️ Uploading to Cloudinary...', {
             url: uploadUrl,
             cloud: CLOUDINARY_CLOUD_NAME,
             preset: CLOUDINARY_UPLOAD_PRESET,
-            imageSize: (base64Image.length / 1024).toFixed(1) + 'KB'
+            imageSize: (imageLength / 1024).toFixed(1) + 'KB'
         });
 
         const response = await fetch(uploadUrl, {

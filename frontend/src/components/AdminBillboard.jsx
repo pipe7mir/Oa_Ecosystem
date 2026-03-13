@@ -170,8 +170,17 @@ const AdminBillboard = () => {
     const normalizeMediaUrl = (url) => {
         if (!url) return '';
         if (url.startsWith('http')) return url;
-        if (url.startsWith('uploads/')) return `${apiClient.defaults.baseURL.replace('/api', '')}/${url}`;
-        return url;
+        
+        // Handle local uploads or paths
+        let base = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
+        if (base.endsWith('/api')) base = base.slice(0, -4);
+        
+        if (!base && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+            base = 'http://localhost:3000';
+        }
+
+        const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+        return `${base.replace(/\/$/, '')}${cleanUrl}`;
     };
 
     const handleEdit = (item) => {
@@ -260,7 +269,11 @@ const AdminBillboard = () => {
             if (selectedFile) {
                 console.log('🚀 Iniciando subida a Cloudinary...');
                 const uploadRes = await uploadToCloudinary(selectedFile);
-                mediaUrlToSave = uploadRes.secure_url;
+                if (uploadRes.success) {
+                    mediaUrlToSave = uploadRes.imageUrl;
+                } else {
+                    throw new Error(uploadRes.error || 'Error al subir a Cloudinary');
+                }
             }
 
             const dataToSave = {
@@ -501,12 +514,46 @@ const AdminBillboard = () => {
                                         />
                                     </div>
                                     <div className="col-md-6">
-                                        <label className="form-label fw-bold">Link del Botón</label>
+                                        <label className="admin-billboard-label">Orden (Prioridad)</label>
+                                        <div className="d-flex gap-2">
+                                            <input
+                                                type="number"
+                                                className="form-control admin-billboard-input"
+                                                value={formData.order}
+                                                onChange={e => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
+                                            />
+                                            <button 
+                                                type="button" 
+                                                className="btn btn-outline-secondary rounded-4 px-3"
+                                                onClick={() => setFormData({ ...formData, order: billboards.length + 1 })}
+                                            >
+                                                Auto
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6 d-flex align-items-center mt-3">
+                                        <div className="form-check form-switch p-3 border rounded-4 w-100" style={{ background: 'rgba(0,0,0,0.02)' }}>
+                                            <input 
+                                                className="form-check-input ms-0 me-2" 
+                                                type="checkbox" 
+                                                id="activeSwitch"
+                                                checked={formData.is_active}
+                                                onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
+                                            />
+                                            <label className="form-check-label fw-bold small text-uppercase" htmlFor="activeSwitch">
+                                                Slide Visible
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className="col-12">
+                                        <label className="admin-billboard-label">Link del Botón</label>
                                         <input
                                             type="text"
                                             className="form-control admin-billboard-input"
                                             value={formData.button_link}
                                             onChange={e => setFormData({ ...formData, button_link: e.target.value })}
+                                            placeholder="URL destino o página interna..."
                                         />
                                     </div>
 
