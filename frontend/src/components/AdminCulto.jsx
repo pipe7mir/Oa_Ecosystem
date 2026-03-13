@@ -100,6 +100,14 @@ const AdminCulto = () => {
         type: 'warning'
     });
 
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [viewMode, setViewMode] = useState('planning'); // 'planning' or 'monthly'
 
@@ -551,27 +559,35 @@ const AdminCulto = () => {
 
     // --- Render Elements ---
     const renderHeader = () => (
-        <header className="mb-4 p-4 d-flex justify-content-between align-items-center" 
+        <header className="mb-4 p-3 p-md-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3" 
             style={{ 
                 background: theme.glass.background,
                 backdropFilter: theme.glass.backdropFilter,
                 border: theme.glass.border,
-                borderRadius: '24px',
+                borderRadius: isMobile ? '20px' : '28px',
                 boxShadow: theme.shadows.soft
             }}>
-            <div className="d-flex flex-column">
-                <h1 style={{ 
-                    fontWeight: 900, 
-                    fontSize: '2.2rem', 
-                    fontFamily: theme.fonts.accent, 
-                    color: isDark ? '#FFFFFF' : '#000000', 
-                    margin: 0, 
-                    textShadow: isDark ? '0 2px 10px rgba(0,0,0,0.3)' : 'none' 
-                }}>
-                    ORDEN <span style={{ color: PURPLE_AMETHYST }}>DEL CULTO</span>
-                </h1>
-                <div className="d-flex align-items-center gap-3 mt-1">
-                    <p className="small mb-0 fw-600" style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>
+            <div className="d-flex flex-column w-100 w-md-auto">
+                <div className="d-flex justify-content-between align-items-center w-100">
+                    <h1 style={{ 
+                        fontWeight: 900, 
+                        fontSize: isMobile ? '1.5rem' : '2.2rem', 
+                        fontFamily: theme.fonts.accent, 
+                        color: isDark ? '#FFFFFF' : '#000000', 
+                        margin: 0, 
+                    }}>
+                        ORDEN <span style={{ color: PURPLE_AMETHYST }}>DEL CULTO</span>
+                    </h1>
+                    {isMobile && !serviceStartTime && (
+                        <button onClick={() => { resetForm(); setShowForm(!showForm); }} 
+                            className="btn rounded-circle d-flex align-items-center justify-content-center p-2" 
+                            style={{ background: showForm ? theme.colors.text.secondary : PURPLE_AMETHYST, color: 'white' }}>
+                            {showForm ? <X size={20} /> : <Plus size={20} />}
+                        </button>
+                    )}
+                </div>
+                <div className="d-flex align-items-center gap-2 mt-1">
+                    <p className="x-small mb-0 fw-600" style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>
                         Gestión en tiempo real
                     </p>
                     <div className="d-flex align-items-center gap-2 px-2 py-1 rounded-pill" 
@@ -579,58 +595,66 @@ const AdminCulto = () => {
                             background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', 
                             border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}` 
                         }}>
-                        <UsersIcon size={12} color={PURPLE_AMETHYST} />
-                        <span className="x-small fw-bold" style={{ color: isDark ? '#FFF' : '#000' }}>{onlineUsers} Conectados</span>
+                        <UsersIcon size={10} color={PURPLE_AMETHYST} />
+                        <span className="x-small fw-bold" style={{ color: isDark ? '#FFF' : '#000', fontSize: '0.65rem' }}>{onlineUsers} Online</span>
                     </div>
                 </div>
             </div>
-            <div className="d-flex gap-2">
-                <div className="d-flex align-items-center rounded-pill px-2 border" 
+
+            <div className={`d-flex flex-wrap gap-2 w-100 w-md-auto ${isMobile ? 'justify-content-between' : ''}`}>
+                <div className="d-flex align-items-center rounded-pill px-2 border flex-grow-1 flex-md-grow-0" 
                     style={{ 
                         background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                        borderColor: theme.colors.border 
+                        borderColor: theme.colors.border,
+                        height: '44px'
                     }}>
-                    <button onClick={() => setViewMode('planning')} className={`btn btn-sm rounded-pill px-3 fw-bold ${viewMode === 'planning' ? 'text-white' : ''}`} 
+                    <button onClick={() => setViewMode('planning')} className={`btn btn-sm rounded-pill px-3 fw-bold flex-grow-1 ${viewMode === 'planning' ? 'text-white' : ''}`} 
                         style={{ 
                             background: viewMode === 'planning' ? PURPLE_AMETHYST : 'transparent',
-                            color: viewMode === 'planning' ? '#FFF' : (isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)')
+                            color: viewMode === 'planning' ? '#FFF' : (isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'),
+                            fontSize: '0.8rem'
                         }}>Día</button>
                     {serviceStartTime && (
-                        <button onClick={() => setViewMode('live')} className={`btn btn-sm rounded-pill px-3 fw-bold ${viewMode === 'live' ? 'text-white' : ''}`} 
+                        <button onClick={() => setViewMode('live')} className={`btn btn-sm rounded-pill px-3 fw-bold flex-grow-1 ${viewMode === 'live' ? 'text-white' : ''}`} 
                             style={{ 
                                 background: viewMode === 'live' ? '#ef4444' : 'transparent',
-                                color: viewMode === 'live' ? '#FFF' : (isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)')
+                                color: viewMode === 'live' ? '#FFF' : (isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'),
+                                fontSize: '0.8rem'
                             }}>
-                            <span className="pulse-dot-red me-1"></span> EN VIVO
+                            LIVE
                         </button>
                     )}
-                    <button onClick={() => setViewMode('monthly')} className={`btn btn-sm rounded-pill px-3 fw-bold ${viewMode === 'monthly' ? 'text-white' : ''}`} 
+                    <button onClick={() => setViewMode('monthly')} className={`btn btn-sm rounded-pill px-3 fw-bold flex-grow-1 ${viewMode === 'monthly' ? 'text-white' : ''}`} 
                         style={{ 
                             background: viewMode === 'monthly' ? PURPLE_AMETHYST : 'transparent',
-                            color: viewMode === 'monthly' ? '#FFF' : (isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)')
+                            color: viewMode === 'monthly' ? '#FFF' : (isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)'),
+                            fontSize: '0.8rem'
                         }}>Mes</button>
                 </div>
-                <div className="px-3 py-2 rounded-4 d-flex align-items-center gap-2" 
-                    style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', border: `1px solid ${theme.colors.border}` }}>
-                    <CalendarIcon size={16} color={PURPLE_AMETHYST} />
+                
+                <div className="px-3 py-2 rounded-pill d-flex align-items-center gap-2 flex-grow-1 flex-md-grow-0" 
+                    style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', border: `1px solid ${theme.colors.border}`, height: '44px' }}>
+                    <CalendarIcon size={14} color={PURPLE_AMETHYST} />
                     <input 
                         type="date" 
                         value={selectedDate} 
                         onChange={(e) => setSelectedDate(e.target.value)}
-                        className="border-0 bg-transparent fw-bold small outline-none"
-                        style={{ color: isDark ? '#FFF' : '#000' }}
+                        className="border-0 bg-transparent fw-bold x-small outline-none"
+                        style={{ color: isDark ? '#FFF' : '#000', width: isMobile ? '100px' : 'auto' }}
                     />
                 </div>
-                {!serviceStartTime && (
+
+                {!isMobile && !serviceStartTime && (
                     <button onClick={() => {
                         resetForm();
                         setShowForm(!showForm);
                     }} className={`btn rounded-pill px-4 fw-bold text-white shadow-lg border-0 ${!showForm ? 'animate-pulse' : ''}`} 
-                        style={{ background: showForm ? theme.colors.text.secondary : PURPLE_AMETHYST, transition: 'all 0.3s' }}>
+                        style={{ background: showForm ? theme.colors.text.secondary : PURPLE_AMETHYST, transition: 'all 0.3s', height: '44px' }}>
                         {showForm ? <><X size={18} className="me-2" /> Cerrar</> : <><Plus size={18} className="me-2" /> Agregar Actividad</>}
                     </button>
                 )}
             </div>
+            
             <style>{`
                 .animate-pulse { animation: pulse-purple 2s infinite; }
                 @keyframes pulse-purple {
@@ -638,14 +662,6 @@ const AdminCulto = () => {
                     70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(109, 40, 217, 0); }
                     100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(109, 40, 217, 0); }
                 }
-                .pulse-dot-red {
-                    display: inline-block;
-                    width: 7px; height: 7px;
-                    background: #ff4d4d;
-                    border-radius: 50%;
-                    animation: blink 1s infinite;
-                }
-                @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
             `}</style>
         </header>
     );
@@ -653,72 +669,77 @@ const AdminCulto = () => {
     const renderActivityForm = () => (
         <AnimatePresence>
             {showForm && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-4 overflow-hidden">
-                    <GlassCard style={{ padding: '30px', border: `2px solid ${PURPLE_AMETHYST}20` }}>
-                        <form onSubmit={handleCreate} className="row g-4">
-                            <div className="col-12 mb-2 d-flex justify-content-between align-items-center">
-                                <h5 className="fw-bold mb-0" style={{ color: PURPLE_AMETHYST }}>Nueva Actividad para el {selectedDate}</h5>
+                <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="mb-4 overflow-hidden shadow-xl" style={{ zIndex: 1001 }}>
+                    <GlassCard style={{ padding: isMobile ? '20px' : '30px', border: `2px solid ${PURPLE_AMETHYST}40`, borderRadius: '24px' }}>
+                        <form onSubmit={handleCreate} className="row g-3">
+                            <div className="col-12 d-flex justify-content-between align-items-center mb-2">
+                                <h5 className="fw-900 mb-0" style={{ color: PURPLE_AMETHYST, fontSize: isMobile ? '1.1rem' : '1.25rem' }}>Agregar Bloque de Culto</h5>
                                 <button type="button" onClick={() => setShowForm(false)} className="btn btn-sm btn-light rounded-circle"><X size={16} /></button>
                             </div>
-                            <div className="col-md-6">
-                                <label className="small fw-bold mb-2" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.7)' }}>Nombre de Actividad</label>
+                            
+                            <div className="col-12 col-md-6">
+                                <label className="x-small fw-900 mb-1 opacity-50">NOMBRE DE LA ACTIVIDAD</label>
                                 <input 
-                                    type="text" required className="form-control rounded-4 border-0 bg-light-soft p-3" 
-                                    placeholder="Ej: Sermón, Alabanza, etc."
+                                    type="text" required className="form-control rounded-4 border-0 bg-light-soft px-3 py-2 py-md-3" 
+                                    placeholder="Ej: Bienvenida, Alabanza..."
                                     value={formData.actividad} onChange={e => setFormData({...formData, actividad: e.target.value})}
-                                    style={{ color: isDark ? '#FFF' : '#000' }}
+                                    style={{ color: isDark ? '#FFF' : '#000', fontWeight: 600 }}
                                 />
                             </div>
-                            <div className="col-md-6">
-                                <label className="small fw-bold mb-2" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.7)' }}>Responsable / Persona</label>
+                            
+                            <div className="col-12 col-md-6">
+                                <label className="x-small fw-900 mb-1 opacity-50">RESPONSABLE</label>
                                 <input 
-                                    type="text" required className="form-control rounded-4 border-0 bg-light-soft p-3" 
-                                    placeholder="Nombre del pastor o grupo"
+                                    type="text" required className="form-control rounded-4 border-0 bg-light-soft px-3 py-2 py-md-3" 
+                                    placeholder="Pastor, Grupo, etc."
                                     value={formData.responsable} onChange={e => setFormData({...formData, responsable: e.target.value})}
-                                    style={{ color: isDark ? '#FFF' : '#000' }}
+                                    style={{ color: isDark ? '#FFF' : '#000', fontWeight: 600 }}
                                 />
                             </div>
-                            <div className="col-md-4">
-                                <label className="small fw-bold mb-2" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.7)' }}>Hora de Inicio (Reloj Visual)</label>
+                            
+                            <div className="col-6 col-md-4">
+                                <label className="x-small fw-900 mb-1 opacity-50">HORA INICIO</label>
                                 <input 
-                                    type="time" required className="form-control rounded-4 border-0 bg-light-soft p-3 fw-bold" 
+                                    type="time" required className="form-control rounded-4 border-0 bg-light-soft px-3 py-2 py-md-3 fw-bold" 
                                     value={formData.hora} onChange={e => setFormData({...formData, hora: e.target.value})}
                                     style={{ color: isDark ? '#FFF' : '#000' }}
                                 />
                             </div>
-                            <div className="col-md-4">
-                                <label className="small fw-bold mb-2" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.7)' }}>Duración (min)</label>
-                                <div className="d-flex align-items-center gap-3">
-                                    <input 
-                                        type="range" min="1" max="120" step="5" className="form-range flex-grow-1"
-                                        value={formData.duracionEstimada} onChange={e => setFormData({...formData, duracionEstimada: e.target.value})}
-                                    />
-                                    <span className="badge rounded-pill p-2 px-3 bg-dark text-white fw-bold">{formData.duracionEstimada}m</span>
-                                </div>
-                            </div>
-                            <div className="col-md-4">
-                                <label className="small fw-bold mb-2" style={{ color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.7)' }}>Cantidad de Personas</label>
+                            
+                            <div className="col-6 col-md-4">
+                                <label className="x-small fw-900 mb-1 opacity-50">DURACIÓN ({formData.duracionEstimada}m)</label>
                                 <input 
-                                    type="number" className="form-control rounded-4 border-0 bg-light-soft p-3" 
+                                    type="number" className="form-control rounded-4 border-0 bg-light-soft px-3 py-2 py-md-3 fw-bold text-center" 
+                                    value={formData.duracionEstimada} onChange={e => setFormData({...formData, duracionEstimada: e.target.value})}
+                                    style={{ color: isDark ? '#FFF' : '#000' }}
+                                />
+                            </div>
+
+                            <div className="col-12 col-md-4">
+                                <label className="x-small fw-900 mb-1 opacity-50">CANTIDAD DE PERSONAS</label>
+                                <input 
+                                    type="number" className="form-control rounded-4 border-0 bg-light-soft px-3 py-2 py-md-3 fw-bold" 
                                     value={formData.cantidadPersonas} onChange={e => setFormData({...formData, cantidadPersonas: e.target.value})}
                                     style={{ color: isDark ? '#FFF' : '#000' }}
                                 />
                             </div>
-                            <div className="col-12 py-2">
-                                <div className="d-flex gap-4">
+
+                            <div className="col-12 mt-2">
+                                <div className="d-flex flex-wrap gap-4">
                                     <div className="form-check form-switch">
                                         <input className="form-check-input" type="checkbox" id="pianistSwitch" checked={formData.necesitaPianista} onChange={e => setFormData({...formData, necesitaPianista: e.target.checked})} />
-                                        <label className="form-check-label small fw-bold" htmlFor="pianistSwitch" style={{ color: isDark ? 'rgba(255,255,255,0.8)' : '#000' }}>Necesita Pianista</label>
+                                        <label className="form-check-label small fw-bold" htmlFor="pianistSwitch">Pianista</label>
                                     </div>
                                     <div className="form-check form-switch">
                                         <input className="form-check-input" type="checkbox" id="specialSwitch" checked={formData.esGrupoEspecial} onChange={e => setFormData({...formData, esGrupoEspecial: e.target.checked})} />
-                                        <label className="form-check-label small fw-bold" htmlFor="specialSwitch" style={{ color: isDark ? 'rgba(255,255,255,0.8)' : '#000' }}>Grupo Especial</label>
+                                        <label className="form-check-label small fw-bold" htmlFor="specialSwitch">Grupo Especial</label>
                                     </div>
                                 </div>
                             </div>
-                            <div className="col-12 text-end">
-                                <button type="submit" className="btn btn-primary rounded-pill px-5 fw-bold shadow-lg py-3" style={{ background: PURPLE_AMETHYST }}>
-                                    Confirmar y Guardar Actividad
+
+                            <div className="col-12 text-end mt-3">
+                                <button type="submit" className="btn btn-primary rounded-pill w-100 w-md-auto px-5 fw-bold py-3 shadow-lg" style={{ background: PURPLE_AMETHYST, border: 'none' }}>
+                                    Guardar Evento
                                 </button>
                             </div>
                         </form>
@@ -824,29 +845,23 @@ const AdminCulto = () => {
                 </AnimatePresence>
 
                 <GlassCard style={{ borderRadius: '24px', padding: '0', overflow: 'hidden' }}>
-                    <div className="p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div className="p-3 p-md-4 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-3">
                         <div className="d-flex align-items-center gap-3">
-                            <h6 className="fw-bold mb-0">Vista Previa: <span style={{ color: PURPLE_AMETHYST }}>{selectedDate}</span></h6>
+                            <h6 className="fw-900 mb-0" style={{ fontSize: isMobile ? '0.9rem' : '1rem' }}>PROGRAMA: <span style={{ color: PURPLE_AMETHYST }}>{selectedDate}</span></h6>
                         </div>
-                        <div className="d-flex gap-2">
-                             <button className="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold" onClick={exportCurrentOrden}>
-                                <FileSpreadsheet size={14} className="me-2" /> Descargar Excel
+                        <div className="d-flex gap-2 w-100 w-md-auto overflow-x-auto pb-1 pb-md-0">
+                             <button className="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold text-nowrap" onClick={exportCurrentOrden}>
+                                <FileSpreadsheet size={14} className="me-2" /> Exportar
                             </button>
                             {serviceStartTime ? (
-                                <>
-                                    <button className="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" onClick={stopService}>
-                                        <X size={14} className="me-2" /> Detener
-                                    </button>
+                                <div className="d-flex gap-1">
+                                    <button className="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" onClick={stopService}>Detener</button>
                                     <button className="btn btn-sm btn-light rounded-pill px-3 fw-bold" onClick={() => setIsPaused(!isPaused)}>
-                                        {isPaused ? <Play size={14} fill="currentColor" className="me-2" /> : <Pause size={14} fill="currentColor" className="me-2" />}
-                                        {isPaused ? 'Reiniciar' : 'Pausar'}
+                                        {isPaused ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}
                                     </button>
-                                    <button className="btn btn-sm btn-light rounded-pill px-3 fw-bold" onClick={nextActivity}>
-                                        <SkipForward size={14} className="me-2" /> Pasar
-                                    </button>
-                                </>
+                                </div>
                             ) : (
-                                <button className="btn btn-sm rounded-pill px-4 fw-bold text-white shadow-lg border-0" 
+                                <button className="btn btn-sm rounded-pill px-4 fw-bold text-white shadow-lg border-0 text-nowrap" 
                                     onClick={startService}
                                     style={{ background: `linear-gradient(135deg, ${PURPLE_AMETHYST}, ${PURPLE_LIGHT})` }}
                                 >
@@ -855,74 +870,122 @@ const AdminCulto = () => {
                             )}
                         </div>
                     </div>
-                    <div className="table-responsive">
-                        <table className="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr className="x-small text-uppercase fw-bold" style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.6)' }}>
-                                    <th className="ps-4 py-3">Evento</th>
-                                    <th>Responsable</th>
-                                    <th>Duración</th>
-                                    <th>Asistentes</th>
-                                    <th className="text-end pe-4">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredOrden.map((item, idx) => (
-                                    <tr key={item.id} className="border-bottom" style={{ color: isDark ? '#FFF' : '#000' }}>
-                                        <td className="ps-4 py-3">
-                                            <div className="d-flex align-items-center gap-3">
-                                                <div className="p-2 rounded-3" style={{ background: `${PURPLE_AMETHYST}15` }}>
-                                                    {idx === 0 ? <UsersIcon size={18} color={PURPLE_AMETHYST} /> : <FileSpreadsheet size={18} color={PURPLE_AMETHYST} />}
-                                                </div>
-                                                <div>
-                                                    <div className="fw-bold small">{item.actividad}</div>
-                                                    <div className="x-small" style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>{item.hora}</div>
-                                                </div>
+
+                    {isMobile ? (
+                        <div className="p-3 d-flex flex-column gap-3">
+                            {filteredOrden.map((item, idx) => (
+                                <div key={item.id} className="p-3 rounded-4" style={{ 
+                                    background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                                    border: `1px solid ${theme.colors.border}`,
+                                    position: 'relative'
+                                }}>
+                                    <div className="d-flex justify-content-between align-items-start mb-2">
+                                        <div className="d-flex align-items-center gap-2">
+                                            <div className="p-2 rounded-3" style={{ background: `${PURPLE_AMETHYST}15` }}>
+                                                <Clock size={16} color={PURPLE_AMETHYST} />
                                             </div>
-                                        </td>
-                                        <td><div className="small fw-semibold" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}>{item.responsable}</div></td>
-                                        <td style={{ width: '100px' }}>
-                                            <div className="d-flex flex-column gap-1">
-                                                <span className="x-small fw-bold">{item.duracionEstimada} min</span>
-                                                <div className="progress" style={{ height: '4px', background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}>
-                                                    <div className="progress-bar" style={{ width: '100%', background: PURPLE_AMETHYST, opacity: 0.3 }}></div>
-                                                </div>
+                                            <div>
+                                                <div className="fw-900 small">{item.actividad}</div>
+                                                <div className="x-small fw-bold opacity-50">{item.hora} • {item.duracionEstimada} min</div>
                                             </div>
-                                        </td>
-                                        <td>
-                                            <div className="d-flex align-items-center gap-2">
-                                                <UserPlus size={14} style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }} />
-                                                <span className="small fw-bold">{item.cantidadPersonas || 0}</span>
-                                            </div>
-                                        </td>
-                                        <td className="text-end pe-4">
-                                            <div className="d-flex justify-content-end gap-1">
-                                                <button className="btn btn-sm btn-light p-2 rounded-circle" onClick={() => moveActivity(idx, -1)} disabled={idx === 0}><ChevronUp size={14} /></button>
-                                                <button className="btn btn-sm btn-light p-2 rounded-circle" onClick={() => moveActivity(idx, 1)} disabled={idx === filteredOrden.length - 1}><ChevronDown size={14} /></button>
-                                                <button className="btn btn-sm btn-light text-danger p-2 rounded-circle ms-2" onClick={() => {
-                                                    setConfirmConfig({
-                                                        show: true, title: 'Eliminar Actividad', message: '¿Estás seguro?', type: 'danger',
-                                                        onConfirm: async () => {
-                                                            await apiClient.delete(`/orden-culto/${item.id}`);
-                                                            fetchOrden();
-                                                            setConfirmConfig(p => ({ ...p, show: false }));
-                                                        }
-                                                    });
-                                                }}><Trash2 size={14} /></button>
-                                            </div>
-                                        </td>
+                                        </div>
+                                        <div className="d-flex gap-1">
+                                            <button className="btn btn-sm btn-light p-1 rounded-circle" onClick={() => moveActivity(idx, -1)} disabled={idx === 0}><ChevronUp size={14} /></button>
+                                            <button className="btn btn-sm btn-light p-1 rounded-circle" onClick={() => moveActivity(idx, 1)} disabled={idx === filteredOrden.length - 1}><ChevronDown size={14} /></button>
+                                        </div>
+                                    </div>
+                                    <div className="d-flex justify-content-between align-items-center mt-3">
+                                        <div className="d-flex align-items-center gap-2">
+                                            <User size={14} className="opacity-50" />
+                                            <span className="x-small fw-bold">{item.responsable}</span>
+                                        </div>
+                                        <button className="btn btn-sm btn-light text-danger p-1 rounded-circle" onClick={() => {
+                                            setConfirmConfig({
+                                                show: true, title: 'Eliminar', message: '¿Eliminar actividad?', type: 'danger',
+                                                onConfirm: async () => {
+                                                    await apiClient.delete(`/orden-culto/${item.id}`);
+                                                    fetchOrden();
+                                                    setConfirmConfig(p => ({ ...p, show: false }));
+                                                }
+                                            });
+                                        }}><Trash2 size={14} /></button>
+                                    </div>
+                                </div>
+                            ))}
+                            {filteredOrden.length === 0 && (
+                                <div className="text-center py-5 x-small fw-bold opacity-40">No hay actividades programadas.</div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="table-responsive">
+                            <table className="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr className="x-small text-uppercase fw-bold" style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.6)' }}>
+                                        <th className="ps-4 py-3">Evento</th>
+                                        <th>Responsable</th>
+                                        <th>Duración</th>
+                                        <th>Asistentes</th>
+                                        <th className="text-end pe-4">Acción</th>
                                     </tr>
-                                ))}
-                                {filteredOrden.length === 0 && (
-                                    <tr>
-                                        <td colSpan="5" className="text-center py-5 small fw-bold" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>
-                                            No hay actividades para esta fecha. Usa "Plantilla Excel" o agrega una manualmente.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    {filteredOrden.map((item, idx) => (
+                                        <tr key={item.id} className="border-bottom" style={{ color: isDark ? '#FFF' : '#000' }}>
+                                            <td className="ps-4 py-3">
+                                                <div className="d-flex align-items-center gap-3">
+                                                    <div className="p-2 rounded-3" style={{ background: `${PURPLE_AMETHYST}15` }}>
+                                                        {idx === 0 ? <UsersIcon size={18} color={PURPLE_AMETHYST} /> : <FileSpreadsheet size={18} color={PURPLE_AMETHYST} />}
+                                                    </div>
+                                                    <div>
+                                                        <div className="fw-bold small">{item.actividad}</div>
+                                                        <div className="x-small" style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)' }}>{item.hora}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td><div className="small fw-semibold" style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}>{item.responsable}</div></td>
+                                            <td style={{ width: '100px' }}>
+                                                <div className="d-flex flex-column gap-1">
+                                                    <span className="x-small fw-bold">{item.duracionEstimada} min</span>
+                                                    <div className="progress" style={{ height: '4px', background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}>
+                                                        <div className="progress-bar" style={{ width: '100%', background: PURPLE_AMETHYST, opacity: 0.3 }}></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <UserPlus size={14} style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }} />
+                                                    <span className="small fw-bold">{item.cantidadPersonas || 0}</span>
+                                                </div>
+                                            </td>
+                                            <td className="text-end pe-4">
+                                                <div className="d-flex justify-content-end gap-1">
+                                                    <button className="btn btn-sm btn-light p-2 rounded-circle" onClick={() => moveActivity(idx, -1)} disabled={idx === 0}><ChevronUp size={14} /></button>
+                                                    <button className="btn btn-sm btn-light p-2 rounded-circle" onClick={() => moveActivity(idx, 1)} disabled={idx === filteredOrden.length - 1}><ChevronDown size={14} /></button>
+                                                    <button className="btn btn-sm btn-light text-danger p-2 rounded-circle ms-2" onClick={() => {
+                                                        setConfirmConfig({
+                                                            show: true, title: 'Eliminar Actividad', message: '¿Estás seguro?', type: 'danger',
+                                                            onConfirm: async () => {
+                                                                await apiClient.delete(`/orden-culto/${item.id}`);
+                                                                fetchOrden();
+                                                                setConfirmConfig(p => ({ ...p, show: false }));
+                                                            }
+                                                        });
+                                                    }}><Trash2 size={14} /></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {filteredOrden.length === 0 && (
+                                        <tr>
+                                            <td colSpan="5" className="text-center py-5 small fw-bold" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>
+                                                No hay actividades para esta fecha. Usa "Plantilla Excel" o agrega una manualmente.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </GlassCard>
             </div>
             
@@ -983,54 +1046,54 @@ const AdminCulto = () => {
                 </button>
             </div>
 
-            <GlassCard style={{ maxWidth: '450px', width: '100%', padding: '40px', background: '#09090b', border: '1px solid rgba(167, 139, 250, 0.2)', borderRadius: '32px' }}>
-                <div className="text-center mb-5">
-                    <div className="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-4" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+            <GlassCard style={{ maxWidth: '450px', width: '100%', padding: isMobile ? '24px' : '40px', background: '#09090b', border: '1px solid rgba(167, 139, 250, 0.2)', borderRadius: '32px' }}>
+                <div className="text-center mb-4 mb-md-5">
+                    <div className="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-3 mb-md-4" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
                         <div className="rounded-circle animate-pulse" style={{ width: 8, height: 8, background: '#10B981' }}></div>
                         <span className="x-small fw-bold" style={{ color: '#10B981' }}>EN VIVO</span>
                     </div>
                     <h5 className="text-muted small fw-bold text-uppercase tracking-widest mb-1">{currentActivity?.responsable || 'A cargo'}</h5>
-                    <h1 className="text-white fw-900" style={{ fontSize: '2.5rem', fontFamily: theme.fonts.accent }}>{currentActivity?.actividad || 'Sin actividad'}</h1>
+                    <h1 className="text-white fw-900" style={{ fontSize: isMobile ? '1.8rem' : '2.5rem', fontFamily: theme.fonts.accent }}>{currentActivity?.actividad || 'Sin actividad'}</h1>
                 </div>
 
-                <div className="position-relative d-flex justify-content-center mb-5 scale-lg">
-                    <CircularProgress percentage={progressPercentage} size={280} />
+                <div className="position-relative d-flex justify-content-center mb-4 mb-md-5 scale-lg">
+                    <CircularProgress percentage={progressPercentage} size={isMobile ? 220 : 280} />
                     <div className="position-absolute top-50 start-50 translate-middle text-center">
-                        <div style={{ fontFamily: 'monospace', fontSize: '4.5rem', fontWeight: 900, color: progressPercentage > 80 ? PURPLE_LIGHT : SUCCESS_GREEN, lineHeight: 1 }}>
+                        <div style={{ fontFamily: 'monospace', fontSize: isMobile ? '3.2rem' : '4.5rem', fontWeight: 900, color: progressPercentage > 80 ? PURPLE_LIGHT : SUCCESS_GREEN, lineHeight: 1 }}>
                             {formatTime(Math.max((currentActivity?.duracionEstimada * 60) - elapsedSeconds, 0))}
                         </div>
-                        <div className="x-small text-white opacity-40 fw-bold mt-2 tracking-widest">MINUTOS RESTANTES</div>
+                        <div className="x-small text-white opacity-40 fw-bold mt-2 tracking-widest" style={{ fontSize: isMobile ? '0.6rem' : '0.75rem' }}>MINUTOS RESTANTES</div>
                     </div>
                 </div>
 
-                <div className="d-flex justify-content-center align-items-center gap-4">
+                <div className="d-flex justify-content-center align-items-center gap-3 gap-md-4">
                     <div className="text-center">
-                        <button className="btn p-3 rounded-circle border-0 luxe-btn mb-2" onClick={() => setElapsedSeconds(prev => Math.max(prev - 30, 0))}><SkipForward size={24} className="transform rotate-180" color="white" /></button>
+                        <button className="btn p-2 p-md-3 rounded-circle border-0 luxe-btn mb-2" onClick={() => setElapsedSeconds(prev => Math.max(prev - 30, 0))}><SkipForward size={isMobile ? 20 : 24} className="transform rotate-180" color="white" /></button>
                         <div className="x-small text-white opacity-40 fw-bold">-30s</div>
                     </div>
                     <div className="text-center">
                         <button 
                             onClick={togglePause}
                             className="btn rounded-circle shadow-lg d-flex align-items-center justify-content-center luxe-play mb-2" 
-                            style={{ width: '80px', height: '80px', background: '#fff' }}
+                            style={{ width: isMobile ? '64px' : '80px', height: isMobile ? '64px' : '80px', background: '#fff' }}
                         >
-                            {isPaused ? <Play size={40} fill="black" /> : <Pause size={40} fill="black" />}
+                            {isPaused ? <Play size={isMobile ? 32 : 40} fill="black" /> : <Pause size={isMobile ? 32 : 40} fill="black" />}
                         </button>
-                        <div className="x-small text-white opacity-40 fw-bold">{isPaused ? 'REANUDAR' : 'PAUSAR'}</div>
+                        <div className="x-small text-white opacity-40 fw-bold" style={{ fontSize: isMobile ? '0.6rem' : '0.75rem' }}>{isPaused ? 'REANUDAR' : 'PAUSAR'}</div>
                     </div>
                     <div className="text-center">
-                        <button className="btn p-3 rounded-circle border-0 luxe-btn mb-2" onClick={nextActivity}><SkipForward size={24} color="white" /></button>
+                        <button className="btn p-2 p-md-3 rounded-circle border-0 luxe-btn mb-2" onClick={nextActivity}><SkipForward size={isMobile ? 20 : 24} color="white" /></button>
                         <div className="x-small text-white opacity-40 fw-bold">PASAR</div>
                     </div>
                 </div>
 
-                <div className="mt-5 p-3 rounded-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="mt-4 mt-md-5 p-3 rounded-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <div className="d-flex justify-content-between align-items-center mb-0">
                         <div className="d-flex align-items-center gap-2">
                             <SkipForward size={14} color="#A78BFA" opacity={0.5} />
                             <span className="x-small text-muted fw-bold">SIGUIENTE:</span>
                         </div>
-                        <span className="x-small text-white fw-bold">{filteredOrden[currentActivityIndex + 1]?.actividad || 'FIN DEL CULTO'}</span>
+                        <span className="x-small text-white fw-bold text-truncate" style={{ maxWidth: isMobile ? '120px' : 'auto' }}>{filteredOrden[currentActivityIndex + 1]?.actividad || 'FIN DEL CULTO'}</span>
                     </div>
                 </div>
             </GlassCard>
