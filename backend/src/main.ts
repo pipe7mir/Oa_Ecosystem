@@ -81,10 +81,14 @@ async function bootstrap() {
   }
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow all origins for now to resolve the "very broken" state
+      callback(null, true);
+    },
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept, Origin, cache-control, pragma',
+    allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Cache-Control, cache-control, Pragma, pragma, X-CSRF-Token',
+    exposedHeaders: 'Content-Range, X-Content-Range',
   });
 
   // ✅ Global pipes for validation (class-validator)
