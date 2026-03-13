@@ -155,7 +155,7 @@ export default defineConfig({
     outDir: 'dist',
     minify: 'esbuild',
     rollupOptions: {
-      external: ['jspdf', 'pptxgenjs'],
+      external: [],
       output: {
         manualChunks: {
           'vendor': ['bootstrap', 'react', 'react-dom'],
