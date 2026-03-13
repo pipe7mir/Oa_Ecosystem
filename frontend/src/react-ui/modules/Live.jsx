@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { theme } from '../styles/theme';
+import { useTheme } from '../ThemeContext';
 import GlassCard from '../components/GlassCard';
 import Button from '../components/Button';
 import apiClient from '../../api/client';
@@ -7,6 +7,7 @@ import useAppMode from '../../hooks/useAppMode';
 import { useToast } from '../components/Toast';
 
 const Live = () => {
+    const { theme } = useTheme();
     const { isMobile } = useAppMode();
     const { showToast } = useToast();
     const [settings, setSettings] = useState({

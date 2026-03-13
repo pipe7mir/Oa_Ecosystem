@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { theme } from '../styles/theme';
+import { useTheme } from '../ThemeContext';
 import GlassCard from '../components/GlassCard';
 import Button from '../components/Button';
 import Hero from '../components/Hero';
@@ -8,8 +8,12 @@ import Announcements from '../components/Announcements';
 import MapSection from '../components/MapSection';
 import CalendarSection from '../components/CalendarSection';
 import apiClient from '../../api/client';
+import useAppMode from '../../hooks/useAppMode'; // Added based on instruction to potentially use isMobile
+import { useToast } from '../components/Toast'; // Added based on instruction, though not used in Home.jsx currently
 
 const Home = () => {
+    const { theme } = useTheme();
+    const { isMobile } = useAppMode(); // Added based on instruction to potentially use isMobile
     const [settings, setSettings] = useState({
         youtube_channel_id: '',
         youtube_live_video_id: '',

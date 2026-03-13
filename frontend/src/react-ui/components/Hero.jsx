@@ -1,24 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-// CORRECCIÓN: Esta ruta ahora apunta correctamente al archivo dentro de la carpeta frontend
+import { useTheme } from '../ThemeContext';
 import apiClient from '../../api/client';
-import { theme } from '../styles/theme';
 import Button from './Button';
 import T1 from '../../img/logos/T1.png';
 import * as LucideIcons from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-/**
- * Componente Hero (Cartelera Dinámica)
- * -----------------------------------
- * Este componente es el corazón visual de la página de inicio. 
- * Implementa un carrusel (Billboard) que:
- * 1. Carga dinámicamente diapositivas desde la API (/billboards).
- * 2. Soporta fondos de Imagen y Video (incluyendo YouTube).
- * 3. Rota automáticamente cada 15 segundos.
- * 4. Aplica un diseño premium con Glassmorphism y degradados.
- * 5. FALLBACK: Usa una galería estática de alta calidad si no hay imágenes configuradas.
- */
 
 const STATIC_BACKGROUNDS = [
     'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&q=80', // Montañas (Clima)
@@ -32,7 +19,9 @@ const STATIC_BACKGROUNDS = [
     'https://images.unsplash.com/photo-1464802686167-b939a67e06a1?w=1920&q=80', // Cielo estrellado (Naturaleza)
     'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=80', // Campo (Naturaleza)
 ];
+
 const Hero = () => {
+    const { theme } = useTheme();
     const [billboards, setBillboards] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
