@@ -23,7 +23,7 @@ const MapSection = () => {
             }}>
                 <i className="bi bi-geo-alt-fill"></i> Acompáñanos
             </h3>
-            <p style={{ color: theme.colors.text.secondary, marginBottom: theme.spacing(3) }}>
+            <p style={{ color: theme.colors.text.primary, marginBottom: theme.spacing(3), opacity: 0.8, fontWeight: 500 }}>
                 Te invitamos a ser parte de nuestra comunidad. Encuéntranos aquí.
             </p>
 

@@ -12,6 +12,29 @@ async function bootstrap() {
     fs.mkdirSync(uploadsDir, { recursive: true });
     console.log(`📁 Created uploads directory at: ${uploadsDir}`);
   }
+
+  // Schema Fix for Billboards (Manual sync)
+  console.log('🔄 Checking database schema for billboards...');
+  const { Client } = require('pg');
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
+  try {
+    await client.connect();
+    await client.query('ALTER TABLE billboards ALTER COLUMN media_url TYPE varchar(1000);');
+    await client.query('ALTER TABLE billboards ALTER COLUMN media_type TYPE varchar(50);');
+    try {
+      await client.query('ALTER TABLE billboards ADD COLUMN IF NOT EXISTS styles jsonb;');
+    } catch (e: any) {
+      console.log('Styles column check/add:', e.message);
+    }
+    console.log('✅ Database schema updated manually (1000 chars + styles)');
+    await client.end();
+  } catch (error: any) {
+    console.warn('⚠️ Could not run manual schema fix (might be expected if table doesn\'t exist yet):', error.message);
+    try { await client.end(); } catch (e: any) {}
+  }
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
   console.log('🚀 Starting OASIS API...');
@@ -61,16 +84,16 @@ async function bootstrap() {
     origin: allowedOrigins,
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept, Origin',
+    allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept, Origin, cache-control, pragma',
   });
 
   // ✅ Global pipes for validation (class-validator)
   const { ValidationPipe } = await import('@nestjs/common');
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // Remove properties not in DTO
-      forbidNonWhitelisted: true, // Throw error for extra properties
-      transform: true, // Automatically transform payloads to DTO instances
+      whitelist: false, 
+      forbidNonWhitelisted: false,
+      transform: true,
       transformOptions: { enableImplicitConversion: true },
     }),
   );

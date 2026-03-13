@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
-import { theme } from '../react-ui/styles/theme';
+import { useTheme } from '../react-ui/ThemeContext';
+import { useToast } from '../react-ui/components/Toast';
+import ConfirmationModal from '../react-ui/components/ConfirmationModal';
 
 const AdminUsers = () => {
+    const { theme, mode } = useTheme();
     const [users, setUsers] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [filter, setFilter] = useState('all'); // all, approved, pending
@@ -12,6 +15,15 @@ const AdminUsers = () => {
     });
     const location = useLocation();
     const navigate = useNavigate();
+    const { showToast } = useToast();
+    
+    const [confirmConfig, setConfirmConfig] = useState({
+        show: false,
+        title: '',
+        message: '',
+        onConfirm: () => {},
+        type: 'warning'
+    });
 
     const glassStyle = {
         background: theme.glass.background,
@@ -55,49 +67,78 @@ const AdminUsers = () => {
             fetchUsers();
             setShowForm(false);
             resetForm();
+            showToast('Usuario guardado correctamente', 'success');
         } catch (error) {
-            alert('Error al guardar usuario: ' + error.message);
+            showToast('Error al guardar usuario: ' + error.message, 'error');
         }
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('¿Eliminar este usuario?')) return;
-        try {
-            await apiClient.delete(`/users/${id}`);
-            fetchUsers();
-        } catch (error) {
-            alert('Error al eliminar');
-        }
+        setConfirmConfig({
+            show: true,
+            title: 'Eliminar Usuario',
+            message: '¿Estás seguro de que deseas eliminar este usuario?',
+            type: 'danger',
+            onConfirm: async () => {
+                try {
+                    await apiClient.delete(`/users/${id}`);
+                    fetchUsers();
+                    showToast('Usuario eliminado', 'success');
+                } catch (error) {
+                    showToast('Error al eliminar', 'error');
+                }
+                setConfirmConfig({ ...confirmConfig, show: false });
+            }
+        });
     };
 
     const handleApprove = async (id) => {
         try {
             await apiClient.patch(`/users/${id}/approve`);
             fetchUsers();
+            showToast('Usuario aprobado', 'success');
         } catch (error) {
-            alert('Error al aprobar usuario: ' + error.message);
+            showToast('Error al aprobar usuario: ' + error.message, 'error');
         }
     };
 
     const handleDisable = async (id) => {
-        if (!window.confirm('¿Inhabilitar este usuario? No podrá acceder al sistema.')) return;
-        try {
-            await apiClient.patch(`/users/${id}/disable`);
-            fetchUsers();
-        } catch (error) {
-            alert('Error al inhabilitar usuario: ' + error.message);
-        }
+        setConfirmConfig({
+            show: true,
+            title: 'Inhabilitar Usuario',
+            message: '¿Inhabilitar este usuario? No podrá acceder al sistema.',
+            type: 'warning',
+            onConfirm: async () => {
+                try {
+                    await apiClient.patch(`/users/${id}/disable`);
+                    fetchUsers();
+                    showToast('Usuario inhabilitado', 'success');
+                } catch (error) {
+                    showToast('Error al inhabilitar usuario: ' + error.message, 'error');
+                }
+                setConfirmConfig({ ...confirmConfig, show: false });
+            }
+        });
     };
 
     const handleToggle = async (id, currentStatus) => {
         const action = currentStatus ? 'inhabilitar' : 'habilitar';
-        if (!window.confirm(`¿${action.charAt(0).toUpperCase() + action.slice(1)} este usuario?`)) return;
-        try {
-            await apiClient.patch(`/users/${id}/toggle`);
-            fetchUsers();
-        } catch (error) {
-            alert(`Error al ${action} usuario: ` + error.message);
-        }
+        setConfirmConfig({
+            show: true,
+            title: `${action.charAt(0).toUpperCase() + action.slice(1)} Usuario`,
+            message: `¿Estás seguro de que deseas ${action} este usuario?`,
+            type: 'warning',
+            onConfirm: async () => {
+                try {
+                    await apiClient.patch(`/users/${id}/toggle`);
+                    fetchUsers();
+                    showToast(`Usuario ${action === 'habilitar' ? 'habilitado' : 'inhabilitado'}`, 'success');
+                } catch (error) {
+                    showToast(`Error al ${action} usuario: ` + error.message, 'error');
+                }
+                setConfirmConfig({ ...confirmConfig, show: false });
+            }
+        });
     };
 
     // Filtrar usuarios según el estado seleccionado
@@ -128,7 +169,9 @@ const AdminUsers = () => {
 
             <div className="d-flex justify-content-between align-items-center mb-4 p-4 rounded-4 shadow-sm" style={glassStyle}>
                 <div>
-                    <h3 className="fw-bold mb-0" style={{ fontFamily: theme.fonts.logo, color: theme.colors.primary }}>Gestión de Usuarios</h3>
+                    <h3 className="fw-bold mb-0" style={{ fontFamily: theme.fonts.accent, color: theme.colors.text.primary, fontSize: '2.2rem', textTransform: 'uppercase' }}>
+                        Gestión de <span style={{ color: theme.colors.primary }}>Equipo</span>
+                    </h3>
                     <p className="text-muted small mb-0">Control de Accesos</p>
                 </div>
                 <div className="d-flex gap-2 align-items-center">
@@ -297,6 +340,14 @@ const AdminUsers = () => {
                     </table>
                 </div>
             </div>
+            <ConfirmationModal 
+                show={confirmConfig.show}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                type={confirmConfig.type}
+                onConfirm={confirmConfig.onConfirm}
+                onCancel={() => setConfirmConfig({ ...confirmConfig, show: false })}
+            />
         </div>
     );
 };

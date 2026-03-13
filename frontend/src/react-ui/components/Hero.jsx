@@ -5,6 +5,8 @@ import apiClient from '../../api/client';
 import { theme } from '../styles/theme';
 import Button from './Button';
 import T1 from '../../img/logos/T1.png';
+import * as LucideIcons from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 /**
  * Componente Hero (Cartelera Dinámica)
@@ -15,7 +17,21 @@ import T1 from '../../img/logos/T1.png';
  * 2. Soporta fondos de Imagen y Video (incluyendo YouTube).
  * 3. Rota automáticamente cada 15 segundos.
  * 4. Aplica un diseño premium con Glassmorphism y degradados.
+ * 5. FALLBACK: Usa una galería estática de alta calidad si no hay imágenes configuradas.
  */
+
+const STATIC_BACKGROUNDS = [
+    'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&q=80', // Montañas (Clima)
+    'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1920&q=80', // Lago (Naturaleza)
+    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80', // Bosque (Clima)
+    'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1920&q=80', // Valle neblina (Naturaleza)
+    'https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?w=1920&q=80', // Nieve (Clima)
+    'https://images.unsplash.com/photo-1473580044384-7ba9967e16a0?w=1920&q=80', // Desierto (Clima)
+    'https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=1920&q=80', // Cascada (Naturaleza)
+    'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=1920&q=80', // Arquitectura limpia (Lugar de culto)
+    'https://images.unsplash.com/photo-1464802686167-b939a67e06a1?w=1920&q=80', // Cielo estrellado (Naturaleza)
+    'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=80', // Campo (Naturaleza)
+];
 const Hero = () => {
     const [billboards, setBillboards] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -30,14 +46,14 @@ const Hero = () => {
 
     // Efecto de rotación: Reinicia el reloj cada vez que cambiamos de slide
     useEffect(() => {
-        if (billboards.length > 1) {
-            startTimer();
-        }
+        startTimer();
     }, [currentIndex, billboards]);
 
     const fetchBillboards = async () => {
         try {
-            const { data } = await apiClient.get('/billboards');
+            const { data } = await apiClient.get(`/billboards?t=${Date.now()}`, {
+                headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+            });
             const activeItems = (data || []).map((item) => ({
                 ...item,
                 media_url: item.media_url || item.mediaUrl || '',
@@ -73,11 +89,11 @@ const Hero = () => {
     };
 
     const nextSlide = () => {
-        setCurrentIndex(prev => (prev === billboards.length - 1 ? 0 : prev + 1));
+        setCurrentIndex(prev => (prev >= activeSlides.length - 1 ? 0 : prev + 1));
     };
 
     const prevSlide = () => {
-        setCurrentIndex(prev => (prev === 0 ? billboards.length - 1 : prev - 1));
+        setCurrentIndex(prev => (prev === 0 ? activeSlides.length - 1 : prev - 1));
     };
 
     const goToSlide = (index) => {
@@ -97,14 +113,30 @@ const Hero = () => {
     const defaultSlide = {
         title: "BIENVENIDO A OASIS",
         description: "Un lugar para conectar con Dios y con la comunidad. Te esperamos cada sábado.",
-        media_url: "https://images.unsplash.com/photo-1544427928-c49cdfebf194?auto=format&fit=crop&q=80",
+        media_url: "", 
         media_type: 'image',
         button_text: "CONÓCENOS",
         button_link: "/about"
     };
 
-    const activeSlides = billboards.length > 0 ? billboards : [defaultSlide];
-    const currentSlide = activeSlides[currentIndex];
+    // GENERACIÓN DE DIAPOSITIVAS:
+    // 1. Las publicaciones reales del servidor (Prioridad 1)
+    // 2. Las imágenes estáticas de la naturaleza (Prioridad 2)
+    const activeSlides = [
+        ...billboards,
+        ...STATIC_BACKGROUNDS.map((url, i) => ({
+            ...defaultSlide,
+            id: `static-${i}`,
+            media_url: url,
+            // Si hay billboards reales, las estáticas NO llevan texto para que no se mezclen
+            // Solo muestran texto si no hay absolutamente ningún anuncio real.
+            title: billboards.length > 0 ? "" : defaultSlide.title,
+            description: billboards.length > 0 ? "" : defaultSlide.description,
+            button_text: billboards.length > 0 ? "" : defaultSlide.button_text
+        }))
+    ];
+
+    const currentSlide = activeSlides[currentIndex] || defaultSlide;
 
     /**
      * Normaliza las URLs de medios para asegurar que apunten al backend correcto
@@ -141,7 +173,7 @@ const Hero = () => {
      * Renderizador de Fondo (Media)
      * Detecta si es video (MP4/YouTube) o imagen y genera el HTML correspondiente.
      */
-    const renderBackground = (slide) => {
+    const renderBackground = (slide, index) => {
         const mediaUrl = normalizeMediaUrl(slide.media_url);
 
         if (slide.media_type === 'video') {
@@ -156,99 +188,166 @@ const Hero = () => {
                 }
 
                 return (
-                    <div className="ratio ratio-16x9" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', minWidth: '100%', minHeight: '100%', width: 'auto', height: 'auto', zIndex: -3 }}>
+                    <motion.div 
+                        key={`vid-${index}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 2, ease: "easeInOut" }}
+                        className="ratio ratio-16x9" 
+                        style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', minWidth: '100%', minHeight: '100%', width: 'auto', height: 'auto', zIndex: -3 }}
+                    >
                         <iframe
                             src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&background=1`}
                             frameBorder="0"
                             allow="autoplay; fullscreen"
                             style={{ pointerEvents: 'none' }}
                         ></iframe>
-                    </div>
+                    </motion.div>
                 );
             }
 
             return (
-                <video
+                <motion.video
+                    key={`vfile-${index}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 2, ease: "easeInOut" }}
                     autoPlay muted loop playsInline
-                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: -3, background: '#0a0a0a' }}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 1, background: '#0a0a0a' }}
                 >
                     <source src={mediaUrl} type="video/mp4" />
-                </video>
+                </motion.video>
             );
         }
 
-        // Para imágenes, usamos un div con background-image y un fondo de respaldo oscuro
+        // Usar imagen de la galería estática si no hay una url válida o si el usuario quiere estáticas
+        const staticFallback = STATIC_BACKGROUNDS[index % STATIC_BACKGROUNDS.length];
+        const finalUrl = (slide.media_url && slide.media_url.length > 10) ? mediaUrl : staticFallback;
+
         return (
-            <div style={{
-                position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                backgroundColor: '#0a0a0a', // Color de respaldo si la imagen no carga
-                backgroundImage: mediaUrl ? `url(${mediaUrl})` : 'none',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                zIndex: -3,
-                transition: 'background-image 1s ease-in-out'
-            }} />
+            <motion.div 
+                key={`img-${index}`}
+                initial={{ opacity: 0, scale: 1.05 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 2, ease: "easeInOut" }}
+                style={{
+                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                    backgroundColor: '#0a0a0a',
+                    backgroundImage: `url("${finalUrl}")`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    zIndex: 1
+                }} 
+            />
         );
     };
 
     return (
-        <section style={{ height: '100vh', minHeight: '650px', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
-            {/* 1. Fondo de Media */}
-            {renderBackground(currentSlide)}
+        <section 
+            className="hero-section"
+            style={{ 
+                height: '100vh', 
+                minHeight: '650px', 
+                position: 'relative', 
+                overflow: 'hidden', 
+                display: 'flex', 
+                alignItems: (!currentSlide.title && !currentSlide.description) ? 'flex-end' : 'center',
+                backgroundColor: '#000' // Base negra total
+            }}
+        >
+            {/* 1. Fondo de Media con Transición Suave */}
+            <AnimatePresence mode="popLayout">
+                {renderBackground(currentSlide, currentIndex)}
+            </AnimatePresence>
 
             {/* 2. Overlays Visuales (Marcas de agua y texturas) */}
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundImage: `url(${T1})`, backgroundSize: 'cover', opacity: 0.3, zIndex: -2, pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%)', zIndex: -1 }} />
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundImage: `url(${T1})`, backgroundSize: 'cover', opacity: 0.3, zIndex: 5, pointerEvents: 'none' }} />
+            <div style={{
+                position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                background: `linear-gradient(to right, rgba(0,0,0,${currentSlide.styles?.overlayOpacity ?? 0.8}) 0%, rgba(0,0,0,${(currentSlide.styles?.overlayOpacity ?? 0.8) * 0.4}) 30%, rgba(0,0,0,0.2) 100%)`,
+                zIndex: 6
+            }} />
 
-            {/* 3. Contenido (Textos y Botones) */}
-            <div className="container" style={{ position: 'relative', zIndex: 1, color: '#fff' }}>
+            {/* 3. Contenido (Textos y Botones) con Transición */}
+            <div className="container" style={{ position: 'relative', zIndex: 10, color: '#fff' }}>
                 <div className="row">
-                    <div className="col-lg-8" style={{ animation: 'oasisSlideUp 0.8s ease-out forwards' }}>
-                        <h1 style={{
-                            fontFamily: 'ModernAge, sans-serif',
-                            fontSize: 'clamp(3rem, 10vw, 5.5rem)',
-                            fontWeight: 'bold',
-                            marginBottom: '1.5rem',
-                            lineHeight: 1.1,
-                            textShadow: '0 4px 15px rgba(0,0,0,0.5)',
-                            background: `linear-gradient(135deg, #ffffff 0%, ${theme.colors.secondary} 100%)`,
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent'
-                        }}>
-                            {currentSlide.title}
-                        </h1>
-                        <p style={{
-                            fontSize: 'clamp(1rem, 2.5vw, 1.35rem)',
-                            marginBottom: '2rem',
-                            opacity: 0.9,
-                            maxWidth: '700px',
-                            lineHeight: 1.6,
-                            textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-                            padding: '0 8px'
-                        }}>
-                            {currentSlide.description}
-                        </p>
-
-                        <div className="hero-buttons" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                            {currentSlide.button_text && (
-                                <Link to={currentSlide.button_link || '#'} style={{ textDecoration: 'none', flex: '1 1 auto', minWidth: '200px', maxWidth: '300px' }}>
-                                    <Button style={{ padding: '14px 32px', fontSize: 'clamp(0.95rem, 2vw, 1.15rem)', width: '100%' }}>
-                                        {currentSlide.button_text}
-                                    </Button>
-                                </Link>
+                    <AnimatePresence mode="wait">
+                        <motion.div 
+                            key={currentIndex}
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                            className="col-lg-8" 
+                            style={{ 
+                                opacity: currentSlide.styles?.textOpacity ?? 1 
+                            }}
+                        >
+                            {currentSlide.styles?.iconName && LucideIcons[currentSlide.styles.iconName] && (
+                                <div className="mb-4" style={{ color: currentSlide.styles.iconColor || '#fff' }}>
+                                    {React.createElement(LucideIcons[currentSlide.styles.iconName], { 
+                                        size: parseInt(currentSlide.styles.iconSize || 60) 
+                                    })}
+                                </div>
                             )}
-                            <Link to="/about" style={{ textDecoration: 'none', flex: '1 1 auto', minWidth: '200px', maxWidth: '300px' }}>
-                                <button className="btn" style={{
-                                    padding: '14px 32px', borderRadius: '16px', border: '2px solid rgba(255,255,255,0.8)',
-                                    background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 'bold',
-                                    fontSize: 'clamp(0.95rem, 2vw, 1.15rem)', backdropFilter: 'blur(5px)', transition: 'all 0.3s',
-                                    width: '100%'
-                                }}>
-                                    <i className="bi bi-info-circle me-2"></i>Conócenos
-                                </button>
-                            </Link>
-                        </div>
-                    </div>
+                            <h1 style={{
+                                fontFamily: currentSlide.styles?.titleFont || 'ModernAge, sans-serif',
+                                fontSize: currentSlide.styles?.titleSize || 'clamp(3rem, 10vw, 5.5rem)',
+                                fontWeight: 'bold',
+                                marginBottom: '1.5rem',
+                                lineHeight: 1.1,
+                                textShadow: '0 4px 15px rgba(0,0,0,0.5)',
+                                color: currentSlide.styles?.titleColor || '#ffffff',
+                                background: !currentSlide.styles?.titleColor ? `linear-gradient(135deg, #ffffff 0%, ${theme.colors.secondary} 100%)` : 'none',
+                                WebkitBackgroundClip: !currentSlide.styles?.titleColor ? 'text' : 'unset',
+                                WebkitTextFillColor: !currentSlide.styles?.titleColor ? 'transparent' : 'unset'
+                            }}>
+                                {currentSlide.title}
+                            </h1>
+                            <p style={{
+                                fontSize: currentSlide.styles?.descSize || 'clamp(1rem, 2.5vw, 1.35rem)',
+                                fontFamily: currentSlide.styles?.descFont || 'inherit',
+                                color: currentSlide.styles?.descColor || '#ffffff',
+                                marginBottom: '2rem',
+                                opacity: currentSlide.styles?.textOpacity ?? 0.9,
+                                maxWidth: '700px',
+                                lineHeight: 1.6,
+                                textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                                padding: '0 8px'
+                            }}>
+                                {currentSlide.description}
+                            </p>
+
+                            <div className="hero-buttons" style={{ 
+                                display: 'flex', 
+                                gap: '1rem', 
+                                flexWrap: 'wrap',
+                                justifyContent: (!currentSlide.title && !currentSlide.description) ? 'flex-start' : 'flex-start',
+                                marginBottom: (!currentSlide.title && !currentSlide.description) ? '80px' : '0'
+                            }}>
+                                {currentSlide.button_text && (
+                                    <Link to={currentSlide.button_link || '#'} style={{ textDecoration: 'none', flex: '0 1 auto', minWidth: '200px', maxWidth: '300px' }}>
+                                        <Button style={{ padding: '14px 32px', fontSize: 'clamp(0.95rem, 2vw, 1.15rem)', width: '100%' }}>
+                                            {currentSlide.button_text}
+                                        </Button>
+                                    </Link>
+                                )}
+                                <Link to="/about" style={{ textDecoration: 'none', flex: '0 1 auto', minWidth: '200px', maxWidth: '300px' }}>
+                                    <button className="btn" style={{
+                                        padding: '14px 32px', borderRadius: '16px', border: '2px solid rgba(255,255,255,0.8)',
+                                        background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 'bold',
+                                        fontSize: 'clamp(0.95rem, 2vw, 1.15rem)', backdropFilter: 'blur(5px)', transition: 'all 0.3s',
+                                        width: '100%'
+                                    }}>
+                                        <i className="bi bi-info-circle me-2"></i>Conócenos
+                                    </button>
+                                </Link>
+                            </div>
+                        </motion.div>
+                    </AnimatePresence>
                 </div>
             </div>
 

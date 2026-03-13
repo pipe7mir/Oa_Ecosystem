@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../../react-ui/ThemeContext';
 
 /**
  * Componente del panel de opciones de texto avanzadas
@@ -24,6 +25,7 @@ export const TextPanel = ({
   setLineHeight,
   isMobile,
 }) => {
+  const { theme, mode } = useTheme();
   const fontFamilies = [
     'Arial',
     'Georgia',
@@ -71,7 +73,7 @@ export const TextPanel = ({
     <AnimatePresence>
       {showTextPanel && (
         <motion.div
-          className="text-panel bg-white border-end shadow-lg"
+          className="text-panel shadow-lg border-end"
           variants={panelVariants}
           initial="hidden"
           animate="visible"
@@ -85,11 +87,13 @@ export const TextPanel = ({
             zIndex: 1150,
             overflowY: 'auto',
             borderRadius: '0',
+            background: theme.colors.surface,
+            borderColor: theme.colors.border
           }}
         >
           {/* Header */}
-          <div className="p-3 border-bottom d-flex justify-content-between align-items-center sticky-top bg-white">
-            <h6 className="fw-bold mb-0">
+          <div className="p-3 border-bottom d-flex justify-content-between align-items-center sticky-top" style={{ background: theme.colors.surface, borderColor: theme.colors.border }}>
+            <h6 className="fw-bold mb-0" style={{ color: theme.colors.text.primary, fontFamily: theme.fonts.accent, letterSpacing: '1px' }}>
               <i className="bi bi-fonts"></i> TEXTO
             </h6>
             <button className="btn-close" onClick={() => setShowTextPanel(false)}></button>

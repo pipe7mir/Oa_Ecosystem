@@ -105,42 +105,81 @@ const Home = () => {
                 padding: `0 ${theme.spacing(2)}`
             }}>
                 {/* Unified Card Style */}
-                <GlassCard className="glass-card" style={{ minHeight: '240px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: theme.spacing(3) }}>
-                    <div className="icon-box" style={{ width: '56px', height: '56px', background: '#ffffff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: theme.spacing(2), color: theme.colors.primary, fontSize: '1.5rem', boxShadow: '0 6px 18px rgba(16,24,40,0.04)' }}>
-                        <i className="bi bi-heart-pulse"></i>
+                <GlassCard className="glass-card" style={{ 
+                    minHeight: '260px', display: 'flex', flexDirection: 'column', 
+                    padding: theme.spacing(3.5), borderRadius: '24px',
+                    background: 'rgba(255,255,255,0.7)',
+                    border: '1px solid rgba(91,46,166,0.1)' 
+                }}>
+                    <div className="icon-box" style={{ 
+                        width: '60px', height: '60px', 
+                        background: 'rgba(91,46,166,0.1)', borderRadius: '18px', 
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                        marginBottom: theme.spacing(2.5), color: theme.colors.primary, 
+                        fontSize: '1.8rem'
+                    }}>
+                        <i className="bi bi-heart-fill"></i>
                     </div>
-                    <h3 style={{ marginBottom: theme.spacing(2), color: theme.colors.primary, fontSize: 'clamp(1.25rem, 3vw, 1.5rem)' }}>Peticiones</h3>
-                    <p style={{ color: theme.colors.text.secondary, lineHeight: '1.6', marginBottom: theme.spacing(3) }}>
-                        Estamos aquí para apoyarte. Envía tus solicitudes de oración o ayuda de manera confidencial.
-                    </p>
-                    <Link to="/peticiones" style={{ textDecoration: 'none' }}>
-                        <Button variant="outline">Enviar Petición</Button>
+                    <div>
+                        <h3 style={{ marginBottom: theme.spacing(1.5), color: theme.colors.text.primary, fontWeight: 800, fontSize: '1.4rem' }}>Peticiones</h3>
+                        <p style={{ color: theme.colors.text.secondary, lineHeight: '1.6', marginBottom: theme.spacing(3), fontSize: '0.95rem', fontWeight: 500 }}>
+                            Estamos aquí para apoyarte. Envía tus solicitudes de oración de manera confidencial.
+                        </p>
+                    </div>
+                    <Link to="/peticiones" style={{ textDecoration: 'none', marginTop: 'auto' }}>
+                        <Button style={{ width: '100%', background: theme.colors.primary, color: '#fff' }}>Enviar Petición</Button>
                     </Link>
                 </GlassCard>
 
-                <GlassCard className="glass-card" style={{ minHeight: '240px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: theme.spacing(3) }}>
-                    <div className="icon-box" style={{ width: '56px', height: '56px', background: '#ffffff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: theme.spacing(2), color: theme.colors.secondary, fontSize: '1.5rem', boxShadow: '0 6px 18px rgba(16,24,40,0.04)' }}>
-                        <i className="bi bi-journal-check"></i>
+                <GlassCard className="glass-card" style={{ 
+                    minHeight: '260px', display: 'flex', flexDirection: 'column', 
+                    padding: theme.spacing(3.5), borderRadius: '24px',
+                    background: 'rgba(255,255,255,0.7)',
+                    border: '1px solid rgba(242,201,76,0.15)' 
+                }}>
+                    <div className="icon-box" style={{ 
+                        width: '60px', height: '60px', 
+                        background: 'rgba(242,201,76,0.15)', borderRadius: '18px', 
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                        marginBottom: theme.spacing(2.5), color: '#d4a017', 
+                        fontSize: '1.8rem'
+                    }}>
+                        <i className="bi bi-calendar-check-fill"></i>
                     </div>
-                    <h3 style={{ marginBottom: theme.spacing(2), color: theme.colors.secondary, fontSize: 'clamp(1.25rem, 3vw, 1.5rem)' }}>Inscríbete y participa</h3>
-                    <p style={{ color: theme.colors.text.secondary, lineHeight: '1.6', marginBottom: theme.spacing(3) }}>
-                        No te quedes fuera. Inscríbete a nuestros próximos campamentos, eventos y actividades especiales aquí.
-                    </p>
-                    <Link to="/inscripciones" style={{ textDecoration: 'none' }}>
-                        <Button variant="outline">Inscribirme</Button>
+                    <div>
+                        <h3 style={{ marginBottom: theme.spacing(1.5), color: theme.colors.text.primary, fontWeight: 800, fontSize: '1.4rem' }}>Inscríbete</h3>
+                        <p style={{ color: theme.colors.text.secondary, lineHeight: '1.6', marginBottom: theme.spacing(3), fontSize: '0.95rem', fontWeight: 500 }}>
+                            No te quedes fuera. Inscríbete a nuestros próximos campamentos y eventos especiales.
+                        </p>
+                    </div>
+                    <Link to="/inscripciones" style={{ textDecoration: 'none', marginTop: 'auto' }}>
+                        <Button style={{ width: '100%', background: '#F2C94C', color: '#1e1b4b' }}>Inscribirme</Button>
                     </Link>
                 </GlassCard>
 
-                <GlassCard className="glass-card" style={{ minHeight: '240px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: theme.spacing(3) }}>
-                    <div className="icon-box" style={{ width: '56px', height: '56px', background: '#ffffff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: theme.spacing(2), color: theme.colors.accent, fontSize: '1.5rem', boxShadow: '0 6px 18px rgba(16,24,40,0.04)' }}>
-                        <i className="bi bi-cash-coin"></i>
+                <GlassCard className="glass-card" style={{ 
+                    minHeight: '260px', display: 'flex', flexDirection: 'column', 
+                    padding: theme.spacing(3.5), borderRadius: '24px',
+                    background: 'rgba(255,255,255,0.7)',
+                    border: '1px solid rgba(0,0,0,0.05)' 
+                }}>
+                    <div className="icon-box" style={{ 
+                        width: '60px', height: '60px', 
+                        background: 'rgba(0,0,0,0.03)', borderRadius: '18px', 
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                        marginBottom: theme.spacing(2.5), color: '#2d3436', 
+                        fontSize: '1.8rem'
+                    }}>
+                        <i className="bi bi-wallet2"></i>
                     </div>
-                    <h3 style={{ marginBottom: theme.spacing(2), color: theme.colors.accent, fontSize: 'clamp(1.25rem, 3vw, 1.5rem)' }}>Diezmos y Ofrendas</h3>
-                    <p style={{ color: theme.colors.text.secondary, lineHeight: '1.6', marginBottom: theme.spacing(3) }}>
-                        Honra al Señor con tus bienes y con las primicias de todos tus frutos. Tu fidelidad sostiene la misión de su iglesia.
-                    </p>
-                    <a href="https://alfoliadventista.org/signin" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                        <Button variant="outline">Saber Más</Button>
+                    <div>
+                        <h3 style={{ marginBottom: theme.spacing(1.5), color: theme.colors.text.primary, fontWeight: 800, fontSize: '1.4rem' }}>Ofrendas</h3>
+                        <p style={{ color: theme.colors.text.secondary, lineHeight: '1.6', marginBottom: theme.spacing(3), fontSize: '0.95rem', fontWeight: 500 }}>
+                            Tu fidelidad sostiene la misión. Haz tus donaciones y diezmos de forma segura.
+                        </p>
+                    </div>
+                    <a href="https://alfoliadventista.org/signin" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', marginTop: 'auto' }}>
+                        <Button variant="outline" style={{ width: '100%', border: '2px solid #e2e8f0' }}>Saber Más</Button>
                     </a>
                 </GlassCard>
             </section>

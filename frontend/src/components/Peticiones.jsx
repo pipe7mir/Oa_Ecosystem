@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import apiClient from '../api/client';
 import { theme } from '../react-ui/styles/theme';
+import { useToast } from '../react-ui/components/Toast';
 
 const Peticiones = () => {
     const [privacyAccepted, setPrivacyAccepted] = useState(false);
@@ -13,6 +14,7 @@ const Peticiones = () => {
         celular: '',
         descripcion: ''
     });
+    const { showToast } = useToast();
 
     // Glassmorphism Style Helper
     const glassStyle = {
@@ -48,8 +50,9 @@ const Peticiones = () => {
 
             await apiClient.post('/requests', payload);
             setSuccess(true);
+            showToast('Petición enviada con éxito', 'success');
         } catch (error) {
-            alert('Error al enviar la solicitud: ' + (error.response?.data?.message || error.message));
+            showToast('Error al enviar la solicitud: ' + (error.response?.data?.message || error.message), 'error');
         } finally {
             setLoading(false);
         }

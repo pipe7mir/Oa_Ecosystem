@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
-import { theme } from '../react-ui/styles/theme';
+import { useTheme } from '../react-ui/ThemeContext';
+import { useToast } from '../react-ui/components/Toast';
+import GlassCard from '../react-ui/components/GlassCard';
 
 /* ── Status config ─────────────────────────────────── */
 const STATUS_CONFIG = {
@@ -75,6 +77,9 @@ const Solicitudes = () => {
     const [actionLoading, setActionLoading] = useState(null); // 'email'|'whatsapp'|'status'
     const [waModal, setWaModal] = useState(null); // { link, message, has_number }
 
+    const { theme } = useTheme();
+    const { showToast } = useToast();
+    const isDark = theme.mode === 'dark';
     const glass = { background: theme.glass.background, backdropFilter: theme.glass.backdropFilter, border: theme.glass.border, borderRadius: theme.glass.borderRadius, boxShadow: theme.glass.boxShadow };
 
     useEffect(() => { fetchRequests(); }, []);
@@ -112,7 +117,7 @@ const Solicitudes = () => {
         //     const msg = e.response?.data?.message || 'Error al enviar correo';
         //     setActionStatus(`❌ ${msg}`);
         // } finally { setActionLoading(null); }
-        alert('El envío de email requiere un servicio backend (Edge Functions). Se recomienda usar WhatsApp.');
+        showToast('El envío de email requiere un servicio backend (Edge Functions). Se recomienda usar WhatsApp.', 'info');
     };
 
     /* ── WhatsApp link ─────────────────────────────── */
@@ -153,23 +158,29 @@ const Solicitudes = () => {
             {/* AdminNav removed - handled by Layout */}
 
             {/* Header + Filter bar */}
-            <div className="container mb-4">
-                <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                    <div>
-                        <h3 className="fw-bold mb-0" style={{ fontFamily: theme.fonts.logo, color: theme.colors.primary }}>
-                            <i className="bi bi-inbox-fill me-2"></i>Gestión de Solicitudes
-                        </h3>
-                        <p className="text-muted small mb-0">Peticiones y consultas de la comunidad</p>
-                    </div>
+            <div className="mb-4 p-4 rounded-4 shadow-sm d-flex flex-wrap justify-content-between align-items-center gap-3" 
+                style={{ 
+                    background: theme.glass.background,
+                    backdropFilter: theme.glass.backdropFilter,
+                    border: theme.glass.border,
+                    borderRadius: theme.glass.borderRadius,
+                    boxShadow: theme.glass.boxShadow
+                }}>
+                <div>
+                    <h3 className="fw-bold mb-0" style={{ fontFamily: theme.fonts.accent, color: theme.colors.text.primary, fontSize: '2.2rem', textTransform: 'uppercase' }}>
+                        Gestión de <span style={{ color: theme.colors.primary }}>Peticiones</span>
+                    </h3>
+                    <p className="text-muted small mb-0">Peticiones y consultas de la comunidad</p>
+                </div>
                     <div className="d-flex gap-2 flex-wrap">
                         {[['todas', 'Todas', null], ['pendiente', 'Pendientes', '#f59e0b'], ['gestionada', 'Gestionadas', '#10b981'], ['sin_respuesta', 'Sin Respuesta', '#ef4444']].map(([key, label, color]) => (
                             <button key={key}
                                 onClick={() => setFilter(key)}
                                 className="btn btn-sm rounded-pill fw-bold"
                                 style={{
-                                    background: filter === key ? (color || theme.colors.primary) : 'white',
-                                    color: filter === key ? 'white' : '#666',
-                                    border: `2px solid ${filter === key ? (color || theme.colors.primary) : '#e0e0e0'}`,
+                                    background: filter === key ? (color || theme.colors.primary) : (isDark ? 'rgba(255,255,255,0.05)' : 'white'),
+                                    color: filter === key ? 'white' : (isDark ? '#eee' : '#666'),
+                                    border: `2px solid ${filter === key ? (color || theme.colors.primary) : (isDark ? 'rgba(255,255,255,0.1)' : '#e0e0e0')}`,
                                     transition: 'all 0.2s',
                                 }}>
                                 {label}
@@ -179,40 +190,50 @@ const Solicitudes = () => {
                             </button>
                         ))}
                     </div>
-                </div>
             </div>
 
-            {/* Stats cards */}
-            <div className="container mb-4">
-                <div className="row g-3">
-                    {[
-                        { label: 'Total', value: stats.total, icon: 'bi-collection', color: theme.colors.primary },
-                        { label: 'Pendientes', value: stats.pendiente, icon: 'bi-clock-history', color: '#f59e0b' },
-                        { label: 'Gestionadas', value: stats.gestionada, icon: 'bi-check-circle', color: '#10b981' },
-                        { label: 'Sin Respuesta', value: stats.sin_respuesta, icon: 'bi-x-circle', color: '#ef4444' },
-                    ].map(s => (
-                        <div key={s.label} className="col-6 col-md-3">
-                            <div className="p-3 rounded-4 text-center h-100" style={{ ...glass, borderTop: `3px solid ${s.color}` }}>
-                                <i className={`bi ${s.icon} fs-3 mb-1`} style={{ color: s.color }}></i>
-                                <div className="fw-bold" style={{ fontSize: '1.8rem', color: s.color, lineHeight: 1 }}>{s.value}</div>
-                                <div className="small text-muted mt-1">{s.label}</div>
-                            </div>
+                    {/* Stats cards */}
+                    <div className="container mb-5">
+                        <div className="row g-4">
+                            {[
+                                { label: 'Total', value: stats.total, icon: 'bi-collection', color: theme.colors.primary },
+                                { label: 'Pendientes', value: stats.pendiente, icon: 'bi-clock-history', color: '#f59e0b' },
+                                { label: 'Gestionadas', value: stats.gestionada, icon: 'bi-check-circle', color: '#10b981' },
+                                { label: 'Sin Respuesta', value: stats.sin_respuesta, icon: 'bi-x-circle', color: '#ef4444' },
+                            ].map(s => (
+                                <div key={s.label} className="col-6 col-md-3">
+                                    <div className="p-4 rounded-4 text-center h-100 shadow-sm" 
+                                        style={{ 
+                                            background: isDark ? 'rgba(255,255,255,0.05)' : '#ffffff',
+                                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : '#e9ecef'}`,
+                                            borderBottom: `4px solid ${s.color}`,
+                                            transition: 'transform 0.3s ease'
+                                        }}>
+                                        <i className={`bi ${s.icon} fs-2 mb-2 d-block`} style={{ color: s.color }}></i>
+                                        <div className="fw-bold" style={{ fontSize: '2.2rem', color: isDark ? '#fff' : '#1a1a1a', lineHeight: 1 }}>{s.value}</div>
+                                        <div className="small fw-bold text-uppercase mt-2 opacity-50" style={{ letterSpacing: '1px', color: isDark ? '#fff' : '#1a1a1a' }}>{s.label}</div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
-            </div>
+                    </div>
 
-            {/* Table */}
-            <div className="container">
-                <div className="card border-0 shadow-sm rounded-4 overflow-hidden" style={glass}>
-                    {loading ? (
-                        <div className="text-center p-5"><div className="spinner-border" style={{ color: theme.colors.primary }}></div></div>
-                    ) : (
-                        <div className="table-responsive">
-                            <table className="table table-hover align-middle mb-0" style={{ background: 'transparent' }}>
-                                <thead style={{ background: '#f8f9fa' }}>
-                                    <tr className="small text-uppercase text-muted">
-                                        <th className="ps-4 py-3">#</th>
+                    {/* Table */}
+                    <div className="container">
+                        <div className="card border-0 shadow-lg rounded-4 overflow-hidden" 
+                            style={{ 
+                                background: isDark ? 'rgba(255,255,255,0.03)' : '#ffffff',
+                                border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : '#e9ecef'}`,
+                                backdropFilter: 'blur(20px)'
+                            }}>
+                            {loading ? (
+                                <div className="text-center p-5"><div className="spinner-border" style={{ color: theme.colors.primary }}></div></div>
+                            ) : (
+                                <div className="table-responsive">
+                                    <table className="table table-hover align-middle mb-0" style={{ background: 'transparent' }}>
+                                        <thead style={{ background: isDark ? 'rgba(255,255,255,0.05)' : '#f8f9fa' }}>
+                                            <tr className="small text-uppercase fw-bold" style={{ color: isDark ? '#a78bfa' : '#6b7280' }}>
+                                                <th className="ps-4 py-3">#</th>
                                         <th>Solicitante</th>
                                         <th>Categoría</th>
                                         <th>Descripción</th>
@@ -271,7 +292,7 @@ const Solicitudes = () => {
                                                                     } catch (e) { console.error('Error updating WA log', e) }
                                                                     await fetchRequests();
                                                                 } catch (err) {
-                                                                    alert(err.response?.data?.message || 'Error WA');
+                                                                    showToast(err.response?.data?.message || 'Error WA', 'error');
                                                                 }
                                                             }}>
                                                             <i className="bi bi-whatsapp"></i>
@@ -290,7 +311,7 @@ const Solicitudes = () => {
                                 </tbody>
                             </table>
                             {filtered.length === 0 && (
-                                <div className="text-center p-5 text-muted">
+                                <div className="text-center p-5 fw-bold" style={{ color: isDark ? 'rgba(255,255,255,0.2)' : '#9ca3af' }}>
                                     <i className="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>
                                     No hay solicitudes {filter !== 'todas' ? `con estado "${STATUS_CONFIG[filter]?.label}"` : ''}
                                 </div>
@@ -308,8 +329,11 @@ const Solicitudes = () => {
                     alignItems: 'center', justifyContent: 'center', padding: '16px',
                 }} onClick={() => setSelected(null)}>
                     <div style={{
-                        background: 'white', borderRadius: '24px', width: '100%', maxWidth: '620px',
+                        background: isDark ? theme.colors.surface : 'white', 
+                        borderRadius: '24px', width: '100%', maxWidth: '620px',
                         maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 30px 80px rgba(0,0,0,0.3)',
+                        border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'transparent'}`,
+                        color: theme.colors.text.primary
                     }} onClick={e => e.stopPropagation()}>
 
                         {/* Modal header */}
@@ -327,20 +351,20 @@ const Solicitudes = () => {
                             {/* Info grid */}
                             <div className="row g-3 mb-3">
                                 <div className="col-6">
-                                    <div className="p-3 rounded-3" style={{ background: '#f8f9fa' }}>
+                                    <div className="p-3 rounded-3" style={{ background: isDark ? 'rgba(255,255,255,0.05)' : '#f8f9fa' }}>
                                         <div className="small text-muted mb-1">Solicitante</div>
                                         <div className="fw-bold">{selected.is_anonymous ? '🕵️ Anónimo' : (selected.name || '—')}</div>
                                     </div>
                                 </div>
                                 <div className="col-6">
-                                    <div className="p-3 rounded-3" style={{ background: '#f8f9fa' }}>
+                                    <div className="p-3 rounded-3" style={{ background: isDark ? 'rgba(255,255,255,0.05)' : '#f8f9fa' }}>
                                         <div className="small text-muted mb-1">Categoría</div>
                                         <div className="fw-bold">{selected.category}</div>
                                     </div>
                                 </div>
                                 {!selected.is_anonymous && (selected.phone || selected.email) && (
                                     <div className="col-12">
-                                        <div className="p-3 rounded-3" style={{ background: '#f8f9fa' }}>
+                                        <div className="p-3 rounded-3" style={{ background: isDark ? 'rgba(255,255,255,0.05)' : '#f8f9fa' }}>
                                             <div className="small text-muted mb-1">Contacto</div>
                                             {selected.phone && <div><i className="bi bi-telephone me-1 text-muted"></i>{selected.phone}</div>}
                                             {selected.email && <div><i className="bi bi-envelope me-1 text-muted"></i>{selected.email}</div>}
@@ -348,7 +372,7 @@ const Solicitudes = () => {
                                     </div>
                                 )}
                                 <div className="col-12">
-                                    <div className="p-3 rounded-3" style={{ background: '#f0f4ff' }}>
+                                    <div className="p-3 rounded-3" style={{ background: isDark ? 'rgba(109, 40, 217, 0.1)' : '#f0f4ff' }}>
                                         <div className="small text-muted mb-1">Descripción</div>
                                         <div style={{ lineHeight: 1.6 }}>{selected.description}</div>
                                     </div>
@@ -362,6 +386,11 @@ const Solicitudes = () => {
                                 </label>
                                 <textarea className="form-control" rows="3"
                                     value={notes} onChange={e => setNotes(e.target.value)}
+                                    style={{
+                                        background: isDark ? 'rgba(255,255,255,0.03)' : '#fff',
+                                        color: isDark ? '#fff' : '#333',
+                                        border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : '#ced4da'}`
+                                    }}
                                     placeholder="Escribe notas internas o una respuesta para incluir en el mensaje..." />
                             </div>
 
@@ -430,8 +459,11 @@ const Solicitudes = () => {
                     alignItems: 'center', justifyContent: 'center', padding: '16px',
                 }} onClick={() => setWaModal(null)}>
                     <div style={{
-                        background: 'white', borderRadius: '20px', width: '100%', maxWidth: '480px',
+                        background: isDark ? theme.colors.surface : 'white', 
+                        borderRadius: '20px', width: '100%', maxWidth: '480px',
                         boxShadow: '0 20px 60px rgba(0,0,0,0.3)', padding: '28px',
+                        border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'transparent'}`,
+                        color: theme.colors.text.primary
                     }} onClick={e => e.stopPropagation()}>
                         <div className="d-flex align-items-center gap-2 mb-3">
                             <div style={{ width: 44, height: 44, background: '#25d366', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -443,7 +475,12 @@ const Solicitudes = () => {
                             </div>
                         </div>
 
-                        <div className="p-3 rounded-3 mb-3" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', fontFamily: 'monospace', fontSize: '0.82rem', whiteSpace: 'pre-wrap', maxHeight: '180px', overflowY: 'auto' }}>
+                        <div className="p-3 rounded-3 mb-3" style={{ 
+                            background: isDark ? 'rgba(37, 211, 102, 0.1)' : '#f0fdf4', 
+                            border: `1px solid ${isDark ? 'rgba(37, 211, 102, 0.2)' : '#bbf7d0'}`, 
+                            fontFamily: 'monospace', fontSize: '0.82rem', whiteSpace: 'pre-wrap', maxHeight: '180px', overflowY: 'auto',
+                            color: isDark ? '#dcfce7' : '#15803d'
+                        }}>
                             {waModal.message}
                         </div>
 
@@ -455,7 +492,7 @@ const Solicitudes = () => {
                         )}
 
                         <div className="d-flex gap-2">
-                            <button className="btn btn-light flex-grow-1 rounded-pill" onClick={() => setWaModal(null)}>
+                            <button className={`btn ${isDark ? 'btn-dark' : 'btn-light'} flex-grow-1 rounded-pill`} onClick={() => setWaModal(null)}>
                                 Cancelar
                             </button>
                             <a href={waModal.link} target="_blank" rel="noopener noreferrer"

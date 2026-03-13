@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/client';
-import { theme } from '../react-ui/styles/theme';
+import { useTheme } from '../react-ui/ThemeContext';
+import { useToast } from '../react-ui/components/Toast';
 
 const AdminLive = () => {
+    const { theme, mode } = useTheme();
     const [settings, setSettings] = useState({
         youtube_channel_id: '',
         youtube_live_video_id: '',
@@ -10,7 +12,10 @@ const AdminLive = () => {
         youtube_playlist_id: '',
         bg_image: '',
         overlay_opacity: 0.5,
+        live_service_title: '',
+        live_service_description: '',
     });
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
 
@@ -47,7 +52,7 @@ const AdminLive = () => {
             handleChange('bg_image', imageUrl);
         } catch (error) {
             console.error(error);
-            alert('Error al subir imagen: ' + error.message);
+            showToast('Error al subir imagen: ' + error.message, 'error');
         } finally {
             setUploading(false);
         }
@@ -87,9 +92,9 @@ const AdminLive = () => {
         setSaving(true);
         try {
             await apiClient.post('/settings', settings);
-            alert('Configuración guardada correctamente');
+            showToast('Configuración guardada correctamente', 'success');
         } catch (error) {
-            alert('Error al guardar: ' + error.message);
+            showToast('Error al guardar: ' + error.message, 'error');
         } finally {
             setSaving(false);
         }
@@ -110,8 +115,8 @@ const AdminLive = () => {
             {/* Header */}
             <div className="d-flex justify-content-between align-items-center mb-4 p-4 rounded-4 shadow-sm" style={glass}>
                 <div>
-                    <h3 className="fw-bold mb-0" style={{ fontFamily: theme.fonts.logo, color: theme.colors.primary }}>
-                        <i className="bi bi-broadcast me-2"></i>Transmisión en Vivo
+                    <h3 className="fw-bold mb-0" style={{ fontFamily: theme.fonts.accent, color: theme.colors.text.primary, fontSize: '2.2rem', textTransform: 'uppercase' }}>
+                        Transmisión <span style={{ color: theme.colors.primary }}>en Vivo</span>
                     </h3>
                     <p className="text-muted small mb-0">Control de directos y YouTube</p>
                 </div>
@@ -127,11 +132,14 @@ const AdminLive = () => {
 
             <div className="row g-4">
                 <div className="col-lg-8 mx-auto">
-                    <div className="p-4 rounded-4 bg-white shadow-sm border">
+                    <div className="p-4 rounded-4 shadow-sm border" style={{ background: theme.colors.surface, borderColor: theme.colors.border }}>
 
                         {/* Live Switch */}
                         <div className="d-flex align-items-center justify-content-between mb-4 p-3 rounded-3"
-                            style={{ background: isLive ? '#f3f0ff' : '#f8f9fa', border: isLive ? `1px solid ${theme.colors.primary}` : '1px solid #dee2e6' }}>
+                            style={{ 
+                                background: isLive ? (mode === 'dark' ? 'rgba(109, 40, 217, 0.15)' : '#f3f0ff') : (mode === 'dark' ? 'rgba(255,255,255,0.03)' : '#f8f9fa'), 
+                                border: isLive ? `1px solid ${theme.colors.primary}` : `1px solid ${theme.colors.border}` 
+                            }}>
                             <div>
                                 <h5 className="fw-bold mb-1">Estado de la Transmisión</h5>
                                 <div className="text-muted small">Activa esto para mostrar el reproductor en el Home</div>
@@ -147,6 +155,29 @@ const AdminLive = () => {
                                     onChange={e => handleChange('stream_is_live', e.target.checked)}
                                 />
                             </div>
+                        </div>
+
+                        {/* Service Info */}
+                        <div className="mb-4">
+                            <label className="form-label fw-bold text-muted small">Nombre del Culto / Evento</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Ej: Servicio de Adoración Dominical"
+                                value={settings.live_service_title || ''}
+                                onChange={e => handleChange('live_service_title', e.target.value)}
+                            />
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="form-label fw-bold text-muted small">Descripción de la Transmisión</label>
+                            <textarea
+                                className="form-control"
+                                rows="2"
+                                placeholder="Ej: Únete a nosotros en una mañana de alabanza y palabra..."
+                                value={settings.live_service_description || ''}
+                                onChange={e => handleChange('live_service_description', e.target.value)}
+                            ></textarea>
                         </div>
 
                         {/* IDs */}
@@ -198,8 +229,8 @@ const AdminLive = () => {
                     </div>
 
                     {/* ── Visual Customization ── */}
-                    <div className="p-4 rounded-4 bg-white shadow-sm border mt-4">
-                        <h5 className="fw-bold mb-4" style={{ color: theme.colors.primary }}>
+                    <div className="p-4 rounded-4 shadow-sm border mt-4" style={{ background: theme.colors.surface, borderColor: theme.colors.border }}>
+                        <h5 className="fw-bold mb-4" style={{ color: theme.colors.primary, fontFamily: theme.fonts.accent }}>
                             <i className="bi bi-palette me-2"></i>Personalización Visual
                         </h5>
 

@@ -11,7 +11,7 @@ export class Billboard {
   @Column({ type: 'text', nullable: true })
   description: string | null;
 
-  @Column({ type: 'varchar', length: 255, name: 'media_url', nullable: true })
+  @Column({ type: 'varchar', length: 1000, name: 'media_url', nullable: true })
   mediaUrl: string | null;
 
   @Column({ type: 'varchar', length: 50, name: 'media_type', default: 'image' })
@@ -28,6 +28,9 @@ export class Billboard {
 
   @Column({ type: 'boolean', name: 'is_active', default: true })
   isActive: boolean;
+
+  @Column({ type: 'jsonb', nullable: true })
+  styles: any;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

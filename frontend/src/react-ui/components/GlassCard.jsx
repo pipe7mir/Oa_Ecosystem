@@ -1,34 +1,37 @@
 import React from 'react';
-import { theme } from '../styles/theme';
+import { useTheme } from '../ThemeContext';
 
 /**
  * Glassmorphism Container Component
  */
 const GlassCard = ({ children, style, className, onClick }) => {
+    const { theme } = useTheme();
+
     const cardStyle = {
-        background: theme.glass.background,
+        background: theme.colors.surface,
         backdropFilter: theme.glass.backdropFilter,
         WebkitBackdropFilter: theme.glass.backdropFilter,
         border: theme.glass.border,
-        borderRadius: theme.glass.borderRadius, // 16px
-        boxShadow: theme.glass.boxShadow,
-        padding: theme.spacing(3), // 24px (3x8)
+        borderRadius: theme.glass.borderRadius,
+        boxShadow: theme.shadows.medium,
+        padding: theme.spacing(3),
         color: theme.colors.text.primary,
-        transition: 'transform 0.16s ease, box-shadow 0.16s ease',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        position: 'relative',
+        overflow: 'hidden',
         ...style
     };
 
-    // Subtle hover only: small lift and slightly brighter background to keep balance
     const onEnter = (e) => {
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = '0 10px 30px rgba(16, 24, 40, 0.06)';
-        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.14)';
+        e.currentTarget.style.transform = 'translateY(-4px)';
+        e.currentTarget.style.boxShadow = theme.shadows.floating;
+        e.currentTarget.style.border = `1px solid ${theme.colors.primary}66`;
     };
 
     const onLeave = (e) => {
         e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = theme.glass.boxShadow;
-        e.currentTarget.style.background = theme.glass.background;
+        e.currentTarget.style.boxShadow = theme.shadows.medium;
+        e.currentTarget.style.border = theme.glass.border;
     };
 
     return (

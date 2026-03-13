@@ -14,8 +14,17 @@ export class AdminEventFormsController {
   ) {}
 
   @Get()
-  findAll() {
-    return this.formsRepo.find({ order: { createdAt: 'DESC' } });
+  async findAll() {
+    const forms = await this.formsRepo.find({ 
+      relations: ['submissions'],
+      order: { createdAt: 'DESC' } 
+    });
+    
+    // Return forms with submission counts to avoid sending all submission data
+    return forms.map(({ submissions, ...f }) => {
+      const count = submissions?.length || 0;
+      return { ...f, submissionCount: count };
+    });
   }
 
   @Post()

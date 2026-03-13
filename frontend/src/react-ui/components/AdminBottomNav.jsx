@@ -1,47 +1,43 @@
-/**
- * AdminBottomNav — Barra de navegación inferior para Administradores
- * Liquid Glass · Lucide Icons · Específica para Módulo Admin
- */
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Inbox,
+    LayoutDashboard,
     Megaphone,
     Image,
     Radio,
     MoreHorizontal,
     Users,
     Settings,
-    Info,
     Layers,
-    FileCheck,
-    LogOut,
-    ExternalLink
+    Calendar,
+    Inbox,
+    LogOut
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../ThemeContext';
 
 const AdminBottomNav = () => {
     const { pathname } = useLocation();
     const { signOut, role } = useAuth();
     const [showMore, setShowMore] = useState(false);
+    const { theme } = useTheme();
 
     const isAdmin = role === 'admin';
 
-    // Items principales en la barra
     const mainItems = [
-        { to: '/admin/solicitudes', label: 'Inbox', Icon: Inbox },
+        { to: '/admin/solicitudes', label: 'Dashboard', Icon: LayoutDashboard },
         { to: '/admin/announcements', label: 'Anuncios', Icon: Megaphone },
+        { to: '/admin/requests', label: 'Peticiones', Icon: Inbox },
         { to: '/admin/cartelera', label: 'Cartelera', Icon: Image },
-        { to: '/admin/live', label: 'En Vivo', Icon: Radio },
     ];
 
-    // Items que van en el menú "Más"
     const moreItems = [
-        { to: '/admin/inscripciones', label: 'Inscripciones', Icon: FileCheck },
-        { to: '/admin/recursos', label: 'Recursos', Icon: Layers, adminOnly: true },
-        { to: '/admin/users', label: 'Usuarios', Icon: Users, adminOnly: true },
-        { to: '/admin/about', label: 'Sobre Oasis', Icon: Info, adminOnly: true },
-        { to: '/admin/ajustes', label: 'Ajustes', Icon: Settings, adminOnly: true },
+        { to: '/admin/inscripciones', label: 'Eventos', Icon: Calendar },
+        { to: '/admin/culto', label: 'Culto', Icon: Layers },
+        { to: '/admin/recursos', label: 'Archivos', Icon: Layers, adminOnly: true },
+        { to: '/admin/users', label: 'Equipo', Icon: Users, adminOnly: true },
+        { to: '/admin/live', label: 'En Vivo', Icon: Radio },
     ].filter(item => !item.adminOnly || isAdmin);
 
     const NavItem = ({ to, label, Icon, onClick }) => {
@@ -49,42 +45,33 @@ const AdminBottomNav = () => {
         return (
             <Link
                 to={to}
-                onClick={onClick}
+                onClick={() => {
+                    if (window.navigator.vibrate) window.navigator.vibrate(10);
+                    onClick && onClick();
+                }}
                 style={{
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    gap: '3px',
+                    gap: '4px',
                     textDecoration: 'none',
                     flex: 1,
-                    padding: '6px 0',
                     position: 'relative',
-                    transition: 'transform 0.15s ease',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: isActive ? 'translateY(-2px)' : 'translateY(0)',
                 }}
             >
-                {isActive && (
-                    <span style={{
-                        position: 'absolute',
-                        top: '4px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: '36px',
-                        height: '36px',
-                        background: 'rgba(91,46,166,0.12)',
-                        borderRadius: '50%',
-                        zIndex: -1,
-                    }} />
-                )}
                 <Icon
-                    size={20}
+                    size={22}
                     strokeWidth={isActive ? 2.5 : 2}
-                    color={isActive ? '#5b2ea6' : '#6b7280'}
+                    color={isActive ? theme.colors.primary : '#6b7280'}
+                    style={{ filter: isActive ? `drop-shadow(0 0 8px ${theme.colors.primary}66)` : 'none' }}
                 />
                 <span style={{
-                    fontSize: '9px',
-                    fontWeight: isActive ? 700 : 500,
-                    color: isActive ? '#5b2ea6' : '#6b7280',
-                    fontFamily: 'AdventSans, sans-serif',
+                    fontSize: '10px',
+                    fontWeight: isActive ? 800 : 500,
+                    color: isActive ? theme.colors.text.primary : '#6b7280',
+                    fontFamily: 'Inter, sans-serif',
                 }}>
                     {label}
                 </span>
@@ -94,113 +81,109 @@ const AdminBottomNav = () => {
 
     return (
         <>
-            {/* Overlay de "Más" */}
-            {showMore && (
-                <div
-                    style={{
-                        position: 'fixed', inset: 0, zIndex: 19999,
-                        background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)',
-                    }}
-                    onClick={() => setShowMore(false)}
-                >
-                    <div
+            <AnimatePresence>
+                {showMore && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
                         style={{
-                            position: 'absolute', bottom: '80px', left: '16px', right: '16px',
-                            background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(20px)',
-                            borderRadius: '24px', padding: '16px',
-                            boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-                            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px',
-                            animation: 'oasisSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                            position: 'fixed', inset: 0, zIndex: 19999,
+                            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
                         }}
-                        onClick={e => e.stopPropagation()}
+                        onClick={() => setShowMore(false)}
                     >
-                        {moreItems.map(item => (
-                            <Link
-                                key={item.to}
-                                to={item.to}
-                                onClick={() => setShowMore(false)}
-                                style={{
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                    gap: '8px', textDecoration: 'none', color: '#435566',
-                                    padding: '12px 8px', borderRadius: '16px',
-                                    background: pathname.startsWith(item.to) ? 'rgba(91,46,166,0.08)' : 'transparent',
-                                }}
-                            >
-                                <div style={{
-                                    width: '40px', height: '40px', borderRadius: '12px',
-                                    background: pathname.startsWith(item.to) ? 'rgba(91,46,166,0.15)' : '#f3f4f6',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    color: pathname.startsWith(item.to) ? '#5b2ea6' : '#6b7280',
-                                }}>
-                                    <item.Icon size={20} />
-                                </div>
-                                <span style={{ fontSize: '10px', fontWeight: 600, textAlign: 'center' }}>
-                                    {item.label}
-                                </span>
-                            </Link>
-                        ))}
+                        <motion.div
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            style={{
+                                position: 'absolute', bottom: '80px', left: '12px', right: '12px',
+                                background: theme.colors.surface,
+                                border: `1px solid ${theme.colors.border}`,
+                                borderRadius: '28px', padding: '24px',
+                                boxShadow: theme.shadows.floating,
+                                display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px',
+                            }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            {moreItems.map(item => (
+                                <Link
+                                    key={item.to}
+                                    to={item.to}
+                                    onClick={() => {
+                                        if (window.navigator.vibrate) window.navigator.vibrate(10);
+                                        setShowMore(false);
+                                    }}
+                                    style={{
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                        gap: '10px', textDecoration: 'none', color: theme.colors.text.secondary,
+                                        padding: '16px 8px', borderRadius: '20px',
+                                        background: pathname.startsWith(item.to) ? `${theme.colors.primary}15` : 'rgba(255,255,255,0.03)',
+                                        border: `1px solid ${pathname.startsWith(item.to) ? `${theme.colors.primary}33` : 'transparent'}`,
+                                    }}
+                                >
+                                    <item.Icon size={24} color={pathname.startsWith(item.to) ? theme.colors.primary : '#888'} />
+                                    <span style={{ fontSize: '11px', fontWeight: 600, color: pathname.startsWith(item.to) ? theme.colors.text.primary : 'inherit' }}>
+                                        {item.label}
+                                    </span>
+                                </Link>
+                            ))}
 
-                        <div style={{ gridColumn: 'span 3', height: '1px', background: '#eee', margin: '4px 0' }} />
+                            <div style={{ gridColumn: 'span 3', height: '1px', background: theme.colors.border, margin: '8px 0' }} />
 
-                        <a href="/" target="_blank" style={{ textDecoration: 'none', color: '#6b7280', gridColumn: 'span 1.5', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '11px', fontWeight: 600 }}>
-                            <ExternalLink size={14} /> Sitio
-                        </a>
-                        <button onClick={signOut} style={{ background: 'none', border: 'none', color: '#ef4444', gridColumn: 'span 1.5', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '11px', fontWeight: 700 }}>
-                            <LogOut size={14} /> Salir
-                        </button>
-                    </div>
-                </div>
-            )}
+                            <button onClick={signOut} style={{ 
+                                background: 'rgba(255,59,48,0.1)', border: 'none', color: '#ff3b30', 
+                                gridColumn: 'span 3', display: 'flex', alignItems: 'center', 
+                                justifyContent: 'center', gap: '8px', fontSize: '13px', 
+                                fontWeight: 800, padding: '16px', borderRadius: '16px' 
+                            }}>
+                                <LogOut size={18} /> Salir del Sistema
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <nav
                 style={{
-                    position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 20000,
-                    backdropFilter: 'blur(24px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.85)',
-                    borderTop: '1px solid rgba(255, 255, 255, 0.5)',
-                    paddingBottom: 'env(safe-area-inset-bottom)',
+                    position: 'fixed', bottom: '12px', left: '16px', right: '16px', zIndex: 20000,
+                    backdropFilter: theme.glass.backdropFilter,
+                    backgroundColor: theme.glass.background,
+                    border: `1px solid ${theme.colors.border}`,
+                    borderRadius: '24px',
+                    paddingBottom: '0',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-around',
-                    height: '64px', boxShadow: '0 -4px 32px rgba(0,0,0,0.08)',
+                    height: '72px', boxShadow: theme.shadows.medium,
                 }}
             >
                 {mainItems.map(item => (
                     <NavItem key={item.to} {...item} />
                 ))}
 
-                {/* Botón Más */}
                 <button
-                    onClick={() => setShowMore(!showMore)}
+                    onClick={() => {
+                        if (window.navigator.vibrate) window.navigator.vibrate(10);
+                        setShowMore(!showMore);
+                    }}
                     style={{
                         display: 'flex', flexDirection: 'column', alignItems: 'center',
-                        gap: '3px', background: 'none', border: 'none', flex: 1, padding: '6px 0',
+                        gap: '4px', background: 'none', border: 'none', flex: 1,
                     }}
                 >
-                    <div style={{
-                        position: 'relative',
-                        color: showMore ? '#5b2ea6' : '#6b7280',
-                    }}>
-                        <MoreHorizontal size={20} strokeWidth={showMore ? 2.5 : 2} />
-                    </div>
+                    <MoreHorizontal size={22} color={showMore ? theme.colors.primary : '#6b7280'} />
                     <span style={{
-                        fontSize: '9px', fontWeight: showMore ? 700 : 500,
-                        color: showMore ? '#5b2ea6' : '#6b7280',
-                        fontFamily: 'AdventSans, sans-serif',
+                        fontSize: '10px', fontWeight: showMore ? 800 : 500,
+                        color: showMore ? theme.colors.text.primary : '#6b7280',
+                        fontFamily: 'Inter, sans-serif',
                     }}>
                         Más
                     </span>
                 </button>
             </nav>
 
-            <div style={{ height: 'calc(64px + env(safe-area-inset-bottom))' }} />
-
-            <style>{`
-                @keyframes oasisSlideUp {
-                    from { transform: translateY(20px); opacity: 0; }
-                    to { transform: translateY(0); opacity: 1; }
-                }
-                @media (min-width: 992px) { nav { display: none !important; } }
-            `}</style>
+            <div style={{ height: '100px' }} />
         </>
     );
 };

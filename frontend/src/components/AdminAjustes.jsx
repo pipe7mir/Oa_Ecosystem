@@ -1,24 +1,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
-import { theme } from '../react-ui/styles/theme';
+import { useTheme } from '../react-ui/ThemeContext';
+import { useToast } from '../react-ui/components/Toast';
+import ConfirmationModal from '../react-ui/components/ConfirmationModal';
 
 /* ─────────────────────────────────────────────────────────────
    SectionCard MUST be defined OUTSIDE the parent component.
    If defined inside, React treats it as a NEW component type
    on every render → DOM nodes destroyed → inputs lose focus.
 ───────────────────────────────────────────────────────────── */
-const SectionCard = ({ icon, title, badge, children }) => (
-    <div className="mb-4 p-4 rounded-4" style={{ background: 'white', boxShadow: '0 4px 24px rgba(0,0,0,0.07)', border: '1px solid #f0f0f0' }}>
-        <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-            <h6 className="fw-bold mb-0" style={{ color: theme.colors.primary }}>
-                <i className={`bi ${icon} me-2`}></i>{title}
-            </h6>
-            {badge}
+const SectionCard = ({ icon, title, badge, children }) => {
+    const { theme } = useTheme();
+    return (
+        <div className="mb-4 p-4 rounded-4" style={{ background: theme.colors.surface, boxShadow: theme.shadows.soft, border: `1px solid ${theme.colors.border}` }}>
+            <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style={{ borderColor: theme.colors.border }}>
+                <h6 className="fw-bold mb-0" style={{ color: theme.colors.primary }}>
+                    <i className={`bi ${icon} me-2`}></i>{title}
+                </h6>
+                {badge}
+            </div>
+            {children}
         </div>
-        {children}
-    </div>
-);
+    );
+};
 
 /* ── SMTP Provider Presets ───────────────────────────────── */
 const SMTP_PRESETS = {
@@ -87,7 +92,9 @@ const DEFAULTS = {
 };
 
 const AdminAjustes = () => {
+    const { theme } = useTheme();
     const [settings, setSettings] = useState(DEFAULTS);
+    // ... rest of state
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [testing, setTesting] = useState(false);
@@ -102,6 +109,8 @@ const AdminAjustes = () => {
     const [waTestMsg, setWaTestMsg] = useState('Hola, este es un mensaje de prueba desde Oasis 📳');
     const [waTestRes, setWaTestRes] = useState(null);
     const [showEvKey, setShowEvKey] = useState(false);
+    const { showToast } = useToast();
+    const [confirmConfig, setConfirmConfig] = useState({ show: false, title: '', message: '', type: 'warning', onConfirm: () => {} });
 
     useEffect(() => {
         (async () => {
@@ -142,16 +151,16 @@ const AdminAjustes = () => {
         setFeedback(null);
         try {
             await apiClient.post('/settings', settings);
-            setFeedback({ type: 'success', msg: '✅ Configuración guardada correctamente' });
+            showToast('Configuración guardada correctamente', 'success');
         } catch (err) {
-            setFeedback({ type: 'error', msg: '❌ ' + (err.response?.data?.message || 'Error al guardar') });
+            showToast('Error al guardar: ' + (err.response?.data?.message || 'Error al guardar'), 'error');
         } finally { setSaving(false); }
     };
 
     const handleTestEmail = async () => {
         // setTesting(true);
         // setTestResult(null);
-        alert('La función de prueba de email requiere un servicio backend (Edge Functions).');
+        showToast('La función de prueba de email requiere un servicio backend (Edge Functions).', 'info');
     };
 
     /* ── Evolution API handlers ───────────────────────── */
@@ -166,17 +175,26 @@ const AdminAjustes = () => {
     useEffect(() => { fetchWaStatus(); }, [fetchWaStatus]);
 
     const handleCreateInstance = async () => {
-        alert('La creación de instancia requiere Evolution API y un servicio backend.');
+        showToast('La creación de instancia requiere Evolution API y un servicio backend.', 'info');
     };
 
     const handleWaLogout = async () => {
-        if (!window.confirm('¿Desconectar el número de WhatsApp?')) return;
-        setWaLoading('logout');
-        try {
-            await apiClient.post('/whatsapp/logout');
-            await fetchWaStatus();
-        } catch (e) { alert('❌ Error al desconectar'); }
-        finally { setWaLoading(null); }
+        setConfirmConfig({
+            show: true, title: 'Desconectar WhatsApp', message: '¿Desconectar el número de WhatsApp?', type: 'warning',
+            onConfirm: async () => {
+                setWaLoading('logout');
+                try {
+                    await apiClient.post('/whatsapp/logout');
+                    await fetchWaStatus();
+                    showToast('Instancia desconectada', 'success');
+                } catch (e) {
+                    showToast('Error al desconectar', 'error');
+                } finally {
+                    setWaLoading(null);
+                    setConfirmConfig(p => ({ ...p, show: false }));
+                }
+            }
+        });
     };
 
     const handleResetKillSwitch = async () => {
@@ -184,7 +202,8 @@ const AdminAjustes = () => {
         try {
             await apiClient.post('/whatsapp/reset-kill-switch');
             await fetchWaStatus();
-        } catch (e) { alert('❌ Error'); }
+            showToast('Kill-switch reseteado', 'success');
+        } catch (e) { showToast('Error al resetear', 'error'); }
         finally { setWaLoading(null); }
     };
 
@@ -208,20 +227,28 @@ const AdminAjustes = () => {
         <section className="container-fluid pb-5">
             {/* AdminNav removed - handled by Layout */}
 
-            <div className="container" style={{ maxWidth: '820px' }}>
-
-                {/* Header */}
-                <div className="d-flex align-items-center gap-3 mb-4">
+            <div className="mb-4 p-4 rounded-4 shadow-sm d-flex align-items-center justify-content-between gap-3"
+                style={{
+                    background: theme.glass.background,
+                    backdropFilter: theme.glass.backdropFilter,
+                    border: theme.glass.border,
+                    borderRadius: theme.glass.borderRadius,
+                    boxShadow: theme.glass.boxShadow
+                }}>
+                <div className="d-flex align-items-center gap-3">
                     <div style={{ width: 52, height: 52, background: theme.colors.primary + '15', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <i className="bi bi-gear-fill fs-3" style={{ color: theme.colors.primary }}></i>
                     </div>
                     <div>
-                        <h3 className="fw-bold mb-0" style={{ fontFamily: theme.fonts.logo, color: theme.colors.primary }}>
-                            Ajustes del Sistema
+                        <h3 className="fw-bold mb-0" style={{ fontFamily: theme.fonts.accent, color: theme.colors.text.primary, fontSize: '2.2rem', textTransform: 'uppercase' }}>
+                            Ajustes del <span style={{ color: theme.colors.primary }}>Sistema</span>
                         </h3>
                         <p className="text-muted small mb-0">Email, WhatsApp y datos de la iglesia</p>
                     </div>
                 </div>
+            </div>
+
+            <div className="container" style={{ maxWidth: '820px' }}>
 
                 {loading ? (
                     <div className="text-center p-5">
@@ -606,6 +633,14 @@ const AdminAjustes = () => {
                     </form>
                 )}
             </div>
+            <ConfirmationModal 
+                show={confirmConfig.show}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                type={confirmConfig.type}
+                onConfirm={confirmConfig.onConfirm}
+                onCancel={() => setConfirmConfig(p => ({ ...p, show: false }))}
+            />
         </section>
     );
 };

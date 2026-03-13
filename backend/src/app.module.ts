@@ -17,6 +17,7 @@ import { Billboard } from './billboards/billboard.entity';
 import { EventForm } from './event-forms-module/event-form.entity';
 import { FormSubmission } from './event-forms-module/form-submission.entity';
 import { LiveSetting } from './live/live-setting.entity';
+import { OrdenCulto } from './culto/orden-culto.entity';
 import { EmailModule } from './email/email.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
@@ -27,6 +28,7 @@ import { BillboardsModule } from './billboards/billboards.module';
 import { EventFormsModule } from './event-forms-module/event-forms.module';
 import { LiveModule } from './live/live.module';
 import { SettingsModule } from './settings-module/settings.module';
+import { CultoModule } from './culto/culto.module';
 import { PresentationsModule } from './presentations/presentations.module';
 import { TestCorsController } from './common/test-cors.controller';
 import { HealthController } from './health.controller';
@@ -90,6 +92,7 @@ import { HealthController } from './health.controller';
     EventFormsModule,
     LiveModule,
     SettingsModule,
+    CultoModule,
     PresentationsModule,
     EmailModule,
   ],

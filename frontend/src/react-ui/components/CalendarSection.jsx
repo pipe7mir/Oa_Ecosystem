@@ -70,16 +70,16 @@ const CalendarSection = () => {
 
             if (isSelected) {
                 bgColor = theme.colors.primary;
-                color = 'white';
+                color = '#ffffff';
                 fontWeight = 'bold';
             } else if (hasEvents) {
-                bgColor = 'rgba(78, 205, 196, 0.2)'; // Light secondary color
-                color = theme.colors.secondary;
+                bgColor = 'rgba(91, 46, 166, 0.15)'; // Tint of primary
+                color = theme.colors.primary;
                 fontWeight = 'bold';
             } else if (isToday) {
                 color = theme.colors.primary;
                 fontWeight = 'bold';
-                bgColor = 'rgba(255,107,107,0.1)';
+                bgColor = 'rgba(242, 201, 76, 0.2)'; // Tint of accent/gold
             }
 
             days.push(
@@ -170,10 +170,10 @@ const CalendarSection = () => {
             </div>
 
             {/* Calendar Grid */}
-            <div className="calendar-grid" style={{ background: '#f8f9fa', borderRadius: '16px', padding: '16px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
+            <div className="calendar-grid" style={{ background: theme.colors.surfaceAlt, borderRadius: '16px', padding: '16px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '8px' }}>
                     {dayNames.map((d, i) => (
-                        <div key={i} style={{ textAlign: 'center', fontWeight: 'bold', color: theme.colors.text.secondary, fontSize: '0.75rem' }}>
+                        <div key={i} style={{ textAlign: 'center', fontWeight: 'bold', color: theme.colors.text.primary, fontSize: '0.75rem' }}>
                             {d}
                         </div>
                     ))}

@@ -39,9 +39,9 @@ const Inscripciones = () => {
         return (
             <div className="container py-5 text-center" style={{ animation: 'fadeIn 0.5s ease' }}>
                 <div className="display-1 mb-4">🎉</div>
-                <h2 style={{ fontFamily: theme.fonts.titles, color: theme.colors.primary }}>¡Inscripción Exitosa!</h2>
+                <h2 style={{ fontFamily: theme.fonts.titles, color: theme.colors.primary }}>Completar Inscripción</h2>
                 <p className="text-muted">Hemos recibido tus datos correctamente. ¡Nos vemos pronto!</p>
-                <button className="btn btn-primary mt-4 rounded-pill px-5" onClick={() => { setFinished(false); setSelectedForm(null); }}>
+                <button className="btn btn-primary mt-4 rounded-pill px-5" onClick={() => { setFinished(false); setSelectedForm(null); }} style={{ background: selectedForm?.styles?.primaryColor || theme.colors.primary, border: 'none' }}>
                     Volver al listado
                 </button>
             </div>
@@ -78,14 +78,24 @@ const Inscripciones = () => {
                                     onClick={() => setSelectedForm(form)}
                                 >
                                     <div className="d-flex flex-column h-100">
-                                        <div style={{ width: 48, height: 48, background: theme.colors.primary + '10', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.colors.primary, marginBottom: theme.spacing(3) }}>
-                                            <i className="bi bi-calendar-event fs-4"></i>
+                                        <div style={{ width: 48, height: 48, background: (form.styles?.primaryColor || theme.colors.primary) + '10', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: form.styles?.primaryColor || theme.colors.primary, marginBottom: theme.spacing(3) }}>
+                                            <i className={`bi ${form.styles?.icon || 'bi-calendar-event'} fs-4`}></i>
                                         </div>
                                         <h4 className="fw-bold mb-3">{form.title}</h4>
                                         <p className="text-muted small flex-grow-1">{form.description}</p>
+                                        
+                                        {/* Status / Capacity */}
                                         <div className="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
-                                            <span className="fw-bold text-primary small">Inscribirme ahora</span>
-                                            <i className="bi bi-chevron-right text-primary"></i>
+                                            {form.capacity > 0 && form.submissionCount >= form.capacity ? (
+                                                <span className="fw-bold text-danger small">Lugar Agotado</span>
+                                            ) : (
+                                                <>
+                                                    <span className="fw-bold small" style={{ color: form.styles?.primaryColor || theme.colors.primary }}>
+                                                        Inscribirme ahora
+                                                    </span>
+                                                    <i className="bi bi-chevron-right" style={{ color: form.styles?.primaryColor || theme.colors.primary }}></i>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </GlassCard>

@@ -1,15 +1,26 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../react-ui/ThemeContext';
 import GlassCard from '../react-ui/components/GlassCard';
-import { theme } from '../react-ui/styles/theme';
 
 const Login = () => {
     const { signIn } = useAuth();
+    const { theme } = useTheme(); // solo para spacing y fuentes
     const [formData, setFormData] = useState({ username: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
+
+    // Colores fijos para el LOGIN (Siempre Claro/Refinado)
+    const loginTheme = {
+        primary: '#6D28D9',
+        secondary: '#8B5CF6',
+        surface: '#ffffff',
+        text: '#1e1b4b',
+        muted: '#6b7280',
+        inputBg: '#f8f9fa'
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -39,12 +50,29 @@ const Login = () => {
             justifyContent: 'center',
             animation: 'fadeIn 0.5s ease-in-out'
         }}>
-            <GlassCard style={{ maxWidth: '400px', width: '100%', padding: theme.spacing(4) }}>
-                <div className="text-center mb-4">
-                    <h2 style={{ fontFamily: 'ModernAge, sans-serif', color: theme.colors.primary, marginBottom: theme.spacing(1) }}>
-                        OASIS Admin
+            <GlassCard style={{ 
+                maxWidth: '430px', 
+                width: '100%', 
+                padding: theme.spacing(4), 
+                borderRadius: '32px',
+                background: loginTheme.surface,
+                border: '1px solid rgba(109, 40, 217, 0.2)',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
+            }}>
+                <div className="text-center mb-5">
+                    <h2 style={{ 
+                        fontFamily: 'ModernAge, sans-serif', 
+                        color: loginTheme.primary, 
+                        fontWeight: 900,
+                        fontSize: '1.8rem',
+                        letterSpacing: '1px',
+                        marginBottom: theme.spacing(1) 
+                    }}>
+                        OASIS ADMIN
                     </h2>
-                    <p className="text-muted small">Acceso restringido a personal autorizado</p>
+                    <p style={{ color: loginTheme.muted, fontSize: '0.85rem', fontWeight: 600 }}>
+                        Acceso restringido a personal autorizado
+                    </p>
                 </div>
 
                 {error && (
@@ -55,10 +83,11 @@ const Login = () => {
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
-                        <label className="form-label small fw-bold text-muted">Usuario / Email</label>
+                        <label className="form-label x-small fw-900 text-uppercase tracking-widest" style={{ color: loginTheme.primary, opacity: 0.8 }}>Usuario / Email</label>
                         <input
                             type="text"
-                            className="form-control rounded-pill px-3 bg-light border-0"
+                            className="form-control rounded-pill px-4 py-3 border-0"
+                            style={{ background: loginTheme.inputBg, color: loginTheme.text, fontSize: '0.9rem' }}
                             placeholder="admin@oasis.com"
                             value={formData.username}
                             onChange={(e) => setFormData({ ...formData, username: e.target.value })}
@@ -66,10 +95,11 @@ const Login = () => {
                         />
                     </div>
                     <div className="mb-4">
-                        <label className="form-label small fw-bold text-muted">Contraseña</label>
+                        <label className="form-label x-small fw-900 text-uppercase tracking-widest" style={{ color: loginTheme.primary, opacity: 0.8 }}>Contraseña</label>
                         <input
                             type="password"
-                            className="form-control rounded-pill px-3 bg-light border-0"
+                            className="form-control rounded-pill px-4 py-3 border-0"
+                            style={{ background: loginTheme.inputBg, color: loginTheme.text, fontSize: '0.9rem' }}
                             placeholder="••••••••"
                             value={formData.password}
                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -80,7 +110,7 @@ const Login = () => {
                     <button
                         type="submit"
                         className="btn w-100 rounded-pill py-2 fw-bold text-white shadow-sm"
-                        style={{ background: `linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.secondary})` }}
+                        style={{ background: `linear-gradient(90deg, ${loginTheme.primary}, ${loginTheme.secondary})` }}
                         disabled={loading}
                     >
                         {loading ? 'Verificando...' : 'INICIAR SESIÓN'}

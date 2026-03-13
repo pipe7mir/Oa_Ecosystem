@@ -18,6 +18,7 @@ import {
     LogOut,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../ThemeContext';
 import useAppMode from '../../hooks/useAppMode';
 import BottomNav from './BottomNav';
 import logoImg from '../../img/logos/LOGO1.png';
@@ -199,17 +200,18 @@ const DesktopNavbar = () => {
                                 display: 'flex', alignItems: 'center', gap: '6px',
                                 padding: '8px 16px', borderRadius: '10px',
                                 textDecoration: 'none',
-                                background: 'linear-gradient(135deg, #5b2ea6, #7c3aed)',
-                                color: '#fff',
+                                background: 'rgba(91,46,166,0.08)',
+                                color: '#5b2ea6',
                                 fontWeight: 700,
                                 fontSize: '0.85rem',
                                 transition: 'all 0.2s ease-in-out',
                                 transform: 'translateY(0)',
+                                border: '1px solid rgba(91,46,166,0.2)',
                                 boxShadow: 'none',
                             }}
                             onMouseEnter={e => {
                                 e.currentTarget.style.transform = 'translateY(-2px)';
-                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(91,46,166,0.3)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(91,46,166,0.15)';
                             }}
                             onMouseLeave={e => {
                                 e.currentTarget.style.transform = 'translateY(0)';
@@ -217,7 +219,7 @@ const DesktopNavbar = () => {
                             }}
                         >
                             <ShieldCheck size={16} />
-                            <span>Iniciar Sesión</span>
+                            <span>Acceso Admin</span>
                         </Link>
                     )}
                 </div>
@@ -266,12 +268,17 @@ const MobileHeader = () => {
 /* ─── LayoutMaestro ─── */
 const LayoutMaestro = ({ showFooter = true }) => {
     const { isMobile, isDesktop } = useAppMode();
+    const { theme, mode } = useTheme();
+    const isDark = mode === 'dark';
 
     return (
         <div style={{
             minHeight: '100vh',
-            background: 'radial-gradient(circle at 15% 20%, #ede9fe 0%, #e8f9ff 50%, #f4f7f6 100%)',
+            background: isDark 
+                ? 'radial-gradient(circle at 10% 10%, #0a0a1a 0%, #000000 100%)' 
+                : 'radial-gradient(circle at 15% 20%, #f0f7ff 0%, #e2e8f0 50%, #f8fafd 100%)',
             fontFamily: 'AdventSans, system-ui, sans-serif',
+            color: theme.colors.text.primary,
         }}>
             {/* Desktop: Horizontal Navbar */}
             {isDesktop && <DesktopNavbar />}

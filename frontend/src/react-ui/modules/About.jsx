@@ -81,7 +81,7 @@ const About = () => {
         // If still no base, use a sensible default for local dev if on a common port
         if (!base) {
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                base = `http://${window.location.hostname}:8000`;
+                base = `http://${window.location.hostname}:3000`;
             }
         }
 
@@ -96,9 +96,10 @@ const About = () => {
         <div style={{
             animation: 'fadeIn 0.5s ease-in-out',
             fontFamily: theme.fonts.body,
-            padding: `0 ${theme.spacing(2)}`,
-            paddingTop: isMobile ? theme.spacing(4) : 0
+            paddingTop: isMobile ? theme.spacing(4) : theme.spacing(6),
+            paddingBottom: theme.spacing(8)
         }}>
+            <div className="page-container" style={{ maxWidth: '1140px', margin: '0 auto', padding: `0 ${theme.spacing(2)}` }}>
             <header style={{ textAlign: 'center', marginBottom: isMobile ? theme.spacing(6) : theme.spacing(3) }}>
                 <h2 style={{ fontFamily: theme.fonts.titles, fontSize: 'clamp(2rem, 6vw, 3rem)', color: theme.colors.secondary, marginBottom: theme.spacing(2) }}>
                     {data.about_hero_title}
@@ -114,12 +115,28 @@ const About = () => {
                     { icon: data.about_vision_icon, title: data.about_vision_title, content: data.about_vision_content, color: theme.colors.secondary },
                     { icon: data.about_values_icon, title: data.about_values_title, content: data.about_values_content, color: theme.colors.accent }
                 ].map((item, i) => (
-                    <GlassCard key={i} style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '3rem', color: item.color, marginBottom: theme.spacing(2) }}>
+                    <GlassCard key={i} style={{ 
+                        textAlign: 'center', 
+                        width: '350px', 
+                        height: '350px', 
+                        margin: '0 auto', 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        padding: '30px',
+                        borderRadius: '12px'
+                    }}>
+                        <div style={{ fontSize: '3rem', color: item.color, marginBottom: theme.spacing(1), flexShrink: 0 }}>
                             <i className={`bi ${item.icon}`}></i>
                         </div>
-                        <h3 style={{ marginBottom: theme.spacing(2), fontFamily: theme.fonts.titles }}>{item.title}</h3>
-                        <p style={{ color: theme.colors.text.secondary, whiteSpace: 'pre-wrap' }}>{item.content}</p>
+                        <h3 style={{ marginBottom: theme.spacing(2), fontFamily: theme.fonts.titles, flexShrink: 0 }}>{item.title}</h3>
+                        <div style={{ 
+                            overflowY: 'auto', 
+                            flexGrow: 1, 
+                            paddingRight: '8px',
+                            textAlign: 'center'
+                        }} className="custom-card-scroll">
+                            <p style={{ color: theme.colors.text.secondary, whiteSpace: 'pre-wrap', margin: 0, fontSize: '0.95rem', lineHeight: '1.6' }}>{item.content}</p>
+                        </div>
                     </GlassCard>
                 ))}
             </div>
@@ -144,46 +161,47 @@ const About = () => {
                     <h2 style={{ textAlign: 'center', fontFamily: theme.fonts.titles, fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', marginBottom: theme.spacing(4), color: theme.colors.primary }}>
                         Nuestra Directiva
                     </h2>
-                    <div className="leadership-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: theme.spacing(2), maxWidth: '1100px', margin: '0 auto' }}>
+                    <div className="leadership-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: theme.spacing(3), width: '100%' }}>
                         {boardMembers.map(member => (
-                            <GlassCard
-                                key={member.id}
-                                className="member-card"
-                                style={{ textAlign: 'center', padding: 0, overflow: 'hidden', cursor: member.fullscreen_image_url ? 'pointer' : 'default' }}
-                                onClick={() => member.fullscreen_image_url && setSelectedMember(member)}
-                            >
-                                <div className="member-image-container" style={{ width: '100%', aspectRatio: '4/5', overflow: 'hidden', position: 'relative' }}>
-                                    <img src={getImageUrl(member.image_url)} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    {member.type === 'group' && (
-                                        <div style={{ position: 'absolute', top: '35px', right: '15px', background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', color: theme.colors.primary, padding: '4px 12px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                                            Grupo
-                                        </div>
-                                    )}
-                                    {member.fullscreen_image_url && (
-                                        <div className="view-more-hint" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.6))', color: 'white', padding: '15px', opacity: 0, transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                            <i className="bi bi-fullscreen"></i>
-                                            <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>VER PANTALLA COMPLETA</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <div style={{ padding: '0.8rem 0.6rem', textAlign: 'center' }}>
-                                    {member.type === 'group' ? (
-                                        <h4 style={{ color: theme.colors.primary, margin: '0 0 0.2rem', fontWeight: 'bold', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '1px', fontFamily: theme.fonts.titles }}>
-                                            {member.role}
-                                        </h4>
-                                    ) : (
-                                        <>
-                                            <h4 style={{ color: theme.colors.text.primary, margin: '0 0 0.1rem', fontWeight: 'bold', fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: theme.fonts.titles }}>{member.name}</h4>
-                                            <h6 style={{ color: theme.colors.primary, fontWeight: '800', textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.5px', marginBottom: '0.3rem', opacity: 0.9 }}>{member.role}</h6>
-                                        </>
-                                    )}
-                                    {member.description && (
-                                        <p style={{ fontSize: '0.7rem', color: theme.colors.text.secondary, lineHeight: '1.4', margin: 0, opacity: 0.8, display: '-webkit-box', WebkitLineClamp: '2', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                                            {member.description}
-                                        </p>
-                                    )}
-                                </div>
-                            </GlassCard>
+                        <GlassCard
+                            key={member.id}
+                            className="member-card"
+                            style={{ 
+                                textAlign: 'center', 
+                                padding: '20px', 
+                                borderRadius: '12px', 
+                                cursor: member.fullscreenImageUrl ? 'pointer' : 'default',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '15px',
+                                width: '240px',
+                                height: 'auto',
+                                margin: '0 auto'
+                            }}
+                            onClick={() => member.fullscreenImageUrl && setSelectedMember(member)}
+                        >
+                            <div className="member-image-container" style={{ width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden', position: 'relative', border: `1px solid ${theme.colors.border}`, boxShadow: '0 4px 15px rgba(0,0,0,0.08)' }}>
+                                <img src={getImageUrl(member.imageUrl)} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                {member.type === 'group' && (
+                                    <div style={{ position: 'absolute', bottom: '0', left: '0', right: '0', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', color: 'white', fontSize: '0.7rem', fontWeight: 'bold', padding: '8px 0', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                        DEPARTAMENTO
+                                    </div>
+                                )}
+                            </div>
+                            <div style={{ textAlign: 'center', width: '100%' }}>
+                                {member.type === 'group' ? (
+                                    <h4 style={{ color: theme.colors.primary, margin: '5px 0 0', fontWeight: 'bold', fontSize: '1.05rem', textTransform: 'uppercase', fontFamily: theme.fonts.titles }}>
+                                        {member.role}
+                                    </h4>
+                                ) : (
+                                    <>
+                                        <h4 style={{ color: theme.colors.text.primary, margin: '5px 0 0', fontWeight: 'bold', fontSize: '1rem', fontFamily: theme.fonts.titles, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{member.name}</h4>
+                                        <h6 style={{ color: theme.colors.primary, fontWeight: '800', textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: '1px', margin: '4px 0 0 0', opacity: 0.9 }}>{member.role}</h6>
+                                    </>
+                                )}
+                            </div>
+                        </GlassCard>
                         ))}
                     </div>
                     <style>{`
@@ -212,7 +230,7 @@ const About = () => {
                     <div
                         style={{
                             position: 'absolute', inset: 0, zIndex: 0,
-                            backgroundImage: `url(${getImageUrl(selectedMember.fullscreen_image_url || selectedMember.image_url)})`,
+                            backgroundImage: `url(${getImageUrl(selectedMember.fullscreenImageUrl || selectedMember.imageUrl)})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
                             filter: 'blur(50px) brightness(0.2)',
@@ -252,7 +270,7 @@ const About = () => {
                         onClick={e => e.stopPropagation()}
                     >
                         <img
-                            src={getImageUrl(selectedMember.fullscreen_image_url || selectedMember.image_url)}
+                            src={getImageUrl(selectedMember.fullscreenImageUrl || selectedMember.imageUrl)}
                             alt={selectedMember.name}
                             style={{
                                 position: 'relative',
@@ -267,7 +285,7 @@ const About = () => {
                             }}
                             onError={(e) => {
                                 e.target.onerror = null;
-                                e.target.src = getImageUrl(selectedMember.image_url);
+                                e.target.src = getImageUrl(selectedMember.imageUrl);
                             }}
                         />
 
@@ -302,18 +320,21 @@ const About = () => {
                 </div>,
                 document.body
             )}
+            </div>
 
-            {/* INFINITE GALLERY CAROUSEL */}
+            {/* INFINITE GALLERY CAROUSEL - Full width outside container for impact */}
             {galleryItems.length > 0 && (
-                <div style={{ marginTop: theme.spacing(12), overflow: 'hidden', position: 'relative', width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}>
-                    <h2 style={{ textAlign: 'center', fontFamily: theme.fonts.titles, fontSize: '2.5rem', marginBottom: theme.spacing(5), color: theme.colors.secondary }}>
-                        Nuestra Comunidad
-                    </h2>
+                <div style={{ marginTop: theme.spacing(12), overflow: 'hidden', position: 'relative', width: '100%' }}>
+                    <div style={{ maxWidth: '1140px', margin: '0 auto', padding: `0 ${theme.spacing(2)}` }}>
+                        <h2 style={{ textAlign: 'center', fontFamily: theme.fonts.titles, fontSize: '2.5rem', marginBottom: theme.spacing(5), color: theme.colors.secondary }}>
+                            Nuestra Comunidad
+                        </h2>
+                    </div>
                     <div className="infinite-scroller">
                         <div className="scroller-inner">
                             {[...galleryItems, ...galleryItems].map((item, idx) => (
                                 <div key={idx} className="scroller-item" style={{ display: 'inline-block', position: 'relative', margin: '0 10px', width: '350px', height: '250px', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}>
-                                    <img src={getImageUrl(item.image_url)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img src={getImageUrl(item.imageUrl)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     {(item.title || item.description) && (
                                         <div className="scroller-caption" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '20px 15px 10px', background: 'linear-gradient(transparent, rgba(0,0,0,0.8))', color: 'white', opacity: 0, transition: 'opacity 0.3s ease' }}>
                                             {item.title && <h6 style={{ margin: 0, fontWeight: 'bold', fontSize: '1rem' }}>{item.title}</h6>}
@@ -342,6 +363,19 @@ const About = () => {
                 @keyframes scroll {
                     from { transform: translateX(0); }
                     to { transform: translateX(-50%); }
+                }
+                .custom-card-scroll::-webkit-scrollbar {
+                    width: 4px;
+                }
+                .custom-card-scroll::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-card-scroll::-webkit-scrollbar-thumb {
+                    background: rgba(0, 0, 0, 0.1);
+                    border-radius: 10px;
+                }
+                .custom-card-scroll::-webkit-scrollbar-thumb:hover {
+                    background: rgba(0, 0, 0, 0.2);
                 }
             `}</style>
         </div>

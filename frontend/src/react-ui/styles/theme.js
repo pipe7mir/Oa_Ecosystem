@@ -1,49 +1,58 @@
 /**
- * OASIS React Design System
- * Flat Design 2.0 + Glassmorphism
- * Base Grid: 8px
+ * OASIS React Design System - Amethyst Church Luxury Edition
+ * Supporting Dark/Light Modes with Split-Screen High-Fidelity Specs
  */
 
-export const theme = {
-    // 1. Arquitectura de Estilos (8px Grid System)
-    spacing: (units) => `${units * 8}px`,
+export const createTheme = (mode = 'dark') => {
+    const isDark = mode === 'dark';
 
-    // 2. Estética Visual: Flat Design 2.0 (Vibrant & Clean)
-    colors: {
-        primary: '#5b2ea6', // Darker brand purple for text/icons
-        secondary: '#00d3df', // Cyan adjusted
-        accent: '#ff4081', // Pink Punch
-        background: '#f4f7f6', // Clean Slate
-        text: {
-            primary: '#102027', // Dark blue-grey for body
-            secondary: '#435566', // medium
-            inverse: '#ffffff'
+    // Shadows based on background tone as requested
+    const shadowColor = isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(109, 40, 217, 0.1)';
+
+    return {
+        mode,
+        spacing: (units) => `${units * 8}px`,
+
+        colors: {
+            primary: '#5B2EA6', // Royal Purple
+            secondary: '#4F46E5', // Indigo (Strong contrast for text)
+            accent: '#F2C94C', // Oasis Gold
+            background: isDark ? '#08080a' : '#f0f4f8', 
+            surface: isDark ? '#121216' : '#ffffff', 
+            surfaceAlt: isDark ? '#1a1a24' : '#e2e8f0', // Visible Grid/Backdrops
+            text: {
+                primary: isDark ? '#f8f4ff' : '#0f172a',
+                secondary: isDark ? '#94a3b8' : '#334155', // Slate-700
+                inverse: isDark ? '#0f172a' : '#f8f4ff'
+            },
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444',
+            border: isDark ? 'rgba(91, 46, 166, 0.2)' : 'rgba(91, 46, 166, 0.12)'
         },
-        success: '#00c853',
-        warning: '#ffd600',
-        error: '#d50000'
-    },
 
-    // 3. Glassmorphism (Strict Spec)
-    glass: {
-        background: 'rgba(255, 255, 255, 0.10)', // 10% Opacity (more subtle)
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.12)', // subtle thin border
-        borderRadius: '16px', // Standard container radius (2 * 8px)
-        boxShadow: '0 8px 20px 0 rgba(16, 24, 40, 0.06)'
-    },
+        glass: {
+            background: isDark ? 'rgba(26, 26, 31, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(12px) saturate(160%)', // Spec: 12px blur
+            border: isDark ? '1px solid rgba(109, 40, 217, 0.3)' : '1px solid rgba(255, 255, 255, 0.4)',
+            borderRadius: '16px', // Spec: 16px
+            boxShadow: `0 8px 32px ${shadowColor}`
+        },
 
-    // 4. Sombras Suaves (Flat 2.0 Soft Shadows)
-    shadows: {
-        soft: '0 4px 6px rgba(0, 0, 0, 0.05)', // Subtle lift
-        medium: '0 10px 20px rgba(0, 0, 0, 0.08)', // Focus state
-        floating: '0 20px 40px rgba(0, 0, 0, 0.12)' // Modal/Floating
-    },
+        shadows: {
+            soft: `0 4px 12px ${shadowColor}`,
+            medium: `0 12px 30px ${shadowColor}`,
+            floating: isDark ? '0 30px 60px rgba(0, 0, 0, 0.8)' : '0 30px 60px rgba(109, 40, 217, 0.15)'
+        },
 
-    // 5. Tipografía & Marca
-    fonts: {
-        titles: "'ModernAge', sans-serif",
-        body: "'AdventSans', sans-serif",
-        logo: "'ModernAge', sans-serif"
-    }
+        fonts: {
+            titles: "'Inter', sans-serif",
+            body: "'Inter', sans-serif",
+            brand: "'ModernAge', sans-serif",
+            accent: "'MoonRising', sans-serif",
+            details: "'Adventist Logo', sans-serif",
+        }
+    };
 };
+
+export const theme = createTheme('light'); // Cambiado a light por defecto como se acordó previamente.

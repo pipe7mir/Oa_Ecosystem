@@ -35,6 +35,12 @@ const FullscreenModal = ({ announcement, onClose, onNext, onPrev, hasNext, hasPr
     // Bloqueo de scroll y animación de entrada
     useEffect(() => {
         document.body.style.overflow = 'hidden';
+        
+        // Si ya entramos en pantalla completa desde el click del padre, activar modo proyector
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+            setIsProjectorMode(true);
+        }
+
         const frame = requestAnimationFrame(() => {
             requestAnimationFrame(() => setVisible(true));
         });
@@ -148,7 +154,7 @@ const FullscreenModal = ({ announcement, onClose, onNext, onPrev, hasNext, hasPr
                 position: 'fixed', inset: 0, zIndex: 9999,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: 'black',
-                transition: 'opacity 0.32s cubic-bezier(.4,0,.2,1)',
+                transition: 'opacity 0.5s cubic-bezier(.4,0,.2,1)',
                 opacity: visible ? 1 : 0,
             }}
             onClick={isProjectorMode ? undefined : handleClose}
@@ -238,22 +244,20 @@ const FullscreenModal = ({ announcement, onClose, onNext, onPrev, hasNext, hasPr
                             style={{
                                 position: 'relative',
                                 zIndex: 1,
-                                // En modo proyector: llenar todo el ancho disponible
-                                // En modo normal: contener dentro de la pantalla
+                                // En modo proyector: verdadera pantalla completa sin bordes
                                 ...(isProjectorMode ? {
-                                    width: '100%',
-                                    height: 'auto',
-                                    maxWidth: '100vw',
-                                    objectFit: 'fill',
+                                    width: '100vw',
+                                    height: '100vh',
+                                    objectFit: 'cover', // Fills the screen completely
                                 } : {
-                                    maxWidth: '100vw',
-                                    maxHeight: '100vh',
+                                    maxWidth: '95vw',
+                                    maxHeight: '85vh',
                                     width: 'auto',
                                     height: 'auto',
                                     objectFit: 'contain',
                                     boxShadow: '0 0 100px rgba(0,0,0,0.8)',
+                                    borderRadius: '12px',
                                 }),
-                                borderRadius: '0',
                                 ...slideStyle,
                             }}
                         />
@@ -383,12 +387,15 @@ const Announcements = () => {
 
     return (
         <section style={{ maxWidth: '100%', overflow: 'hidden', padding: '40px 0', position: 'relative' }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto', paddingLeft: theme.spacing(2) }}>
+            <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
                 <h2 style={{
                     fontFamily: '"San Francisco", sans-serif', fontWeight: '600',
-                    fontSize: 'clamp(1.5rem, 4vw, 2rem)', color: theme.colors.text.primary, marginBottom: theme.spacing(3)
+                    fontSize: 'clamp(1.5rem, 4vw, 2.2rem)', 
+                    color: theme.colors.text.primary, 
+                    marginBottom: theme.spacing(4),
+                    textTransform: 'none'
                 }}>
-                    Novedades
+                    Nuestras novedades
                 </h2>
             </div>
 
@@ -405,20 +412,29 @@ const Announcements = () => {
                 {announcements.map((announcement) => {
                     const thumbUrl = buildUrl(announcement.imageUrl || announcement.image_url);
                     return (
-                        <div key={announcement.id} className="announcement-card-wrapper" style={{ minWidth: '280px', maxWidth: '320px', scrollSnapAlign: 'start', flexShrink: 0 }}>
+                        <div key={announcement.id} className="announcement-card-wrapper" style={{ minWidth: '240px', maxWidth: '280px', scrollSnapAlign: 'start', flexShrink: 0 }}>
                             <div
                                 className="announcement-card h-100"
-                                onClick={() => { setTransitionDir('next'); setSelectedAnnouncement(announcement); }}
+                                onClick={() => { 
+                                    setTransitionDir('next'); 
+                                    setSelectedAnnouncement(announcement);
+                                    // Pantalla completa inmediata (aprovechando el gesto del usuario)
+                                    const el = document.documentElement;
+                                    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+                                    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen().catch(() => {});
+                                }}
                                 style={{ cursor: 'pointer' }}
                             >
                                 <GlassCard style={{
-                                    padding: '0', overflow: 'hidden', height: '100%', minHeight: '400px',
+                                    padding: '0', overflow: 'hidden', height: '180px',
                                     display: 'flex', flexDirection: 'column',
                                     background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(15px)',
-                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    border: '1px solid rgba(255,255,255,0.15)',
+                                    borderRadius: '20px',
+                                    boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
                                 }}>
                                     <div style={{
-                                        height: '280px', width: '100%', position: 'relative',
+                                        flexGrow: 1, width: '100%', position: 'relative',
                                         backgroundImage: thumbUrl
                                             ? `url(${thumbUrl})`
                                             : `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
@@ -429,9 +445,7 @@ const Announcements = () => {
                                                 <i className="bi bi-megaphone text-white opacity-50 fs-1"></i>
                                             </div>
                                         )}
-                                        <div style={{ position: 'absolute', top: '15px', right: '15px' }}>
-                                            <span className="badge bg-white text-primary shadow-sm px-3 py-2">{announcement.tag}</span>
-                                        </div>
+                                        {/* Tag removed for pure image look */}
                                         {/* Expand hint */}
                                         <div style={{
                                             position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -440,41 +454,6 @@ const Announcements = () => {
                                         }} className="card-hover-overlay">
                                             <i className="bi bi-fullscreen text-white" style={{ fontSize: '2rem' }}></i>
                                         </div>
-                                    </div>
-                                    <div style={{ padding: '24px', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                                        <h3 style={{
-                                            fontFamily: '"San Francisco", sans-serif', fontWeight: 'bold',
-                                            fontSize: '1.25rem', color: theme.colors.text.primary,
-                                            marginBottom: '12px', lineHeight: 1.3,
-                                        }}>
-                                            {announcement.title}
-                                        </h3>
-                                        <p style={{
-                                            fontSize: '0.95rem', color: theme.colors.text.secondary,
-                                            marginBottom: '8px', flexGrow: 1,
-                                            display: '-webkit-box', WebkitLineClamp: 3,
-                                            WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                                        }}>
-                                            {announcement.content || announcement.description}
-                                        </p>
-                                        {/* Date / Time / Location row */}
-                                        {(announcement.date || announcement.time || announcement.location) && (
-                                            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                {(announcement.date || announcement.time) && (
-                                                    <span style={{ fontSize: '0.8rem', color: theme.colors.text.secondary, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                        <i className="bi bi-calendar3" style={{ color: theme.colors.primary }}></i>
-                                                        {announcement.date && new Date(announcement.date + 'T00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
-                                                        {announcement.time && ` — ${announcement.time}`}
-                                                    </span>
-                                                )}
-                                                {announcement.location && (
-                                                    <span style={{ fontSize: '0.8rem', color: theme.colors.text.secondary, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                        <i className="bi bi-geo-alt-fill" style={{ color: theme.colors.primary }}></i>
-                                                        {announcement.location}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        )}
                                     </div>
                                 </GlassCard>
                             </div>
@@ -498,9 +477,10 @@ const Announcements = () => {
 
             <style>{`
                 .hide-scrollbar::-webkit-scrollbar { display: none; }
-                .announcement-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-                .announcement-card:hover { transform: translateY(-8px); }
+                .announcement-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+                .announcement-card:hover { transform: translateY(-10px) scale(1.02); }
                 .announcement-card:hover .card-hover-overlay { opacity: 1 !important; }
+                .announcement-card-wrapper { padding: 10px 0; }
 
                 #fullscreen-stage:fullscreen {
                     width: 100vw !important;
@@ -511,12 +491,13 @@ const Announcements = () => {
                     justify-content: center !important;
                 }
                 #fullscreen-stage:fullscreen img {
-                    max-width: 100vw !important;
-                    max-height: 100vh !important;
-                    width: auto !important;
-                    height: auto !important;
-                    object-fit: contain !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    max-width: none !important;
+                    max-height: none !important;
+                    object-fit: cover !important; /* Llena toda la pantalla */
                     box-shadow: none !important;
+                    border-radius: 0 !important;
                 }
                 
                 @media (max-width: 576px) {

@@ -24,6 +24,7 @@ export class BillboardsController {
       button_link: item.buttonLink,
       order: item.order,
       is_active: item.isActive,
+      styles: item.styles || {},
       created_at: item.createdAt,
       updated_at: item.updatedAt,
     };

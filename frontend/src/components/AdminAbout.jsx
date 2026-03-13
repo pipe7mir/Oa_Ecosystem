@@ -1,17 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import apiClient from '../api/client';
-import { theme } from '../react-ui/styles/theme';
+import { useTheme } from '../react-ui/ThemeContext';
+import { useToast } from '../react-ui/components/Toast';
+import ConfirmationModal from '../react-ui/components/ConfirmationModal';
 
-const SectionCard = ({ icon, title, children }) => (
-    <div className="mb-4 p-4 rounded-4" style={{ background: 'white', boxShadow: '0 4px 24px rgba(0,0,0,0.07)', border: '1px solid #f0f0f0' }}>
-        <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-            <h6 className="fw-bold mb-0" style={{ color: theme.colors.primary }}>
-                <i className={`bi ${icon} me-2`}></i>{title}
-            </h6>
+const SectionCard = ({ icon, title, children }) => {
+    const { theme } = useTheme();
+    return (
+        <div className="mb-4 p-4 rounded-4" style={{ background: theme.colors.surface, boxShadow: theme.shadows.soft, border: `1px solid ${theme.colors.border}` }}>
+            <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom" style={{ borderColor: theme.colors.border }}>
+                <h6 className="fw-bold mb-0" style={{ color: theme.colors.primary }}>
+                    <i className={`bi ${icon} me-2`}></i>{title}
+                </h6>
+            </div>
+            {children}
         </div>
-        {children}
-    </div>
-);
+    );
+};
 
 const DEFAULTS = {
     about_hero_title: 'Nuestra Identidad',
@@ -31,19 +36,21 @@ const DEFAULTS = {
 };
 
 const AdminAbout = () => {
+    const { theme, mode } = useTheme();
     const [settings, setSettings] = useState(DEFAULTS);
     const [boardMembers, setBoardMembers] = useState([]);
     const [galleryItems, setGalleryItems] = useState([]);
 
     // New Member Form State
-    const [memberForm, setMemberForm] = useState({ name: '', role: '', type: 'individual', description: '', image_url: '', fullscreen_image_url: '' });
+    const [memberForm, setMemberForm] = useState({ name: '', role: '', type: 'individual', description: '', imageUrl: '', fullscreenImageUrl: '' });
     const [showMemberForm, setShowMemberForm] = useState(false);
     const [memberFormSaving, setMemberFormSaving] = useState(false);
     const [imageUploading, setImageUploading] = useState(false);
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [feedback, setFeedback] = useState(null);
+    const { showToast } = useToast();
+    const [confirmConfig, setConfirmConfig] = useState({ show: false, title: '', message: '', type: 'warning', onConfirm: () => {} });
 
     const fetchData = async () => {
         try {
@@ -82,14 +89,13 @@ const AdminAbout = () => {
     }, []);
 
     const handleSaveSettings = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         setSaving(true);
-        setFeedback(null);
         try {
             await apiClient.post('/settings', settings);
-            setFeedback({ type: 'success', msg: '✅ Contenido "Quienes Somos" guardado correctamente' });
+            showToast('Contenido guardado correctamente', 'success');
         } catch (err) {
-            setFeedback({ type: 'error', msg: '❌ Error al guardar: ' + err.message });
+            showToast('Error al guardar: ' + err.message, 'error');
         } finally {
             setSaving(false);
         }
@@ -116,37 +122,56 @@ const AdminAbout = () => {
                 submissionData.name = submissionData.role || 'Departamento';
             }
             await apiClient.post('/board-members', { ...submissionData, order: boardMembers.length });
-            setMemberForm({ name: '', role: '', type: 'individual', description: '', image_url: '', fullscreen_image_url: '' });
+            setMemberForm({ name: '', role: '', type: 'individual', description: '', imageUrl: '', fullscreenImageUrl: '' });
             setShowMemberForm(false);
             fetchData();
+            showToast('Miembro guardado', 'success');
         } catch (err) {
-            alert('Error al guardar: ' + err.message);
+            showToast('Error al guardar: ' + err.message, 'error');
         } finally {
             setMemberFormSaving(false);
         }
     };
 
     const handleBoardDelete = async (id) => {
-        if (!window.confirm('¿Eliminar este miembro?')) return;
-        try {
-            await apiClient.delete(`/board-members/${id}`);
-            fetchData();
-        } catch (err) { alert('Error al eliminar'); }
+        setConfirmConfig({
+            show: true, title: 'Eliminar Miembro', message: '¿Estás seguro de eliminar este miembro?', type: 'danger',
+            onConfirm: async () => {
+                try {
+                    await apiClient.delete(`/board-members/${id}`);
+                    fetchData();
+                    showToast('Miembro eliminado', 'success');
+                } catch (err) {
+                    showToast('Error al eliminar', 'error');
+                } finally {
+                    setConfirmConfig(p => ({ ...p, show: false }));
+                }
+            }
+        });
     };
 
     const handleGallerySave = async (item) => {
         try {
             await apiClient.post('/gallery-items', item);
             fetchData();
-        } catch (err) { alert('Error al guardar item de galería'); }
+        } catch (err) { showToast('Error al guardar item de galería', 'error'); }
     };
 
     const handleGalleryDelete = async (id) => {
-        if (!window.confirm('¿Eliminar esta imagen de la galería?')) return;
-        try {
-            await apiClient.delete(`/gallery-items/${id}`);
-            fetchData();
-        } catch (err) { alert('Error al eliminar'); }
+        setConfirmConfig({
+            show: true, title: 'Eliminar Imagen', message: '¿Eliminar esta imagen de la galería?', type: 'danger',
+            onConfirm: async () => {
+                try {
+                    await apiClient.delete(`/gallery-items/${id}`);
+                    fetchData();
+                    showToast('Imagen eliminada', 'success');
+                } catch (err) {
+                    showToast('Error al eliminar', 'error');
+                } finally {
+                    setConfirmConfig(p => ({ ...p, show: false }));
+                }
+            }
+        });
     };
 
     const getImageUrl = (url) => {
@@ -160,7 +185,7 @@ const AdminAbout = () => {
 
         if (!base) {
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                base = `http://${window.location.hostname}:8000`;
+                base = `http://${window.location.hostname}:3000`;
             }
         }
 
@@ -173,18 +198,36 @@ const AdminAbout = () => {
 
     return (
         <section className="container-fluid pb-5">
-            <div className="container" style={{ maxWidth: '850px' }}>
-                <div className="d-flex align-items-center gap-3 mb-4">
+            <div className="mb-4 p-4 rounded-4 shadow-sm d-flex align-items-center justify-content-between gap-3"
+                style={{
+                    background: theme.glass.background,
+                    backdropFilter: theme.glass.backdropFilter,
+                    border: theme.glass.border,
+                    borderRadius: theme.glass.borderRadius,
+                    boxShadow: theme.glass.boxShadow
+                }}>
+                <div className="d-flex align-items-center gap-3">
                     <div style={{ width: 52, height: 52, background: theme.colors.primary + '15', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <i className="bi bi-info-circle-fill fs-3" style={{ color: theme.colors.primary }}></i>
                     </div>
                     <div>
-                        <h3 className="fw-bold mb-0" style={{ fontFamily: 'ModernAge, sans-serif', color: theme.colors.primary }}>
-                            Gestión Quienes Somos
+                        <h3 className="fw-bold mb-0" style={{ fontFamily: theme.fonts.accent, color: theme.colors.text.primary, fontSize: '2.2rem', textTransform: 'uppercase' }}>
+                            Gestión de <span style={{ color: theme.colors.primary }}>Identidad</span>
                         </h3>
                         <p className="text-muted small mb-0">Administra identidad, directiva y galería</p>
                     </div>
                 </div>
+                <button
+                    onClick={handleSaveSettings}
+                    disabled={saving}
+                    className="btn rounded-pill px-4 shadow-sm fw-bold border-0 text-white"
+                    style={{ background: theme.colors.primary }}
+                >
+                    {saving ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+            </div>
+
+            <div className="container" style={{ maxWidth: '850px' }}>
 
                 <form onSubmit={handleSaveSettings}>
                     <SectionCard icon="bi-megaphone" title="Encabezado (Hero)">
@@ -258,8 +301,6 @@ const AdminAbout = () => {
                         </div>
                     </SectionCard>
 
-                    {feedback && <div className={`alert border-0 rounded-3 mb-3 ${feedback.type === 'success' ? 'alert-success' : 'alert-danger'}`}>{feedback.msg}</div>}
-
                     <div className="d-grid mb-5">
                         <button type="submit" disabled={saving} className="btn btn-lg fw-bold text-white rounded-pill py-3"
                             style={{ background: saving ? '#aaa' : `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`, boxShadow: '0 4px 18px rgba(0,0,0,0.18)' }}>
@@ -276,8 +317,8 @@ const AdminAbout = () => {
                                 {boardMembers.map(m => (
                                     <div key={m.id} className="col-md-6">
                                         <div className="p-3 border rounded-4 d-flex align-items-center gap-3 bg-white h-100 position-relative shadow-sm hover-shadow">
-                                            <div style={{ width: 60, height: 60, borderRadius: '12px', overflow: 'hidden', flexShrink: 0 }}>
-                                                <img src={getImageUrl(m.image_url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                                            <div style={{ width: 48, height: 48, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: `1px solid ${theme.colors.border}` }}>
+                                                <img src={getImageUrl(m.imageUrl)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                                             </div>
                                             <div className="flex-grow-1 overflow-hidden">
                                                 <div className="d-flex align-items-center gap-2">
@@ -312,17 +353,16 @@ const AdminAbout = () => {
                                 <div className="col-md-5">
                                     <div className="row g-2">
                                         <div className="col-6 text-center">
-                                            <label className="form-label x-small fw-bold text-muted d-block">Miniatura Vertical (4:5)</label>
-                                            <div className="border rounded-4 bg-white mb-2 mx-auto" style={{ width: '100%', aspectRatio: '4/5', overflow: 'hidden', position: 'relative' }}>
+                                            <div className="border rounded-circle bg-white mb-2 mx-auto" style={{ width: '80px', height: '80px', overflow: 'hidden', position: 'relative' }}>
                                                 {imageUploading === 'miniature' ? (
                                                     <div className="h-100 d-flex align-items-center justify-content-center">
                                                         <div className="spinner-border spinner-border-sm text-primary"></div>
                                                     </div>
-                                                ) : memberForm.image_url ? (
-                                                    <img src={getImageUrl(memberForm.image_url)} className="img-fluid h-100 w-100 object-fit-cover" alt="" />
+                                                ) : memberForm.imageUrl ? (
+                                                    <img src={getImageUrl(memberForm.imageUrl)} className="img-fluid h-100 w-100 object-fit-cover" alt="" />
                                                 ) : (
                                                     <div className="h-100 d-flex align-items-center justify-content-center text-muted">
-                                                        <i className="bi bi-person-bounding-box fs-3 opacity-25"></i>
+                                                        <i className="bi bi-person-bounding-box fs-4 opacity-25"></i>
                                                     </div>
                                                 )}
                                             </div>
@@ -332,7 +372,7 @@ const AdminAbout = () => {
                                                     setImageUploading('miniature');
                                                     try {
                                                         const url = await uploadFile(e.target.files[0]);
-                                                        setMemberForm(prev => ({ ...prev, image_url: url }));
+                                                        setMemberForm(prev => ({ ...prev, imageUrl: url }));
                                                     } finally {
                                                         setImageUploading(false);
                                                     }
@@ -340,25 +380,18 @@ const AdminAbout = () => {
                                             </label>
                                         </div>
                                         <div className="col-6 text-center">
-                                            <label className="form-label x-small fw-bold text-muted d-block">Full HD (1920x1080 | 16:9)</label>
-                                            <div className="border rounded-4 bg-white mb-2 mx-auto" style={{ width: '100%', aspectRatio: '16/9', overflow: 'hidden', position: 'relative' }}>
+                                            <div className="border rounded-4 bg-white mb-2 mx-auto" style={{ width: '100%', height: '45px', overflow: 'hidden', position: 'relative' }}>
                                                 {imageUploading === 'fullscreen' ? (
                                                     <div className="h-100 d-flex align-items-center justify-content-center">
                                                         <div className="spinner-border spinner-border-sm text-primary"></div>
                                                     </div>
-                                                ) : memberForm.fullscreen_image_url ? (
-                                                    <img
-                                                        src={getImageUrl(memberForm.fullscreen_image_url)}
-                                                        className="img-fluid h-100 w-100 object-fit-cover"
-                                                        alt=""
-                                                        onError={(e) => {
-                                                            e.target.onerror = null;
-                                                            e.target.src = getImageUrl(memberForm.image_url);
-                                                        }}
-                                                    />
+                                                ) : memberForm.fullscreenImageUrl ? (
+                                                    <div className="h-100 bg-success d-flex align-items-center justify-content-center text-white small fw-bold">
+                                                        <i className="bi bi-check-circle-fill me-1"></i> OK
+                                                    </div>
                                                 ) : (
-                                                    <div className="h-100 d-flex align-items-center justify-content-center text-muted">
-                                                        <i className="bi bi-display fs-3 opacity-25"></i>
+                                                    <div className="h-100 d-flex align-items-center justify-content-center text-muted small opacity-50">
+                                                        Sin fondo
                                                     </div>
                                                 )}
                                             </div>
@@ -368,7 +401,7 @@ const AdminAbout = () => {
                                                     setImageUploading('fullscreen');
                                                     try {
                                                         const url = await uploadFile(e.target.files[0]);
-                                                        setMemberForm(prev => ({ ...prev, fullscreen_image_url: url }));
+                                                        setMemberForm(prev => ({ ...prev, fullscreenImageUrl: url }));
                                                     } finally {
                                                         setImageUploading(false);
                                                     }
@@ -424,7 +457,7 @@ const AdminAbout = () => {
                                 const files = Array.from(e.target.files);
                                 for (const file of files) {
                                     const url = await uploadFile(file);
-                                    handleGallerySave({ image_url: url, order: galleryItems.length });
+                                    handleGallerySave({ imageUrl: url, order: galleryItems.length });
                                 }
                             }} />
                         </label>
@@ -434,7 +467,7 @@ const AdminAbout = () => {
                         {galleryItems.map(item => (
                             <div key={item.id} className="col-md-4">
                                 <div className="card h-100 border rounded-4 overflow-hidden position-relative group shadow-sm">
-                                    <img src={getImageUrl(item.image_url)} className="card-img-top" style={{ height: '140px', objectFit: 'cover' }} alt="" />
+                                    <img src={getImageUrl(item.imageUrl)} className="card-img-top" style={{ height: '140px', objectFit: 'cover' }} alt="" />
                                     <div className="p-2 bg-white">
                                         <input
                                             className="form-control form-control-sm border-0 bg-light-soft"
@@ -482,6 +515,14 @@ const AdminAbout = () => {
                 .animate-in { animation: fadeIn 0.4s ease-out; }
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
             `}</style>
+            <ConfirmationModal 
+                show={confirmConfig.show}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                type={confirmConfig.type}
+                onConfirm={confirmConfig.onConfirm}
+                onCancel={() => setConfirmConfig(p => ({ ...p, show: false }))}
+            />
         </section>
     );
 };

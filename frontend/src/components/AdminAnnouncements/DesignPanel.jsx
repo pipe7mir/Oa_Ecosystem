@@ -50,7 +50,7 @@ export const DesignPanel = ({
     <AnimatePresence>
       {showDesignPanel && (
         <motion.div
-          className="design-panel bg-white border-end shadow-lg"
+          className="design-panel border-end shadow-lg"
           variants={panelVariants}
           initial="hidden"
           animate="visible"
@@ -64,11 +64,13 @@ export const DesignPanel = ({
             zIndex: 1150,
             overflowY: 'auto',
             borderRadius: '0',
+            background: theme.colors.surface,
+            borderColor: theme.colors.border
           }}
         >
           {/* Header */}
-          <div className="p-3 border-bottom d-flex justify-content-between align-items-center sticky-top bg-white">
-            <h6 className="fw-bold mb-0">DISEÑO</h6>
+          <div className="p-3 border-bottom d-flex justify-content-between align-items-center sticky-top" style={{ background: theme.colors.surface, borderColor: theme.colors.border }}>
+            <h6 className="fw-bold mb-0" style={{ color: theme.colors.text.primary, fontFamily: theme.fonts.accent, letterSpacing: '1px' }}>DISEÑO</h6>
             <button
               className="btn-close"
               onClick={() => setShowDesignPanel(false)}

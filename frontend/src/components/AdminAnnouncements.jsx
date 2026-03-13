@@ -1,10 +1,11 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { theme } from '../react-ui/styles/theme';
+import { useTheme } from '../react-ui/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';  // API client for backend requests
 import { uploadCanvasToCloudinary } from '../api/cloudinary';  // Cloudinary upload
-import OasisPress from './OasisPress';  // Presentation editor
+import { useToast } from '../react-ui/components/Toast';
+import ConfirmationModal from '../react-ui/components/ConfirmationModal';
 
 // Refactored components
 import AnnouncementPreview from './AdminAnnouncements/AnnouncementPreview';
@@ -360,7 +361,8 @@ const CalendarPickerModal = ({ value, onChange, onClose }) => {
    Main Component
  ───────────────────────────────────────────────────*/
 const AdminAnnouncements = () => {
-    const [activeMode, setActiveMode] = useState('anuncios'); // 'anuncios' | 'presentaciones'
+    const { theme, mode, toggleMode } = useTheme();
+    const [activeMode, setActiveMode] = useState('anuncios');
     const [announcements, setAnnouncements] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [activeSidebar, setActiveSidebar] = useState('design');
@@ -405,6 +407,8 @@ const AdminAnnouncements = () => {
     const [logoPosition, setLogoPosition] = useState('top-left');
     const [logoOpacity, setLogoOpacity] = useState(1);
     const [selectedLogo, setSelectedLogo] = useState(null);
+    const { showToast } = useToast();
+    const [confirmConfig, setConfirmConfig] = useState({ show: false, title: '', message: '', type: 'warning', onConfirm: () => {} });
 
     // Handle responsive breakpoints
     useEffect(() => {
@@ -498,6 +502,117 @@ const AdminAnnouncements = () => {
     const set = (key, val) => setFormData(prev => ({ ...prev, [key]: val }));
     const setMany = (obj) => setFormData(prev => ({ ...prev, ...obj }));
 
+    // Helpers to update properties of selected items (Shapes or Custom Logos)
+    const updateSelectedShape = (prop, val) => {
+        if (!selectedElementId || !selectedElementId.startsWith('shape_')) return;
+        const id = parseInt(selectedElementId.replace('shape_', ''));
+        setFormData(prev => ({
+            ...prev,
+            shapes: (prev.shapes || []).map(s => s.id === id ? { ...s, [prop]: val } : s)
+        }));
+    };
+
+    const updateSelectedCustomLogo = (prop, val) => {
+        if (!selectedElementId || !selectedElementId.startsWith('customLogo_')) return;
+        const idx = parseInt(selectedElementId.replace('customLogo_', ''));
+        setFormData(prev => ({
+            ...prev,
+            customLogos: (prev.customLogos || []).map((lg, i) => i === idx ? { ...lg, [prop]: val } : lg)
+        }));
+    };
+
+    // Resize Handles Component
+    const ResizeHandles = ({ element, type }) => {
+        const isSelected = selectedElementId === (type === 'shape' ? `shape_${element.id}` : `customLogo_${element.idx}`);
+        if (!isSelected) return null;
+
+        const handles = [
+            { pos: 'tl', cursor: 'nwse-resize', top: -4, left: -4 },
+            { pos: 'tr', cursor: 'nesw-resize', top: -4, right: -4 },
+            { pos: 'bl', cursor: 'nesw-resize', bottom: -4, left: -4 },
+            { pos: 'br', cursor: 'nwse-resize', bottom: -4, right: -4 },
+            { pos: 'tc', cursor: 'ns-resize', top: -4, left: '50%' },
+            { pos: 'bc', cursor: 'ns-resize', bottom: -4, left: '50%' },
+            { pos: 'lc', cursor: 'ew-resize', top: '50%', left: -4 },
+            { pos: 'rc', cursor: 'ew-resize', top: '50%', right: -4 },
+        ];
+
+        return (
+            <div style={{ position: 'absolute', inset: -2, pointerEvents: 'none', border: '1px solid #00d2f3', zIndex: 50 }}>
+                {handles.map(h => (
+                    <div
+                        key={h.pos}
+                        onMouseDown={(e) => {
+                            e.stopPropagation();
+                            dragState.current = { 
+                                active: true, 
+                                type: 'resize', 
+                                handle: h.pos, 
+                                startX: e.clientX, 
+                                startY: e.clientY,
+                                startW: element.width || element.size || 80,
+                                startH: element.height || element.size || 80,
+                                startXPos: element.x,
+                                startYPos: element.y,
+                                targetType: type,
+                                targetId: type === 'shape' ? element.id : element.idx
+                            };
+                            
+                            const onMouseMove = (moveEvent) => {
+                                if (!dragState.current.active) return;
+                                const dx = moveEvent.clientX - dragState.current.startX;
+                                const dy = moveEvent.clientY - dragState.current.startY;
+                                
+                                let newW = dragState.current.startW;
+                                let newH = dragState.current.startH;
+                                
+                                if (h.pos.includes('r')) newW += dx;
+                                if (h.pos.includes('l')) newW -= dx;
+                                if (h.pos.includes('b')) newH += dy;
+                                if (h.pos.includes('t')) newH -= dy;
+
+                                newW = Math.max(10, newW);
+                                newH = Math.max(10, newH);
+
+                                if (type === 'shape') {
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        shapes: prev.shapes.map(s => s.id === element.id ? { ...s, width: newW, height: newH } : s)
+                                    }));
+                                } else {
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        customLogos: prev.customLogos.map((lg, i) => i === element.idx ? { ...lg, size: newW } : lg)
+                                    }));
+                                }
+                            };
+
+                            const onMouseUp = () => {
+                                dragState.current.active = false;
+                                window.removeEventListener('mousemove', onMouseMove);
+                                window.removeEventListener('mouseup', onMouseUp);
+                            };
+
+                            window.addEventListener('mousemove', onMouseMove);
+                            window.addEventListener('mouseup', onMouseUp);
+                        }}
+                        style={{
+                            position: 'absolute',
+                            width: '8px', height: '8px',
+                            background: '#fff', border: '1px solid #00d2f3',
+                            borderRadius: '50%',
+                            cursor: h.cursor,
+                            top: h.top, bottom: h.bottom, left: h.left, right: h.right,
+                            transform: h.pos.includes('c') ? 'translate(-50%, -50%)' : 'none',
+                            pointerEvents: 'auto',
+                            zIndex: 60
+                        }}
+                    />
+                ))}
+            </div>
+        );
+    };
+
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
     const previewRef = useRef(null);
@@ -547,7 +662,7 @@ const AdminAnnouncements = () => {
     const handleFileChange = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size > 8 * 1024 * 1024) { alert('La imagen no debe superar 8 MB'); return; }
+        if (file.size > 8 * 1024 * 1024) { showToast('La imagen no debe superar 8 MB', 'warning'); return; }
         setImageFile(file);
         const reader = new FileReader();
         reader.onloadend = () => setMany({ bgImage: reader.result, bgMode: 'image', bgPosX: 50, bgPosY: 50 });
@@ -639,7 +754,7 @@ const AdminAnnouncements = () => {
             link.click();
         } catch (err) {
             console.error("Download failed:", err);
-            alert("Error al descargar la imagen.");
+            showToast("Error al descargar la imagen.", "error");
         }
     };
 
@@ -1048,11 +1163,11 @@ const AdminAnnouncements = () => {
                 await apiClient.post('/announcements', announcementData);
             }
 
-            fetchAnnouncements(); setShowForm(false); resetForm();
+            fetchAnnouncements(); showToast('Anuncio guardado', 'success'); setShowForm(false); resetForm();
         } catch (err) {
             console.error('❌ Save error:', err);
             const msg = err.response?.data?.error || err.response?.data?.message || err.message;
-            alert('Error al guardar: ' + msg);
+            showToast('Error al guardar: ' + msg, 'error');
         }
         finally { setIsSubmitting(false); }
     };
@@ -1073,11 +1188,17 @@ const AdminAnnouncements = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('¿Eliminar?')) return;
-        try {
-            await apiClient.delete(`/announcements/${id}`);
-            fetchAnnouncements();
-        } catch { alert('Error'); }
+        setConfirmConfig({
+            show: true, title: 'Eliminar Anuncio', message: '¿Estás seguro de que deseas eliminar este anuncio?', type: 'danger',
+            onConfirm: async () => {
+                try {
+                    await apiClient.delete(`/announcements/${id}`);
+                    fetchAnnouncements();
+                    showToast('Anuncio eliminado', 'success');
+                } catch { showToast('Error al eliminar', 'error'); }
+                setConfirmConfig(p => ({ ...p, show: false }));
+            }
+        });
     };
 
     const resetForm = () => {
@@ -1107,7 +1228,7 @@ const AdminAnnouncements = () => {
             link.click();
         } catch (err) {
             console.error('Download PNG error:', err);
-            alert('Error al descargar: ' + err.message);
+            showToast('Error al descargar: ' + err.message, 'error');
         }
     };
 
@@ -1127,7 +1248,13 @@ const AdminAnnouncements = () => {
 
     // Canva UI Helpers
     const renderSidebar = () => (
-        <div className="canva-sidebar d-flex flex-column align-items-center bg-dark text-white py-3 shadow-lg" style={{ width: '72px', zIndex: 100, position: 'relative' }}>
+        <div className="canva-sidebar d-flex flex-column align-items-center py-3 shadow-lg" 
+            style={{ 
+                width: '72px', zIndex: 100, position: 'relative',
+                background: mode === 'dark' ? theme.colors.surface : '#1f1f2e', // Deep Charcoal but not pure black
+                borderRight: `1px solid ${theme.colors.border}`,
+                color: '#fff'
+            }}>
             <div className="canva-logo-mini mb-4" onClick={() => navigate('/admin')}>
                 <img src={logoOasis} style={{ height: '32px' }} alt="Oasis" />
             </div>
@@ -1527,6 +1654,16 @@ const AdminAnnouncements = () => {
     const renderRibbon = () => {
         const target = selectedElementId || 'title';
         const isLogo = target.toLowerCase().includes('logo') || target.toLowerCase().includes('rrss') || target.toLowerCase().includes('customlogo');
+        
+        // Helper to find selected array-based items
+        const selectedShape = selectedElementId?.startsWith('shape_') 
+            ? (formData.shapes || []).find(s => s.id === parseInt(selectedElementId.replace('shape_', '')))
+            : null;
+            
+        const selectedCustomLogo = selectedElementId?.startsWith('customLogo_')
+            ? (formData.customLogos || [])[parseInt(selectedElementId.replace('customLogo_', ''))]
+            : null;
+
         const fontSizeKey = `${target}Size`;
         const fontColorKey = `${target}Color`;
         const fontKey = `${target}Font`;
@@ -1535,20 +1672,29 @@ const AdminAnnouncements = () => {
             <div className="ribbon-container bg-white border-bottom shadow-sm flex-shrink-0" style={{ borderRadius: '0', width: '100%' }}>
 
                 {/* ── Tab row: tabs + acciones derecha (sin barra oscura) ── */}
-                <div className="d-flex border-bottom px-1" style={{ gap: '0', background: '#f8f9fa', alignItems: 'stretch', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                <div className="d-flex border-bottom px-1" 
+                    style={{ 
+                        gap: '0', 
+                        background: '#f8f9fa', 
+                        alignItems: 'stretch', 
+                        justifyContent: 'space-between', 
+                        flexWrap: isMobile ? 'nowrap' : 'wrap',
+                        overflowX: isMobile ? 'auto' : 'visible',
+                        scrollbarWidth: 'none'
+                    }}>
                     <div style={{ display: 'flex', gap: '0' }}>
-                        {['Inicio', 'Insertar', 'Diseño', 'Formato'].map(tab => (
+                        {['Inicio', 'Insertar', 'Diseño', 'Formato', 'Capas'].map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveRibbonTab(tab.toLowerCase())}
                                 style={{
                                     border: 'none',
-                                    borderBottom: activeRibbonTab === tab.toLowerCase() ? '3px solid #5b2ea6' : '3px solid transparent',
+                                    borderBottom: activeRibbonTab === tab.toLowerCase() ? `3px solid ${theme.colors.primary}` : '3px solid transparent',
                                     background: 'transparent',
-                                    padding: '5px 12px',
-                                    fontSize: '0.78rem',
+                                    padding: isMobile ? '8px 15px' : '5px 12px',
+                                    fontSize: isMobile ? '0.85rem' : '0.78rem',
                                     fontWeight: activeRibbonTab === tab.toLowerCase() ? 700 : 400,
-                                    color: activeRibbonTab === tab.toLowerCase() ? '#5b2ea6' : '#555',
+                                    color: activeRibbonTab === tab.toLowerCase() ? theme.colors.primary : theme.colors.text.secondary,
                                     cursor: 'pointer', 
                                     transition: 'all 0.15s', 
                                     whiteSpace: 'nowrap',
@@ -1559,48 +1705,57 @@ const AdminAnnouncements = () => {
                     </div>
 
                     {/* Acciones al lado derecho — sin barra oscura */}
-                    <div style={{ marginLeft: isMobile ? '0' : 'auto', display: 'flex', alignItems: 'center', gap: '2px', paddingRight: '4px', flexShrink: 0, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
+                    <div style={{ 
+                        marginLeft: isMobile ? '10px' : 'auto', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '4px', 
+                        paddingRight: '6px', 
+                        flexShrink: 0, 
+                        flexWrap: 'nowrap'
+                    }}>
                         <button onClick={() => setShowForm(!showForm)} title="Mis Anuncios"
-                            style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: showForm ? '#ede9fe' : '#fff', color: showForm ? '#5b2ea6' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 6px', cursor: 'pointer', gap: '0', minWidth: '40px', fontSize: isMobile ? '0.5rem' : '0.55rem', fontWeight: 600 }}>
-                            <i className="bi bi-folder2-open" style={{ fontSize: '0.85rem' }}></i>
-                            <span style={{ whiteSpace: 'nowrap' }}>Mis Anuncios</span>
+                            style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: showForm ? '#ede9fe' : '#fff', color: showForm ? '#5b2ea6' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 8px', cursor: 'pointer', gap: '1px', minWidth: '45px', fontSize: isMobile ? '0.55rem' : '0.55rem', fontWeight: 600 }}>
+                            <i className="bi bi-folder2-open" style={{ fontSize: '1rem' }}></i>
+                            <span style={{ whiteSpace: 'nowrap' }}>Anuncios</span>
                         </button>
                         <button onClick={handleDownloadPNG} title="Descargar PNG"
-                            style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: '#fff', color: '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 6px', cursor: 'pointer', gap: '0', minWidth: '36px', fontSize: isMobile ? '0.5rem' : '0.55rem', fontWeight: 600 }}>
-                            <i className="bi bi-image" style={{ fontSize: '0.85rem' }}></i>
+                            style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: '#fff', color: '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 8px', cursor: 'pointer', gap: '1px', minWidth: '40px', fontSize: isMobile ? '0.55rem' : '0.55rem', fontWeight: 600 }}>
+                            <i className="bi bi-image" style={{ fontSize: '1rem' }}></i>
                             <span>PNG</span>
                         </button>
                         <button onClick={handleSubmit} disabled={isSubmitting} title="Guardar y Publicar"
-                            style={{ border: 'none', borderRadius: '4px', background: isSubmitting ? '#6ee7b7' : '#10b981', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 8px', cursor: isSubmitting ? 'not-allowed' : 'pointer', gap: '0', minWidth: '46px', fontSize: isMobile ? '0.5rem' : '0.55rem', fontWeight: 700 }}>
-                            <i className={`bi ${isSubmitting ? 'bi-hourglass-split' : 'bi-cloud-arrow-up'}`} style={{ fontSize: '0.85rem' }}></i>
-                            <span>{isSubmitting ? 'Guardando…' : 'Guardar'}</span>
-                        </button>
-                        <button onClick={handleFullscreen} title="Pantalla completa"
-                            style={{ border: '1px solid #dee2e6', borderRadius: '4px', background: '#fff', color: '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 6px', cursor: 'pointer', gap: '0', minWidth: '40px', fontSize: isMobile ? '0.5rem' : '0.55rem', fontWeight: 600 }}>
-                            <i className="bi bi-arrows-fullscreen" style={{ fontSize: '0.85rem' }}></i>
-                            <span>Compartir</span>
+                            style={{ border: 'none', borderRadius: '4px', background: isSubmitting ? '#6ee7b7' : '#10b981', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4px 10px', cursor: isSubmitting ? 'not-allowed' : 'pointer', gap: '1px', minWidth: '50px', fontSize: isMobile ? '0.6rem' : '0.55rem', fontWeight: 700 }}>
+                            <i className={`bi ${isSubmitting ? 'bi-hourglass-split' : 'bi-cloud-arrow-up'}`} style={{ fontSize: '1rem' }}></i>
+                            <span>{isSubmitting ? '...' : 'Publicar'}</span>
                         </button>
                     </div>
                 </div>
 
                 {/* ── Ribbon Content ── */}
-                <div style={{
+                <div className="ribbon-content-scroll" style={{
                     display: 'flex',
                     alignItems: 'stretch',
-                    padding: isMobile ? '2px 4px' : '4px 6px',
-                    minHeight: isMobile ? 'auto' : '62px',
-                    overflowX: isMobile ? 'auto' : 'visible',
+                    padding: isMobile ? '5px 8px' : '4px 6px',
+                    minHeight: isMobile ? '75px' : '62px',
+                    overflowX: 'auto',
                     background: '#fff',
                     flexWrap: 'nowrap',
                     scrollbarWidth: 'none',
-                    gap: isMobile ? '2px' : '0px'
+                    msOverflowStyle: 'none',
+                    gap: isMobile ? '8px' : '0px'
                 }}>
+                    <style>{`
+                        .ribbon-content-scroll::-webkit-scrollbar { display: none; }
+                        .ribbon-group { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 0 8px; border-right: 1px solid #e9ecef; }
+                        .ribbon-group-label { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; color: #999; letter-spacing: 0.5px; margin-top: 4px; white-space: nowrap; }
+                    `}</style>
 
                     {/* ═══════ INICIO ═══════ */}
                     {activeRibbonTab === 'inicio' && (
                         <>
                             {/* ── Grupo: Elemento ── */}
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 6px', borderRight: '1px solid #e9ecef', justifyContent: 'space-between', gap: '2px', minWidth: isMobile ? '90px' : '100px' }}>
+                            <div className="ribbon-group" style={{ minWidth: isMobile ? '80px' : '100px' }}>
                                 <select
                                     className="form-select form-select-sm"
                                     style={{ fontSize: '0.65rem', width: '100%', height: '24px', padding: '0 4px' }}
@@ -1617,75 +1772,87 @@ const AdminAnnouncements = () => {
                                     <option value="location">Ubicación</option>
                                     <option value="content">Contenido</option>
                                 </select>
-                                <span style={{ fontSize: '0.52rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.2px' }}>Elemento</span>
+                                <span className="ribbon-group-label">Elemento</span>
                             </div>
 
-                            {/* ── Grupo: Fuente (unificado: familia + tamaño + N K S tachado sombra) ── */}
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '2px 6px', borderRight: '1px solid #e9ecef', justifyContent: 'center', gap: '2px', minWidth: isMobile ? 'auto' : '220px' }}>
-                                {/* Fila 1: selector tipografía + A- tamaño A+ */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexWrap: 'wrap' }}>
+                            {/* ── Grupo: Fuente ── */}
+                            <div className="ribbon-group" style={{ minWidth: isMobile ? 'auto' : '200px', alignItems: 'flex-start' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexWrap: isMobile ? 'nowrap' : 'wrap' }}>
                                     <select
                                         className="form-select form-select-sm"
-                                        style={{ fontSize: '0.63rem', width: isMobile ? '90px' : '95px', height: '22px', padding: '0 3px' }}
+                                        style={{ fontSize: '0.63rem', width: isMobile ? '85px' : '95px', height: '22px', padding: '0 3px' }}
                                         value={formData[fontKey] || 'MoonRising'}
                                         onChange={(e) => set(fontKey, e.target.value)}
                                     >
                                         {FONTS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-                                        <option value="Arial">Arial</option>
-                                        <option value="Georgia">Georgia</option>
                                     </select>
-                                    <button onClick={() => set(fontSizeKey, Math.max(isLogo ? 10 : 0.1, (formData[fontSizeKey] || 1) - (isLogo ? 5 : 0.1)))}
-                                        style={{ border: '1px solid #dee2e6', borderRadius: '3px', background: '#f8f9fa', width: '20px', height: '22px', fontSize: '0.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, padding: '0' }}
-                                        title="Reducir fuente">A<sup style={{ fontSize: '0.35rem' }}>−</sup></button>
-                                    <span style={{ minWidth: '24px', textAlign: 'center', fontSize: '0.6rem', fontWeight: 700, background: '#f8f9fa', border: '1px solid #dee2e6', borderRadius: '3px', padding: '0 2px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        {isLogo ? Math.round(formData[fontSizeKey] || 60) : (formData[fontSizeKey] || 1).toFixed(1)}
-                                    </span>
-                                    <button onClick={() => set(fontSizeKey, Math.min(600, (formData[fontSizeKey] || 1) + (isLogo ? 5 : 0.1)))}
-                                        style={{ border: '1px solid #dee2e6', borderRadius: '3px', background: '#f8f9fa', width: '20px', height: '22px', fontSize: '0.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, padding: '0' }}
-                                        title="Agrandar fuente">A<sup style={{ fontSize: '0.35rem' }}>+</sup></button>
+                                    <div className="d-flex align-items-center gap-1">
+                                        <button onClick={() => {
+                                            if (selectedShape) {
+                                                const newW = Math.max(10, (selectedShape.width || selectedShape.size || 80) - 10);
+                                                const newH = Math.max(10, (selectedShape.height || selectedShape.size || 80) - 10);
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    shapes: prev.shapes.map(s => s.id === selectedShape.id ? { ...s, width: newW, height: newH } : s)
+                                                }));
+                                            }
+                                            else if (selectedCustomLogo) updateSelectedCustomLogo('size', Math.max(20, (selectedCustomLogo.size || 80) - 10));
+                                            else set(fontSizeKey, Math.max(isLogo ? 10 : 0.1, (formData[fontSizeKey] || 1) - (isLogo ? 5 : 0.1)));
+                                        }}
+                                            style={{ border: '1px solid #dee2e6', borderRadius: '3px', background: '#f8f9fa', width: '22px', height: '22px', fontSize: '0.6rem', cursor: 'pointer', fontWeight: 700 }}>A-</button>
+                                        <button onClick={() => {
+                                            if (selectedShape) {
+                                                const newW = Math.min(600, (selectedShape.width || selectedShape.size || 80) + 10);
+                                                const newH = Math.min(600, (selectedShape.height || selectedShape.size || 80) + 10);
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    shapes: prev.shapes.map(s => s.id === selectedShape.id ? { ...s, width: newW, height: newH } : s)
+                                                }));
+                                            }
+                                            else if (selectedCustomLogo) updateSelectedCustomLogo('size', Math.min(600, (selectedCustomLogo.size || 80) + 10));
+                                            else set(fontSizeKey, Math.min(600, (formData[fontSizeKey] || 1) + (isLogo ? 5 : 0.1)));
+                                        }}
+                                            style={{ border: '1px solid #dee2e6', borderRadius: '3px', background: '#f8f9fa', width: '22px', height: '22px', fontSize: '0.6rem', cursor: 'pointer', fontWeight: 700 }}>A+</button>
+                                    </div>
                                 </div>
-                                {/* Fila 2: estilos (N K S tachado sombra) */}
                                 {!isLogo && (
-                                    <div style={{ display: 'flex', gap: '2px' }}>
+                                    <div style={{ display: 'flex', gap: '2px', marginTop: '2px' }}>
                                         {[
-                                            { key: 'Bold', label: 'N', title: 'Negrita', extraStyle: { fontWeight: 900 } },
-                                            { key: 'Italic', label: 'K', title: 'Cursiva', extraStyle: { fontStyle: 'italic', fontFamily: 'serif' } },
-                                            { key: 'Underline', label: 'S', title: 'Subrayado', extraStyle: { textDecoration: 'underline' } },
-                                            { key: 'Strike', label: 'S̶', title: 'Tachado', extraStyle: {} },
-                                            { key: 'Shadow', label: 'A', title: 'Sombra', extraStyle: { textShadow: '1px 1px 2px rgba(0,0,0,0.6)' } },
+                                            { key: 'Bold', label: 'B', title: 'Negrita' },
+                                            { key: 'Italic', label: 'I', title: 'Cursiva' },
+                                            { key: 'Underline', label: 'U', title: 'Subrayado' },
+                                            { key: 'Shadow', label: 'S', title: 'Sombra' },
                                         ].map(btn => {
                                             const sk = `${target}${btn.key}`;
                                             const on = !!formData[sk];
                                             return (
                                                 <button key={btn.key} onClick={() => set(sk, !on)} title={btn.title}
-                                                    style={{ ...btn.extraStyle, width: '24px', height: '24px', border: `1px solid ${on ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '4px', background: on ? '#ede9fe' : '#f8f9fa', color: on ? '#5b2ea6' : '#444', cursor: 'pointer', fontSize: '0.78rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                    style={{ width: '22px', height: '22px', border: `1px solid ${on ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '4px', background: on ? '#ede9fe' : '#f8f9fa', color: on ? '#5b2ea6' : '#444', cursor: 'pointer', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                     {btn.label}
                                                 </button>
                                             );
                                         })}
                                     </div>
                                 )}
-                                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px', alignSelf: 'center' }}>Fuente</span>
+                                <span className="ribbon-group-label" style={{ alignSelf: 'center' }}>Fuente</span>
                             </div>
 
                             {/* ── Grupo: Color ── */}
                             {!isLogo && (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 10px', borderRight: '1px solid #e9ecef', justifyContent: 'space-between', gap: '3px' }}>
-                                    <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', maxWidth: '140px', alignItems: 'center' }}>
+                                <div className="ribbon-group" style={{ minWidth: isMobile ? '120px' : 'auto' }}>
+                                    <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', maxWidth: isMobile ? '130px' : '140px', alignItems: 'center', justifyContent: 'center' }}>
                                         <input type="color"
-                                            style={{ width: '26px', height: '26px', padding: '0', border: '2px solid #dee2e6', borderRadius: '4px', cursor: 'pointer' }}
+                                            style={{ width: '24px', height: '24px', padding: '0', border: '2px solid #dee2e6', borderRadius: '4px', cursor: 'pointer' }}
                                             value={formData[fontColorKey] || '#ffffff'}
                                             onChange={(e) => set(fontColorKey, e.target.value)}
-                                            title="Color personalizado"
                                         />
-                                        {['#ffffff', '#000000', '#5b2ea6', '#7c3aed', '#2563eb', '#0891b2', '#059669', '#16a34a', '#ca8a04', '#ea580c', '#dc2626', '#db2777'].map(c => (
+                                        {['#ffffff', '#000000', '#6D28D9', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444'].map(c => (
                                             <button key={c} onClick={() => set(fontColorKey, c)}
-                                                style={{ width: '20px', height: '20px', background: c, border: formData[fontColorKey] === c ? '2px solid #5b2ea6' : '1px solid #ccc', borderRadius: '3px', cursor: 'pointer', flexShrink: 0 }}
-                                                title={c}
+                                                style={{ width: '18px', height: '18px', background: c, border: formData[fontColorKey] === c ? '2px solid #5b2ea6' : '1px solid #ccc', borderRadius: '3px', cursor: 'pointer' }}
                                             />
                                         ))}
                                     </div>
-                                    <span style={{ fontSize: '0.57rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.3px' }}>Color</span>
+                                    <span className="ribbon-group-label">Color</span>
                                 </div>
                             )}
 
@@ -1747,92 +1914,97 @@ const AdminAnnouncements = () => {
                     {/* ═══════ INSERTAR ═══════ */}
                     {activeRibbonTab === 'insertar' && (
                         <>
-                            {/* ── Grupo: TEXTO — Click = seleccionar, H1+/H2+/H3+ = agregar más ── */}
-                            <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 10px', borderRight: '1px solid #e9ecef', gap: '2px' }}>
-                                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                                    {/* H1 + botón agregar */}
-                                    {[{ id: 'title', icon: 'bi-type-h1', label: 'H1', title: 'Título H1', color: '#5b2ea6', size: '1.1rem', addKey: 'title', defaultText: 'TÍTULO PRINCIPAL' },
-                                    { id: 'title2', icon: 'bi-type-h2', label: 'H2', title: 'Subtítulo H2', color: '#7c3aed', size: '0.9rem', addKey: 'title2', defaultText: 'Subtítulo' },
-                                    { id: 'title3', icon: 'bi-type-h3', label: 'H3', title: 'Línea 3 H3', color: '#9f67ff', size: '0.78rem', addKey: 'title3', defaultText: 'Línea 3' },
-                                    ].map(el => {
-                                        const active = selectedElementId === el.id;
-                                        const hasContent = !!formData[el.addKey];
-                                        return (
-                                            <div key={el.id} style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
-                                                <button
-                                                    onClick={() => setSelectedElementId(el.id)}
-                                                    title={el.title}
-                                                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', border: `2px solid ${active ? '#5b2ea6' : '#e9ecef'}`, borderRadius: '8px', background: active ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', gap: '1px' }}>
-                                                    <i className={`bi ${el.icon}`} style={{ fontSize: el.size, color: active ? '#5b2ea6' : el.color }}></i>
-                                                    <span style={{ fontSize: '0.5rem', fontWeight: 700, color: active ? '#5b2ea6' : el.color, lineHeight: 1 }}>{el.label}</span>
-                                                </button>
-                                                {/* Botón + agregar texto */}
-                                                <button
-                                                    onClick={() => { if (!hasContent) set(el.addKey, el.defaultText); setSelectedElementId(el.id); }}
-                                                    title={hasContent ? `Editar ${el.label}` : `Agregar ${el.label}`}
-                                                    style={{ width: '20px', height: '14px', border: `1px solid ${hasContent ? '#10b981' : '#dee2e6'}`, borderRadius: '4px', background: hasContent ? '#d1fae5' : '#f8f9fa', color: hasContent ? '#059669' : '#888', cursor: 'pointer', fontSize: '0.6rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
-                                                    {hasContent ? '✓' : '+'}
-                                                </button>
-                                            </div>
-                                        );
-                                    })}
-
-                                    {/* Botones simples sin sub-botón */}
+                            {/* ── Grupo: TEXTO ── */}
+                            <div className="ribbon-group" style={{ padding: '2px 10px', minWidth: isMobile ? '160px' : '200px' }}>
+                                <div style={{ 
+                                    display: 'grid', 
+                                    gridTemplateColumns: 'repeat(4, 1fr)', 
+                                    gap: '6px', 
+                                    alignItems: 'center' 
+                                }}>
                                     {[
-                                        { id: 'speaker', icon: 'bi-person-fill', label: '', title: 'Orador', color: '#374151' },
-                                        { id: 'tag', icon: 'bi-tag-fill', label: '', title: 'Etiqueta — clic para editar', color: '#2563eb', action: () => setShowTagEditor(true) },
-                                        { id: 'date', icon: 'bi-calendar3', label: '', title: 'Fecha — clic para abrir calendario', color: '#059669', action: () => setShowDatePicker(true) },
-                                        { id: 'time', icon: 'bi-clock-fill', label: '', title: 'Hora — clic para abrir reloj', color: '#d97706', action: () => setShowClockPicker(true) },
-                                        { id: 'location', icon: 'bi-geo-alt-fill', label: '', title: 'Lugar', color: '#dc2626' },
-                                    ].map(el => {
-                                        const active = selectedElementId === el.id;
-                                        return (
-                                            <button key={el.id}
-                                                onClick={() => { setSelectedElementId(el.id); el.action?.(); }}
-                                                title={el.title}
-                                                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', border: `2px solid ${active ? '#5b2ea6' : '#e9ecef'}`, borderRadius: '8px', background: active ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', gap: '1px', flexShrink: 0 }}>
-                                                <i className={`bi ${el.icon}`} style={{ fontSize: '1rem', color: active ? '#5b2ea6' : el.color }}></i>
-                                            </button>
-                                        );
-                                    })}
+                                        { id: 'title', label: 'H1', type: 'text' },
+                                        { id: 'title2', label: 'H2', type: 'text' },
+                                        { id: 'title3', label: 'H3', type: 'text' },
+                                        { id: 'speaker', icon: 'bi-person-circle', color: '#374151', title: 'Orador' },
+                                        { id: 'tag', icon: 'bi-tag-fill', color: '#2563eb', title: 'Etiqueta' },
+                                        { id: 'date', icon: 'bi-calendar-event', color: '#10b981', title: 'Fecha' },
+                                        { id: 'time', icon: 'bi-clock', color: '#f59e0b', title: 'Hora' },
+                                        { id: 'location', icon: 'bi-geo-alt-fill', color: '#ef4444', title: 'Lugar' }
+                                    ].map(el => (
+                                        <button key={el.id} 
+                                            onClick={() => {
+                                                setSelectedElementId(el.id);
+                                                if (el.id === 'date') setShowDatePicker(true);
+                                                if (el.id === 'time') setShowClockPicker(true);
+                                                if (el.id === 'tag') setShowTagEditor(true);
+                                            }}
+                                            title={el.title || el.label}
+                                            style={{ 
+                                                display: 'flex', 
+                                                flexDirection: 'column', 
+                                                alignItems: 'center', 
+                                                justifyContent: 'center', 
+                                                width: isMobile ? '34px' : '38px', 
+                                                height: isMobile ? '34px' : '38px', 
+                                                border: `2px solid ${selectedElementId === el.id ? '#5b2ea6' : '#e9ecef'}`, 
+                                                borderRadius: '8px', 
+                                                background: selectedElementId === el.id ? '#ede9fe' : '#f8f9fa', 
+                                                cursor: 'pointer', 
+                                                flexShrink: 0,
+                                                padding: '0'
+                                            }}>
+                                            {el.type === 'text' ? (
+                                                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: selectedElementId === el.id ? '#5b2ea6' : '#333' }}>{el.label}</span>
+                                            ) : (
+                                                <i className={`bi ${el.icon}`} style={{ fontSize: isMobile ? '1rem' : '1.1rem', color: selectedElementId === el.id ? '#5b2ea6' : el.color }}></i>
+                                            )}
+                                        </button>
+                                    ))}
                                 </div>
-                                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', textAlign: 'center' }}>Texto</span>
+                                <span className="ribbon-group-label">Texto y Detalles</span>
                             </div>
 
                             {/* ── Grupo: LOGOS ── */}
-                            <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 10px', borderRight: '1px solid #e9ecef', gap: '2px' }}>
-                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-
-                                    {/* IASD — icono dentro de rectángulo */}
-                                    <button
-                                        onClick={() => set('showLogoIasd', !formData.showLogoIasd)}
-                                        title="Logo Iglesia Adventista"
-                                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '48px', height: '40px', border: `2px solid ${formData.showLogoIasd ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '8px', background: formData.showLogoIasd ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', gap: '2px' }}>
-                                        <i className="bi bi-church" style={{ fontSize: '1.1rem', color: formData.showLogoIasd ? '#5b2ea6' : '#374151' }}></i>
-                                        <span style={{ fontSize: '0.45rem', fontWeight: 700, color: formData.showLogoIasd ? '#5b2ea6' : '#666', lineHeight: 1 }}>IASD</span>
+                            <div className="ribbon-group" style={{ padding: '2px 10px' }}>
+                                <div style={{ 
+                                    display: 'grid', 
+                                    gridTemplateColumns: 'repeat(2, 1fr)', 
+                                    gap: '6px', 
+                                    alignItems: 'center' 
+                                }}>
+                                    <button onClick={() => set('showLogoIasd', !formData.showLogoIasd)}
+                                        title="Logo IASD"
+                                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: isMobile ? '34px' : '38px', height: isMobile ? '34px' : '38px', border: `2px solid ${formData.showLogoIasd ? '#5b2ea6' : '#e9ecef'}`, borderRadius: '8px', background: formData.showLogoIasd ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', padding: '0' }}>
+                                        <i className="bi bi-church" style={{ fontSize: isMobile ? '1rem' : '1.1rem', color: formData.showLogoIasd ? '#5b2ea6' : '#374151' }}></i>
                                     </button>
-
-                                    {/* Logo Oasis */}
-                                    <button
-                                        onClick={() => set('showLogoOasis', !formData.showLogoOasis)}
+                                    <button onClick={() => set('showLogoOasis', !formData.showLogoOasis)}
                                         title="Logo Oasis"
-                                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '48px', height: '40px', border: `2px solid ${formData.showLogoOasis ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '8px', background: formData.showLogoOasis ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', padding: '2px' }}>
-                                        <img src={logoOasis} style={{ height: '22px', objectFit: 'contain', filter: formData.showLogoOasis ? 'none' : 'grayscale(0.5)' }} alt="Oasis" />
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: isMobile ? '34px' : '38px', height: isMobile ? '34px' : '38px', border: `2px solid ${formData.showLogoOasis ? '#5b2ea6' : '#e9ecef'}`, borderRadius: '8px', background: formData.showLogoOasis ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', padding: '4px' }}>
+                                        <img src={logoOasis} style={{ height: '100%', width: '100%', objectFit: 'contain' }} alt="O" />
                                     </button>
-
-                                    {/* RRSS Oasis */}
-                                    <button
-                                        onClick={() => set('showRrss', !formData.showRrss)}
-                                        title="Redes Sociales Oasis"
-                                        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '48px', height: '40px', border: `2px solid ${formData.showRrss ? '#5b2ea6' : '#dee2e6'}`, borderRadius: '8px', background: formData.showRrss ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', padding: '2px' }}>
-                                        <img src={rrssImage} style={{ height: '22px', objectFit: 'contain', filter: formData.showRrss ? 'none' : 'grayscale(0.5)' }} alt="RRSS" />
+                                    <button onClick={() => set('showRrss', !formData.showRrss)}
+                                        title="Redes Sociales"
+                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: isMobile ? '34px' : '38px', height: isMobile ? '34px' : '38px', border: `2px solid ${formData.showRrss ? '#5b2ea6' : '#e9ecef'}`, borderRadius: '8px', background: formData.showRrss ? '#ede9fe' : '#f8f9fa', cursor: 'pointer', padding: '0' }}>
+                                        <i className="bi bi-share" style={{ fontSize: isMobile ? '0.9rem' : '1rem', color: formData.showRrss ? '#5b2ea6' : '#374151' }}></i>
                                     </button>
+                                    <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: isMobile ? '34px' : '38px', height: isMobile ? '34px' : '38px', border: '2px dashed #dee2e6', borderRadius: '8px', background: '#f8f9fa', cursor: 'pointer', margin: 0 }}>
+                                        <i className="bi bi-upload" style={{ fontSize: isMobile ? '0.8rem' : '0.9rem', color: '#666' }}></i>
+                                        <input type="file" hidden accept="image/*" onChange={async e => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            const reader = new FileReader();
+                                            reader.onload = () => set('customLogos', [...(formData.customLogos || []), { name: file.name, url: reader.result }]);
+                                            reader.readAsDataURL(file);
+                                            e.target.value = '';
+                                        }} />
+                                    </label>
                                 </div>
-                                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', textAlign: 'center' }}>Logos</span>
+                                <span className="ribbon-group-label">Logos</span>
                             </div>
 
                             {/* ── Grupo: IMAGEN ── */}
-                            <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 10px', borderRight: '1px solid #e9ecef', gap: '2px' }}>
+                            <div className="ribbon-group" style={{ padding: '2px 10px' }}>
                                 <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                                     <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', border: '2px dashed #dee2e6', borderRadius: '8px', background: '#f8f9fa', cursor: 'pointer', gap: '1px' }} title="Subir imagen de fondo">
                                         <i className="bi bi-cloud-upload" style={{ fontSize: '1rem', color: '#555' }}></i>
@@ -1847,7 +2019,7 @@ const AdminAnnouncements = () => {
                                         </div>
                                     )}
                                 </div>
-                                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', textAlign: 'center' }}>Imagen</span>
+                                <span className="ribbon-group-label">Imagen</span>
                             </div>
 
                             {/* ── Grupo: FORMAS con degradado ── */}
@@ -1887,42 +2059,130 @@ const AdminAnnouncements = () => {
                                     </div>
                                     {/* Controles de degradado */}
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', borderLeft: '1px solid #e9ecef', paddingLeft: '8px' }}>
+                                        {/* Row 1: Colors */}
                                         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                            <input type="color" value={formData.shapeGradFrom || '#5b2ea6'} onChange={e => set('shapeGradFrom', e.target.value)}
+                                            <input type="color" 
+                                                value={selectedShape ? (selectedShape.gradFrom || '#5b2ea6') : (formData.shapeGradFrom || '#5b2ea6')} 
+                                                onChange={e => {
+                                                    if (selectedShape) updateSelectedShape('gradFrom', e.target.value);
+                                                    else set('shapeGradFrom', e.target.value);
+                                                }}
                                                 style={{ width: '22px', height: '22px', padding: '0', border: '1px solid #dee2e6', borderRadius: '4px', cursor: 'pointer' }} title="Color inicio" />
                                             <span style={{ fontSize: '0.55rem', color: '#888' }}>→</span>
-                                            <input type="color" value={formData.shapeGradTo || '#a78bfa'} onChange={e => set('shapeGradTo', e.target.value)}
+                                            <input type="color" 
+                                                value={selectedShape ? (selectedShape.gradTo || '#a78bfa') : (formData.shapeGradTo || '#a78bfa')} 
+                                                onChange={e => {
+                                                    if (selectedShape) updateSelectedShape('gradTo', e.target.value);
+                                                    else set('shapeGradTo', e.target.value);
+                                                }}
                                                 style={{ width: '22px', height: '22px', padding: '0', border: '1px solid #dee2e6', borderRadius: '4px', cursor: 'pointer' }} title="Color final" />
+                                            
+                                            {/* Opacity slider inside color row to save space */}
+                                            <div style={{ display: 'flex', gap: '2px', alignItems: 'center', marginLeft: '4px' }}>
+                                                <i className="bi bi-droplet-half" style={{ fontSize: '0.6rem', color: '#888' }}></i>
+                                                <input type="range" min="0" max="1" step="0.1" 
+                                                    value={selectedShape ? (selectedShape.opacity ?? 1) : (formData.shapeOpacity ?? 1)}
+                                                    onChange={e => {
+                                                        const val = parseFloat(e.target.value);
+                                                        if (selectedShape) updateSelectedShape('opacity', val);
+                                                        else set('shapeOpacity', val);
+                                                    }}
+                                                    style={{ width: '30px', height: '4px' }} title="Opacidad" />
+                                            </div>
                                         </div>
+
+                                        {/* Row 2: Angle & Radius */}
                                         <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
                                             <span style={{ fontSize: '0.55rem', color: '#888', width: '16px' }}>⬛</span>
-                                            <input type="range" min="0" max="360" value={formData.shapeGradAngle || 135} onChange={e => set('shapeGradAngle', parseInt(e.target.value))}
-                                                style={{ width: '56px', height: '4px' }} title="Ángulo" />
-                                            <span style={{ fontSize: '0.55rem', color: '#888', width: '24px' }}>{formData.shapeGradAngle || 135}°</span>
+                                            <input type="range" min="0" max="360" 
+                                                value={selectedShape ? (selectedShape.angle || 135) : (formData.shapeGradAngle || 135)} 
+                                                onChange={e => {
+                                                    const val = parseInt(e.target.value);
+                                                    if (selectedShape) updateSelectedShape('angle', val);
+                                                    else set('shapeGradAngle', val);
+                                                }}
+                                                style={{ width: '30px', height: '4px' }} title="Ángulo" />
+                                            
+                                            <span style={{ fontSize: '0.55rem', color: '#888', width: '16px', marginLeft: '2px' }}>🔘</span>
+                                            <input type="range" min="0" max="100" 
+                                                value={selectedShape ? (selectedShape.radius ?? 8) : (formData.shapeRadius ?? 8)} 
+                                                onChange={e => {
+                                                    const val = parseInt(e.target.value);
+                                                    if (selectedShape) updateSelectedShape('radius', val);
+                                                    else set('shapeRadius', val);
+                                                }}
+                                                style={{ width: '34px', height: '4px' }} title="Redondeo" />
+                                            <span style={{ fontSize: '0.45rem', color: '#888' }}>{selectedShape ? (selectedShape.radius ?? 8) : (formData.shapeRadius ?? 8)}px</span>
                                         </div>
-                                        <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '0.55rem', color: '#888', width: '16px' }}>↔</span>
-                                            <input type="range" min="20" max="300" value={formData.shapeSize || 80} onChange={e => set('shapeSize', parseInt(e.target.value))}
-                                                style={{ width: '56px', height: '4px' }} title="Tamaño" />
-                                            <span style={{ fontSize: '0.55rem', color: '#888', width: '28px' }}>{formData.shapeSize || 80}px</span>
+
+                                        {/* Row Extra: Individual Corners (Simple) */}
+                                        <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
+                                             {['tl','tr','bl','br'].map(c => (
+                                                 <input key={c} type="number" 
+                                                     value={selectedShape ? (selectedShape[`radius_${c}`] ?? (selectedShape.radius ?? 8)) : 8}
+                                                     onChange={e => selectedShape && updateSelectedShape(`radius_${c}`, parseInt(e.target.value))}
+                                                     style={{ width: '22px', border: '1px solid #dee2e6', fontSize: '0.45rem', padding: '0 2px', borderRadius: '2px' }} title={`Radio ${c.toUpperCase()}`} />
+                                             ))}
                                         </div>
-                                        <button
-                                            onClick={() => {
-                                                const shapes = [...(formData.shapes || []), {
-                                                    id: Date.now(), type: formData.shapeType || 'rect',
-                                                    gradFrom: formData.shapeGradFrom || '#5b2ea6',
-                                                    gradTo: formData.shapeGradTo || '#a78bfa',
-                                                    angle: formData.shapeGradAngle || 135,
-                                                    size: formData.shapeSize || 80, x: 50, y: 50,
-                                                }];
-                                                set('shapes', shapes);
-                                            }}
-                                            style={{ height: '20px', fontSize: '0.6rem', fontWeight: 700, border: 'none', borderRadius: '4px', background: '#5b2ea6', color: '#fff', cursor: 'pointer', padding: '0 8px' }}>
-                                            + Centro
-                                        </button>
+
+                                        {/* Row 3: Width & Height */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                            <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+                                                <span style={{ fontSize: '0.45rem', color: '#888', width: '16px', fontWeight: 700 }}>W</span>
+                                                <input type="range" min="10" max="600" 
+                                                    value={selectedShape ? (selectedShape.width || selectedShape.size || 80) : (formData.shapeWidth || 80)} 
+                                                    onChange={e => {
+                                                        const val = parseInt(e.target.value);
+                                                        if (selectedShape) updateSelectedShape('width', val);
+                                                        else set('shapeWidth', val);
+                                                    }}
+                                                    style={{ width: '56px', height: '4px' }} title="Ancho" />
+                                                <span style={{ fontSize: '0.55rem', color: '#888', width: '28px' }}>{selectedShape ? (selectedShape.width || selectedShape.size || 80) : (formData.shapeWidth || 80)}px</span>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+                                                <span style={{ fontSize: '0.45rem', color: '#888', width: '16px', fontWeight: 700 }}>H</span>
+                                                <input type="range" min="10" max="600" 
+                                                    value={selectedShape ? (selectedShape.height || selectedShape.size || 80) : (formData.shapeHeight || 80)} 
+                                                    onChange={e => {
+                                                        const val = parseInt(e.target.value);
+                                                        if (selectedShape) updateSelectedShape('height', val);
+                                                        else set('shapeHeight', val);
+                                                    }}
+                                                    style={{ width: '56px', height: '4px' }} title="Alto" />
+                                                <span style={{ fontSize: '0.55rem', color: '#888', width: '28px' }}>{selectedShape ? (selectedShape.height || selectedShape.size || 80) : (formData.shapeHeight || 80)}px</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Row 4: Action (+ Centro / Delete if selected) */}
+                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                            <button
+                                                onClick={() => {
+                                                    const shapes = [...(formData.shapes || []), {
+                                                        id: Date.now(), type: formData.shapeType || 'rect',
+                                                        gradFrom: formData.shapeGradFrom || '#5b2ea6',
+                                                        gradTo: formData.shapeGradTo || '#a78bfa',
+                                                        angle: formData.shapeGradAngle || 135,
+                                                        width: formData.shapeWidth || 80,
+                                                        height: formData.shapeHeight || 80,
+                                                        opacity: formData.shapeOpacity ?? 1,
+                                                        x: 50, y: 50,
+                                                    }];
+                                                    set('shapes', shapes);
+                                                }}
+                                                style={{ flex: 1, height: '18px', fontSize: '0.55rem', fontWeight: 700, border: 'none', borderRadius: '4px', background: '#5b2ea6', color: '#fff', cursor: 'pointer', padding: '0 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                                                <i className="bi bi-plus-circle"></i> Centro
+                                            </button>
+                                            {selectedShape && (
+                                                <button
+                                                    onClick={() => set('shapes', formData.shapes.filter(s => s.id !== selectedShape.id))}
+                                                    style={{ height: '18px', width: '24px', fontSize: '0.6rem', border: 'none', borderRadius: '4px', background: '#ef4444', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <i className="bi bi-trash"></i>
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', textAlign: 'center' }}>Formas</span>
+                                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', textAlign: 'center', marginTop: 'auto' }}>Ajustar Forma</span>
                             </div>
                         </>
                     )}
@@ -1931,81 +2191,75 @@ const AdminAnnouncements = () => {
                     {activeRibbonTab === 'diseño' && (
                         <>
                             {/* Grupo: PLANTILLAS */}
-                            <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 10px', borderRight: '1px solid #e9ecef', gap: '2px' }}>
-                                <div style={{ display: 'flex', gap: '5px', overflowX: 'auto', maxWidth: '420px', paddingBottom: '2px' }}>
+                            <div className="ribbon-group">
+                                <div style={{ display: 'flex', gap: '5px', overflowX: 'auto', maxWidth: isMobile ? '280px' : '420px', paddingBottom: '2px', scrollbarWidth: 'none' }}>
                                     {TEMPLATES.map(tpl => (
                                         <button
                                             key={tpl.id}
                                             onClick={() => applyTemplate(tpl)}
                                             style={{
                                                 flexShrink: 0,
-                                                width: '62px', height: '70px',
+                                                width: isMobile ? '60px' : '65px', height: isMobile ? '65px' : '70px',
                                                 background: `linear-gradient(135deg, ${tpl.gradientStart}, ${tpl.gradientEnd})`,
                                                 border: '2px solid #ddd', borderRadius: '8px',
                                                 cursor: 'pointer', display: 'flex', flexDirection: 'column',
                                                 alignItems: 'center', justifyContent: 'flex-end',
-                                                padding: '4px', gap: '2px', transition: 'transform 0.1s',
+                                                padding: '4px', transition: 'transform 0.1s',
                                             }}
                                             title={tpl.name}
-                                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                                         >
-                                            <span style={{ fontSize: '0.45rem', fontWeight: 700, color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase', letterSpacing: '0.5px', background: 'rgba(0,0,0,0.3)', borderRadius: '3px', padding: '1px 3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '58px' }}>{tpl.name}</span>
+                                            <span style={{ fontSize: '0.4rem', fontWeight: 700, color: 'white', background: 'rgba(0,0,0,0.3)', borderRadius: '3px', padding: '1px 3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '58px' }}>{tpl.name}</span>
                                         </button>
                                     ))}
                                 </div>
-                                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', textAlign: 'center' }}>Plantillas</span>
+                                <span className="ribbon-group-label">Plantillas</span>
                             </div>
 
                             {/* Grupo: FONDO */}
-                            <div className="d-flex flex-column px-3 border-end">
-                                <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Fondo</span>
+                            <div className="ribbon-group">
                                 <div className="d-flex gap-1 align-items-center">
-                                    <input type="color" className="form-control form-control-color p-0" style={{ width: 28, height: 28, border: '2px solid #ddd', borderRadius: '4px' }} value={formData.gradientStart} onChange={e => set('gradientStart', e.target.value)} title="Color inicial" />
-                                    <input type="color" className="form-control form-control-color p-0" style={{ width: 28, height: 28, border: '2px solid #ddd', borderRadius: '4px' }} value={formData.gradientEnd} onChange={e => set('gradientEnd', e.target.value)} title="Color final" />
-                                    <button className="btn btn-sm btn-outline-primary" onClick={() => setMany({ gradientStart: '#5b2ea6', gradientEnd: '#16213e' })} title="Colores Oasis">
-                                        <i className="bi bi-stars"></i>
+                                    <input type="color" style={{ width: 28, height: 28, border: '2px solid #ddd', borderRadius: '4px', cursor: 'pointer', padding: 0 }} value={formData.gradientStart} onChange={e => set('gradientStart', e.target.value)} title="Color inicial" />
+                                    <input type="color" style={{ width: 28, height: 28, border: '2px solid #ddd', borderRadius: '4px', cursor: 'pointer', padding: 0 }} value={formData.gradientEnd} onChange={e => set('gradientEnd', e.target.value)} title="Color final" />
+                                    <button className="btn btn-sm btn-outline-primary" style={{ padding: '2px 5px', fontSize: '0.8rem' }} onClick={() => setMany({ gradientStart: '#5b2ea6', gradientEnd: '#16213e' })} title="Colores Oasis">
+                                        ✨
                                     </button>
                                 </div>
+                                <span className="ribbon-group-label" style={{ marginTop: 'auto' }}>Fondo</span>
                             </div>
 
-                            {/* Grupo: GALERÍA RÁPIDA */}
-                            <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 10px', borderRight: '1px solid #e9ecef', gap: '2px' }}>
-                                <div style={{ display: 'flex', gap: '5px', overflowX: 'auto', maxWidth: '340px', paddingBottom: '2px' }}>
-                                    {['https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=400&q=80',
+                            {/* Grupo: GALERÍA */}
+                            <div className="ribbon-group">
+                                <div style={{ display: 'flex', gap: '5px', overflowX: 'auto', maxWidth: isMobile ? '200px' : '340px', paddingBottom: '2px' }}>
+                                    {[
+                                        'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=400&q=80',
                                         'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=400&q=80',
                                         'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&q=80',
                                         'https://images.unsplash.com/photo-1514632595-4944383f2737?w=400&q=80',
-                                        'https://images.unsplash.com/photo-1529070538774-1843cb3265df?w=400&q=80',
-                                        'https://images.unsplash.com/photo-1499209974431-2761e25236d0?w=400&q=80',
                                     ].map((img, i) => (
                                         <img key={i} src={img} onClick={() => handleSelectStock(img)}
-                                            style={{ width: '58px', height: '68px', objectFit: 'cover', borderRadius: '8px', cursor: 'pointer', border: '2px solid #ddd', flexShrink: 0, transition: 'transform 0.1s' }}
-                                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                                            style={{ width: '55px', height: '65px', objectFit: 'cover', borderRadius: '8px', cursor: 'pointer', border: '2px solid #ddd', flexShrink: 0 }}
                                             alt="stock" />
                                     ))}
                                     <button onClick={() => setShowLibrary(true)}
-                                        style={{ width: '58px', height: '68px', flexShrink: 0, border: '2px dashed #dee2e6', borderRadius: '8px', background: '#f8f9fa', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', color: '#888' }}
+                                        style={{ width: '55px', height: '65px', flexShrink: 0, border: '2px dashed #dee2e6', borderRadius: '8px', background: '#f8f9fa', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#888' }}
                                         title="Ver más">
-                                        <i className="bi bi-plus-circle" style={{ fontSize: '1.2rem' }}></i>
-                                        <span style={{ fontSize: '0.5rem', fontWeight: 600 }}>Más</span>
+                                        <i className="bi bi-plus-circle" style={{ fontSize: '1.1rem' }}></i>
                                     </button>
                                 </div>
-                                <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#888', textAlign: 'center' }}>Imágenes</span>
+                                <span className="ribbon-group-label">Galería</span>
                             </div>
 
                             {/* Grupo: MEZCLA */}
                             {formData.bgImage && (
-                                <div className="d-flex flex-column px-3">
-                                    <span className="small text-muted mb-1" style={{ fontSize: '0.65rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Mezcla</span>
-                                    <div className="d-flex gap-1 align-items-center">
+                                <div className="ribbon-group">
+                                    <div className="d-flex gap-2 align-items-center">
                                         <input type="checkbox" checked={formData.blendGradient} onChange={e => set('blendGradient', e.target.checked)} id="ribbonBlend" />
-                                        <input type="range" className="form-range" style={{ width: '60px' }} min="0" max="1" step="0.05"
+                                        <input type="range" style={{ width: '60px', height: '4px' }} min="0" max="1" step="0.05"
                                             value={formData.blendOpacity} onChange={e => set('blendOpacity', parseFloat(e.target.value))}
                                             disabled={!formData.blendGradient} />
-                                        <span className="small">{Math.round(formData.blendOpacity * 100)}%</span>
+                                        <span style={{ fontSize: '0.65rem', fontWeight: 700 }}>{Math.round(formData.blendOpacity * 100)}%</span>
                                     </div>
+                                    <span className="ribbon-group-label" style={{ marginTop: 'auto' }}>Mezcla</span>
                                 </div>
                             )}
                         </>
@@ -2015,63 +2269,144 @@ const AdminAnnouncements = () => {
                     {activeRibbonTab === 'formato' && (
                         <>
                             {/* Grupo: Posición */}
-                            <div className="d-flex flex-column align-items-center px-3 border-end">
-                                <div className="d-flex flex-column gap-1 mb-1">
-                                    <div className="d-flex gap-1">
-                                        <span className="small me-1" style={{ width: '20px' }}>X:</span>
-                                        <input
-                                            type="range"
-                                            className="form-range"
-                                            style={{ width: '80px' }}
-                                            min="-50" max="50"
-                                            value={formData[`${target}Pos`]?.x || 0}
-                                            onChange={e => set(`${target}Pos`, { ...formData[`${target}Pos`], x: parseFloat(e.target.value) })}
-                                        />
+                            <div className="ribbon-group">
+                                <div className="d-flex flex-column gap-1">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <span style={{ fontSize: '0.65rem', width: '15px', fontWeight: 700 }}>X:</span>
+                                        <input type="range" style={{ width: '80px', height: '4px' }} min="-50" max="50" value={formData[`${target}Pos`]?.x || 0}
+                                            onChange={e => set(`${target}Pos`, { ...formData[`${target}Pos`], x: parseFloat(e.target.value) })} />
                                     </div>
-                                    <div className="d-flex gap-1">
-                                        <span className="small me-1" style={{ width: '20px' }}>Y:</span>
-                                        <input
-                                            type="range"
-                                            className="form-range"
-                                            style={{ width: '80px' }}
-                                            min="-50" max="50"
-                                            value={formData[`${target}Pos`]?.y || 0}
-                                            onChange={e => set(`${target}Pos`, { ...formData[`${target}Pos`], y: parseFloat(e.target.value) })}
-                                        />
+                                    <div className="d-flex align-items-center gap-2">
+                                        <span style={{ fontSize: '0.65rem', width: '15px', fontWeight: 700 }}>Y:</span>
+                                        <input type="range" style={{ width: '80px', height: '4px' }} min="-50" max="50" value={formData[`${target}Pos`]?.y || 0}
+                                            onChange={e => set(`${target}Pos`, { ...formData[`${target}Pos`], y: parseFloat(e.target.value) })} />
                                     </div>
                                 </div>
-                                <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Posición</span>
+                                <span className="ribbon-group-label" style={{ marginTop: 'auto' }}>Posición</span>
                             </div>
 
                             {/* Grupo: Opacidad */}
-                            <div className="d-flex flex-column align-items-center px-3 border-end">
-                                <div className="d-flex gap-1 align-items-center mb-1">
-                                    <input
-                                        type="range"
-                                        className="form-range"
-                                        style={{ width: '80px' }}
-                                        min="0" max="100"
-                                        value={formData[`${target}Opacity`] || 100}
-                                        onChange={e => set(`${target}Opacity`, parseInt(e.target.value))}
-                                    />
-                                    <span className="small" style={{ minWidth: '30px' }}>{formData[`${target}Opacity`] || 100}%</span>
+                            <div className="ribbon-group">
+                                <div className="d-flex align-items-center gap-2">
+                                    <input type="range" style={{ width: '80px', height: '4px' }} min="0" max="100" value={formData[`${target}Opacity`] || 100}
+                                        onChange={e => set(`${target}Opacity`, parseInt(e.target.value))} />
+                                    <span style={{ fontSize: '0.7rem', fontWeight: 700, minWidth: '30px' }}>{formData[`${target}Opacity`] || 100}%</span>
                                 </div>
-                                <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Opacidad</span>
+                                <span className="ribbon-group-label" style={{ marginTop: 'auto' }}>Opacidad</span>
                             </div>
 
-                            {/* Grupo: Vista */}
-                            <div className="d-flex flex-column align-items-center px-3">
-                                <div className="d-flex gap-2 mb-1">
-                                    <button onClick={handleFullscreen} className="btn btn-light" title="Pantalla Completa">
+                            {/* Grupo: Herramientas */}
+                            <div className="ribbon-group" style={{ borderRight: 'none' }}>
+                                <div className="d-flex gap-2">
+                                    <button onClick={handleFullscreen} className="btn btn-sm btn-light" style={{ padding: '5px 10px' }} title="Pantalla Completa">
                                         <i className="bi bi-arrows-fullscreen"></i>
                                     </button>
-                                    <button onClick={() => setSelectedElementId(null)} className="btn btn-light" title="Deseleccionar">
+                                    <button onClick={() => setSelectedElementId(null)} className="btn btn-sm btn-light" style={{ padding: '5px 10px' }} title="Deseleccionar">
                                         <i className="bi bi-x-lg"></i>
                                     </button>
                                 </div>
-                                <span className="small text-muted" style={{ fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Vista</span>
+                                <span className="ribbon-group-label" style={{ marginTop: 'auto' }}>Herramientas</span>
                             </div>
                         </>
+                    )}
+
+                    {/* ═══════ CAPAS ═══════ */}
+                    {activeRibbonTab === 'capas' && (
+                        <div className="ribbon-group" style={{ 
+                            flex: 1, 
+                            borderRight: 'none', 
+                            padding: '2px 10px', 
+                            flexDirection: 'row', 
+                            justifyContent: 'flex-start',
+                            overflowX: 'auto',
+                            scrollbarWidth: 'none',
+                            position: 'relative'
+                        }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', height: '100%', paddingBottom: '12px' }}>
+                                {/* Capas fijas y de texto */}
+                                {[
+                                    { id: 'bgImage', label: 'Fondo', icon: 'bi-image', active: !!formData.bgImage, del: () => setMany({ bgImage: null, bgMode: 'gradient' }) },
+                                    { id: 'logoOasis', label: 'Logo Oasis', icon: 'bi-app-indicator', active: formData.showLogoOasis, del: () => set('showLogoOasis', false) },
+                                    { id: 'logoIasd', label: 'Logo IASD', icon: 'bi-church', active: formData.showLogoIasd, del: () => set('showLogoIasd', false) },
+                                    { id: 'rrss', label: 'RRSS', icon: 'bi-share', active: formData.showRrss, del: () => set('showRrss', false) },
+                                    { id: 'tag', label: 'Etiqueta', icon: 'bi-tag', active: !!formData.tag, del: () => set('tag', '') },
+                                    { id: 'title', label: 'Título', icon: 'bi-header-h1', active: !!formData.title, del: () => set('title', '') },
+                                    { id: 'title2', label: 'Subtítulo', icon: 'bi-header-h2', active: !!formData.title2, del: () => set('title2', '') },
+                                    { id: 'date', label: 'Fecha/Hora', icon: 'bi-calendar3', active: !!(formData.date || formData.time), del: () => setMany({ date: '', time: '' }) },
+                                    { id: 'location', label: 'Lugar', icon: 'bi-geo-alt', active: !!formData.location, del: () => set('location', '') },
+                                ].map(layer => (
+                                    <div key={layer.id} 
+                                        onClick={() => setSelectedElementId(layer.id)}
+                                        style={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: '6px', 
+                                            background: selectedElementId === layer.id ? '#ede9fe' : '#f8f9fa', 
+                                            border: `1px solid ${selectedElementId === layer.id ? '#5b2ea6' : '#dee2e6'}`,
+                                            padding: '4px 8px',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer',
+                                            opacity: layer.active ? 1 : 0.4
+                                        }}>
+                                        <i className={`bi ${layer.icon}`} style={{ fontSize: '0.8rem', color: selectedElementId === layer.id ? '#5b2ea6' : '#666' }}></i>
+                                        <span style={{ fontSize: '0.6rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{layer.label}</span>
+                                        {layer.active && (
+                                            <button onClick={(e) => { e.stopPropagation(); layer.del(); }}
+                                                style={{ border: 'none', background: 'transparent', color: '#ef4444', padding: '0 2px', cursor: 'pointer' }}>
+                                                <i className="bi bi-trash" style={{ fontSize: '0.7rem' }}></i>
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+
+                                {/* Capas de Formas Dinámicas */}
+                                {(formData.shapes || []).map(sh => (
+                                    <div key={sh.id}
+                                        onClick={() => setSelectedElementId(`shape_${sh.id}`)}
+                                        style={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: '6px', 
+                                            background: selectedElementId === `shape_${sh.id}` ? '#ede9fe' : '#f8f9fa', 
+                                            border: `1px solid ${selectedElementId === `shape_${sh.id}` ? '#5b2ea6' : '#dee2e6'}`,
+                                            padding: '4px 8px',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer'
+                                        }}>
+                                        <i className="bi bi-square-fill" style={{ fontSize: '0.8rem', color: sh.gradFrom }}></i>
+                                        <span style={{ fontSize: '0.6rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Forma</span>
+                                        <button onClick={(e) => { e.stopPropagation(); set('shapes', formData.shapes.filter(s => s.id !== sh.id)); }}
+                                            style={{ border: 'none', background: 'transparent', color: '#ef4444', padding: '0 2px', cursor: 'pointer' }}>
+                                            <i className="bi bi-trash" style={{ fontSize: '0.7rem' }}></i>
+                                        </button>
+                                    </div>
+                                ))}
+
+                                {/* Capas de Logos Personalizados */}
+                                {(formData.customLogos || []).map((lg, idx) => (
+                                    <div key={idx}
+                                        onClick={() => setSelectedElementId(`customLogo_${idx}`)}
+                                        style={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: '6px', 
+                                            background: selectedElementId === `customLogo_${idx}` ? '#ede9fe' : '#f8f9fa', 
+                                            border: `1px solid ${selectedElementId === `customLogo_${idx}` ? '#5b2ea6' : '#dee2e6'}`,
+                                            padding: '4px 8px',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer'
+                                        }}>
+                                        <img src={lg.url} style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
+                                        <span style={{ fontSize: '0.6rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Logo Ext.</span>
+                                        <button onClick={(e) => { e.stopPropagation(); set('customLogos', formData.customLogos.filter((_, i) => i !== idx)); }}
+                                            style={{ border: 'none', background: 'transparent', color: '#ef4444', padding: '0 2px', cursor: 'pointer' }}>
+                                            <i className="bi bi-trash" style={{ fontSize: '0.7rem' }}></i>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            <span style={{ position: 'absolute', bottom: '2px', left: '50%', transform: 'translateX(-50%)', fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', color: '#999', letterSpacing: '0.5px' }}>Capas del Diseño</span>
+                        </div>
                     )}
                 </div>
             </div>
@@ -2085,20 +2420,29 @@ const AdminAnnouncements = () => {
             <FontPreloader />
 
             {/* ── Header: solo el selector de modo ── */}
-            <header className="d-flex align-items-center px-3 bg-white border-bottom flex-shrink-0" style={{ height: '36px', minHeight: '36px', gap: '8px', position: 'sticky', top: 0, zIndex: 1000 }}>
+            <header className="d-flex align-items-center px-3 border-bottom flex-shrink-0" 
+                style={{ 
+                    height: '36px', minHeight: '36px', gap: '8px', position: 'sticky', top: 0, zIndex: 1000,
+                    background: theme.colors.surface, borderBottomColor: theme.colors.border
+                }}>
                 <img src={logoOasis} style={{ height: '22px', cursor: 'pointer' }} alt="Oasis" onClick={() => navigate('/admin')} title="Volver al inicio" />
-                <div style={{ width: '1px', height: '16px', background: '#ddd' }} />
-                <div className="nav nav-pills p-0" style={{ background: '#f8f9fa', borderRadius: '20px', padding: '2px', fontSize: '0.7rem' }}>
+                <div style={{ width: '1px', height: '16px', background: theme.colors.border }} />
+                <div className="nav nav-pills p-0" style={{ background: mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#f8f9fa', borderRadius: '20px', padding: '2px', fontSize: '0.7rem' }}>
                     <button
-                        className="nav-link rounded-pill px-3 py-1 fw-semibold"
-                        style={{ fontSize: '0.7rem', background: activeMode === 'anuncios' ? '#5b2ea6' : 'transparent', color: activeMode === 'anuncios' ? 'white' : '#666', border: 'none', cursor: 'pointer' }}
+                        className="nav-link rounded-pill px-3 py-1 fw-semibold d-flex align-items-center gap-1"
+                        style={{ 
+                            fontSize: '0.7rem', 
+                            background: activeMode === 'anuncios' ? theme.colors.primary : 'transparent', 
+                            color: activeMode === 'anuncios' ? 'white' : theme.colors.text.secondary, 
+                            border: 'none', cursor: 'pointer',
+                            fontFamily: theme.fonts.accent,
+                            letterSpacing: '0.5px'
+                        }}
                         onClick={() => setActiveMode('anuncios')}
-                    >Anuncios</button>
-                    <button
-                        className="nav-link rounded-pill px-3 py-1 fw-semibold"
-                        style={{ fontSize: '0.7rem', background: activeMode === 'presentaciones' ? '#5b2ea6' : 'transparent', color: activeMode === 'presentaciones' ? 'white' : '#666', border: 'none', cursor: 'pointer' }}
-                        onClick={() => setActiveMode('presentaciones')}
-                    >Presentaciones</button>
+                    >{isMobile ? 'ANUNCIOS' : 'GESTIÓN DE ANUNCIOS'}</button>
+                    <button onClick={toggleMode} style={{ background: 'transparent', border: 'none', color: theme.colors.text.secondary, padding: '0 8px', cursor: 'pointer' }}>
+                        {mode === 'dark' ? <i className="bi bi-sun-fill"></i> : <i className="bi bi-moon-fill"></i>}
+                    </button>
                 </div>
             </header>
 
@@ -2115,9 +2459,9 @@ const AdminAnnouncements = () => {
                         overflowY: 'auto',
                         background: '#e9ecef',
                         position: 'relative',
-                        padding: '1rem',
+                        padding: isMobile ? '0.5rem' : '1rem',
                         display: 'flex',
-                        alignItems: 'center',
+                        alignItems: isMobile ? 'flex-start' : 'center',
                         justifyContent: 'center'
                     }}
                     onMouseDown={(e) => {
@@ -2134,7 +2478,9 @@ const AdminAnnouncements = () => {
                             gradFrom: formData.shapeGradFrom || '#5b2ea6',
                             gradTo: formData.shapeGradTo || '#a78bfa',
                             angle: formData.shapeGradAngle || 135,
-                            size: formData.shapeSize || 80,
+                            width: formData.shapeWidth || 80,
+                            height: formData.shapeHeight || 80,
+                            opacity: formData.shapeOpacity ?? 1,
                             x: Math.max(5, Math.min(95, px)),
                             y: Math.max(5, Math.min(95, py)),
                         }]);
@@ -2151,17 +2497,16 @@ const AdminAnnouncements = () => {
                             gradFrom: formData.shapeGradFrom || '#5b2ea6',
                             gradTo: formData.shapeGradTo || '#a78bfa',
                             angle: formData.shapeGradAngle || 135,
-                            size: formData.shapeSize || 80,
+                            width: formData.shapeWidth || 80,
+                            height: formData.shapeHeight || 80,
+                            opacity: formData.shapeOpacity ?? 1,
                             x: Math.max(5, Math.min(95, px)),
                             y: Math.max(5, Math.min(95, py)),
                         }]);
                         setShapeMode(false);
                     }}
                 >
-                    {activeMode === 'presentaciones' ? (
-                        <div className="w-100 h-100"><OasisPress /></div>
-                    ) : (
-                        <>
+                    <>
                             {/* Canvas Area - Perfectly Centered */}
                             <div
                                 className="canvas-wrapper"
@@ -2195,9 +2540,106 @@ const AdminAnnouncements = () => {
                                         touchAction: 'none',
                                         outline: shapeMode ? '3px dashed #5b2ea6' : 'none',
                                     }}
+                                    onClick={(e) => {
+                                        if (shapeMode && previewRef.current) {
+                                            const rect = previewRef.current.getBoundingClientRect();
+                                            const px = ((e.clientX - rect.left) / rect.width) * 100;
+                                            const py = ((e.clientY - rect.top) / rect.height) * 100;
+                                            set('shapes', [...(formData.shapes || []), {
+                                                id: Date.now(), type: formData.shapeType || 'rect',
+                                                gradFrom: formData.shapeGradFrom || '#5b2ea6',
+                                                gradTo: formData.shapeGradTo || '#a78bfa',
+                                                angle: formData.shapeGradAngle || 135,
+                                                width: formData.shapeWidth || 80,
+                                                height: formData.shapeHeight || 80,
+                                                opacity: formData.shapeOpacity ?? 1,
+                                                x: Math.max(5, Math.min(95, px)), y: Math.max(5, Math.min(95, py)),
+                                            }]);
+                                            setShapeMode(false);
+                                        }
+                                    }}
                                 >
                                     {/* Dark Overlay */}
                                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.8) 100%)', opacity: formData.bgOpacity, pointerEvents: 'none' }} />
+
+                                    {/* SHAPES */}
+                                    {(formData.shapes || []).map(sh => (
+                                        <motion.div
+                                            key={sh.id}
+                                            drag dragElastic={0.1}
+                                            whileDrag={{ scale: 1.05, zIndex: 100, cursor: 'grabbing' }}
+                                            whileTap={{ scale: 0.98 }}
+                                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                                            onMouseDown={() => setSelectedElementId(`shape_${sh.id}`)}
+                                            onTouchStart={() => setSelectedElementId(`shape_${sh.id}`)}
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${sh.x}%`, top: `${sh.y}%`,
+                                                width: `${sh.width || sh.size || 80}px`, 
+                                                height: `${sh.height || sh.size || 80}px`,
+                                                transform: 'translate(-50%, -50%)',
+                                                cursor: 'grab',
+                                                zIndex: 4,
+                                                outline: selectedElementId === `shape_${sh.id}` ? '2px dashed #00d2f3' : 'none',
+                                                outlineOffset: '4px'
+                                            }}
+                                            onDragEnd={(e, info) => {
+                                                if (!previewRef.current) return;
+                                                const rect = previewRef.current.getBoundingClientRect();
+                                                const newX = sh.x + (info.offset.x / rect.width) * 100;
+                                                const newY = sh.y + (info.offset.y / rect.height) * 100;
+                                                set('shapes', formData.shapes.map(s => s.id === sh.id ? { ...s, x: newX, y: newY } : s));
+                                            }}
+                                        >
+                                            <div style={{
+                                                width: '100%', height: '100%',
+                                                background: `linear-gradient(${sh.angle || 135}deg, ${sh.gradFrom}, ${sh.gradTo})`,
+                                                borderRadius: sh.type === 'circle' ? '50%' : (sh.type === 'rounded' || sh.type === 'rect' ? 
+                                                    `${sh.radius_tl ?? sh.radius ?? 8}px ${sh.radius_tr ?? sh.radius ?? 8}px ${sh.radius_br ?? sh.radius ?? 8}px ${sh.radius_bl ?? sh.radius ?? 8}px` : '0'),
+                                                clipPath: sh.type === 'triangle' ? 'polygon(50% 0%, 0% 100%, 100% 100%)' : (sh.type === 'diamond' ? 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' : 'none'),
+                                                boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                                                opacity: sh.opacity ?? 1,
+                                                pointerEvents: 'auto'
+                                            }} />
+                                            {/* Vector Points (Resize Handles) */}
+                                            <ResizeHandles element={sh} type="shape" />
+                                        </motion.div>
+                                    ))}
+
+                                    {/* CUSTOM LOGOS */}
+                                    {(formData.customLogos || []).map((curr, idx) => (
+                                        <motion.div
+                                            key={`custom_${idx}`}
+                                            drag dragElastic={0.1}
+                                            whileDrag={{ scale: 1.05, zIndex: 100, cursor: 'grabbing' }}
+                                            whileTap={{ scale: 0.98 }}
+                                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                                            onMouseDown={() => setSelectedElementId(`customLogo_${idx}`)}
+                                            onTouchStart={() => setSelectedElementId(`customLogo_${idx}`)}
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${curr.x || 50}%`, top: `${curr.y || 50}%`,
+                                                width: `${curr.size || 80}px`,
+                                                transform: 'translate(-50%, -50%)',
+                                                cursor: 'grab',
+                                                zIndex: 10,
+                                                outline: selectedElementId === `customLogo_${idx}` ? '2px dashed #00d2f3' : 'none',
+                                                outlineOffset: '4px'
+                                            }}
+                                            onDragEnd={(e, info) => {
+                                                if (!previewRef.current) return;
+                                                const rect = previewRef.current.getBoundingClientRect();
+                                                const curX = parseFloat(curr.x || 50);
+                                                const curY = parseFloat(curr.y || 50);
+                                                const nx = curX + (info.offset.x / rect.width) * 100;
+                                                const ny = curY + (info.offset.y / rect.height) * 100;
+                                                set('customLogos', formData.customLogos.map((lg, i) => i === idx ? { ...lg, x: nx, y: ny } : lg));
+                                            }}
+                                        >
+                                            <img src={curr.url} style={{ width: '100%', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }} />
+                                            <ResizeHandles element={{ ...curr, idx }} type="customLogo" />
+                                        </motion.div>
+                                    ))}
 
                                     {/* BRANDING (Fixed Corners) */}
                                     {formData.showLogoIasd && assets.iasd && (
@@ -2243,21 +2685,24 @@ const AdminAnnouncements = () => {
                                         </div>
                                     )}
 
-                                    {/* INTERACTIVE CONTENT WITH FRAMER MOTION */}
-                                    <div className="p-4 d-flex flex-column justify-content-center" style={{ position: 'absolute', inset: 0, zIndex: 5 }}>
+                                    {/* INTERACTIVE CONTENT WITH FRAMER MOTION - Use pointerEvents none on container to allow clicking shapes below */}
+                                    <div className="p-4 d-flex flex-column justify-content-center" style={{ position: 'absolute', inset: 0, zIndex: 5, pointerEvents: 'none' }}>
 
                                         {/* TAG */}
                                         <motion.div
-                                            drag
-                                            dragMomentum={false}
+                                            drag dragElastic={0.1}
+                                            whileDrag={{ scale: 1.05, zIndex: 100, cursor: 'grabbing' }}
+                                            whileTap={{ scale: 0.98 }}
+                                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                                             onMouseDown={() => setSelectedElementId('tag')}
                                             onTouchStart={() => setSelectedElementId('tag')}
                                             onDoubleClick={() => handleElementDoubleClick('tag')}
                                             style={{
-                                                x: formData.tagPos.x, y: formData.tagPos.y, cursor: 'move', alignSelf: 'center', marginBottom: '10px',
+                                                x: formData.tagPos.x, y: formData.tagPos.y, cursor: 'grab', alignSelf: 'center', marginBottom: '10px',
                                                 outline: selectedElementId === 'tag' ? '2px dashed #00d2f3' : 'none',
                                                 outlineOffset: '4px',
-                                                borderRadius: '4px'
+                                                borderRadius: '4px',
+                                                pointerEvents: 'auto'
                                             }}
                                             onDragEnd={(e, info) => set('tagPos', { x: formData.tagPos.x + info.offset.x, y: formData.tagPos.y + info.offset.y })}
                                         >
@@ -2276,30 +2721,38 @@ const AdminAnnouncements = () => {
 
                                         {/* TITLES */}
                                         <div className="mt-2 text-center w-100">
-                                            <motion.div drag dragMomentum={false}
+                                            <motion.div drag dragElastic={0.1}
+                                                whileDrag={{ scale: 1.05, zIndex: 100, cursor: 'grabbing' }}
+                                                whileTap={{ scale: 0.98 }}
+                                                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                                                 onMouseDown={() => setSelectedElementId('title')}
                                                 onTouchStart={() => setSelectedElementId('title')}
                                                 onDoubleClick={() => handleElementDoubleClick('title')}
                                                 style={{
-                                                    x: formData.titlePos.x, y: formData.titlePos.y, cursor: 'move',
+                                                    x: formData.titlePos.x, y: formData.titlePos.y, cursor: 'grab',
                                                     outline: selectedElementId === 'title' ? '2px dashed #00d2f3' : 'none',
                                                     outlineOffset: '4px',
-                                                    borderRadius: '4px'
+                                                    borderRadius: '4px',
+                                                    pointerEvents: 'auto'
                                                 }}
                                                 onDragEnd={(e, info) => set('titlePos', { x: formData.titlePos.x + info.offset.x, y: formData.titlePos.y + info.offset.y })}
                                             >
                                                 <h2 ref={titleRef} style={{ color: formData.titleColor, fontFamily: formData.titleFont, fontSize: `calc(${formData.titleSize * 3}cqw + 1cqw)`, fontWeight: '800', textShadow: '0 2px 10px rgba(0,0,0,0.5)', lineHeight: 1.1, margin: 0, opacity: formData.titleOpacity / 100 }}>{formData.title || 'Título'}</h2>
                                             </motion.div>
 
-                                            <motion.div drag dragMomentum={false}
+                                            <motion.div drag dragElastic={0.1}
+                                                whileDrag={{ scale: 1.05, zIndex: 100, cursor: 'grabbing' }}
+                                                whileTap={{ scale: 0.98 }}
+                                                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                                                 onMouseDown={() => setSelectedElementId('title2')}
                                                 onTouchStart={() => setSelectedElementId('title2')}
                                                 onDoubleClick={() => handleElementDoubleClick('title2')}
                                                 style={{
-                                                    x: formData.title2Pos.x, y: formData.title2Pos.y, cursor: 'move', marginTop: '10px',
+                                                    x: formData.title2Pos.x, y: formData.title2Pos.y, cursor: 'grab', marginTop: '10px',
                                                     outline: selectedElementId === 'title2' ? '2px dashed #00d2f3' : 'none',
                                                     outlineOffset: '4px',
-                                                    borderRadius: '4px'
+                                                    borderRadius: '4px',
+                                                    pointerEvents: 'auto'
                                                 }}
                                                 onDragEnd={(e, info) => set('title2Pos', { x: formData.title2Pos.x + info.offset.x, y: formData.title2Pos.y + info.offset.y })}
                                             >
@@ -2308,15 +2761,19 @@ const AdminAnnouncements = () => {
 
                                             {/* TITLE3 - Tercer subtítulo */}
                                             {formData.title3 && (
-                                                <motion.div drag dragMomentum={false}
+                                                <motion.div drag dragElastic={0.1}
+                                                    whileDrag={{ scale: 1.05, zIndex: 100, cursor: 'grabbing' }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                                                     onMouseDown={() => setSelectedElementId('title3')}
                                                     onTouchStart={() => setSelectedElementId('title3')}
                                                     onDoubleClick={() => handleElementDoubleClick('title3')}
                                                     style={{
-                                                        x: formData.title3Pos.x, y: formData.title3Pos.y, cursor: 'move', marginTop: '8px',
+                                                        x: formData.title3Pos.x, y: formData.title3Pos.y, cursor: 'grab', marginTop: '8px',
                                                         outline: selectedElementId === 'title3' ? '2px dashed #00d2f3' : 'none',
                                                         outlineOffset: '4px',
-                                                        borderRadius: '4px'
+                                                        borderRadius: '4px',
+                                                        pointerEvents: 'auto'
                                                     }}
                                                     onDragEnd={(e, info) => set('title3Pos', { x: formData.title3Pos.x + info.offset.x, y: formData.title3Pos.y + info.offset.y })}
                                                 >
@@ -2324,15 +2781,19 @@ const AdminAnnouncements = () => {
                                                 </motion.div>
                                             )}
 
-                                            <motion.div drag dragMomentum={false}
+                                            <motion.div drag dragElastic={0.1}
+                                                whileDrag={{ scale: 1.05, zIndex: 100, cursor: 'grabbing' }}
+                                                whileTap={{ scale: 0.98 }}
+                                                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                                                 onMouseDown={() => setSelectedElementId('speaker')}
                                                 onTouchStart={() => setSelectedElementId('speaker')}
                                                 onDoubleClick={() => handleElementDoubleClick('speaker')}
                                                 style={{
-                                                    x: formData.speakerPos.x, y: formData.speakerPos.y, cursor: 'move', marginTop: '15px',
+                                                    x: formData.speakerPos.x, y: formData.speakerPos.y, cursor: 'grab', marginTop: '15px',
                                                     outline: selectedElementId === 'speaker' ? '2px dashed #00d2f3' : 'none',
                                                     outlineOffset: '4px',
-                                                    borderRadius: '4px'
+                                                    borderRadius: '4px',
+                                                    pointerEvents: 'auto'
                                                 }}
                                                 onDragEnd={(e, info) => set('speakerPos', { x: formData.speakerPos.x + info.offset.x, y: formData.speakerPos.y + info.offset.y })}
                                             >
@@ -2343,15 +2804,19 @@ const AdminAnnouncements = () => {
                                         {/* DESCRIPTION */}
                                         {formData.content && (
                                             <motion.div
-                                                drag dragMomentum={false}
+                                                drag dragElastic={0.1}
+                                                whileDrag={{ scale: 1.05, zIndex: 100, cursor: 'grabbing' }}
+                                                whileTap={{ scale: 0.98 }}
+                                                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                                                 onMouseDown={() => setSelectedElementId('content')}
                                                 onTouchStart={() => setSelectedElementId('content')}
                                                 onDoubleClick={() => handleElementDoubleClick('content')}
                                                 style={{
-                                                    x: formData.contentPos.x, y: formData.contentPos.y, cursor: 'move', marginTop: '20px', alignSelf: 'center',
+                                                    x: formData.contentPos.x, y: formData.contentPos.y, cursor: 'grab', marginTop: '20px', alignSelf: 'center',
                                                     outline: selectedElementId === 'content' ? '2px dashed #00d2f3' : 'none',
                                                     outlineOffset: '4px',
-                                                    borderRadius: '16px'
+                                                    borderRadius: '16px',
+                                                    pointerEvents: 'auto'
                                                 }}
                                                 onDragEnd={(e, info) => set('contentPos', { x: formData.contentPos.x + info.offset.x, y: formData.contentPos.y + info.offset.y })}
                                             >
@@ -2371,13 +2836,17 @@ const AdminAnnouncements = () => {
                                         <div className="mt-auto pb-4 d-flex flex-wrap justify-content-center gap-2">
                                             {(formData.date || formData.time) && (
                                                 <motion.div
-                                                    drag dragMomentum={false}
+                                                    drag dragElastic={0.1}
+                                                    whileDrag={{ scale: 1.05, zIndex: 100, cursor: 'grabbing' }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                                                     onMouseDown={() => setSelectedElementId('date')}
                                                     onTouchStart={() => setSelectedElementId('date')}
                                                     style={{
-                                                        x: formData.datePos.x, y: formData.datePos.y, cursor: 'move',
+                                                        x: formData.datePos.x, y: formData.datePos.y, cursor: 'grab',
                                                         outline: selectedElementId === 'date' ? '2px dashed #00d2f3' : 'none',
-                                                        outlineOffset: '4px', borderRadius: '30px'
+                                                        outlineOffset: '4px', borderRadius: '30px',
+                                                        pointerEvents: 'auto'
                                                     }}
                                                     onDragEnd={(e, info) => set('datePos', { x: formData.datePos.x + info.offset.x, y: formData.datePos.y + info.offset.y })}
                                                 >
@@ -2389,13 +2858,17 @@ const AdminAnnouncements = () => {
                                             )}
                                             {formData.location && (
                                                 <motion.div
-                                                    drag dragMomentum={false}
+                                                    drag dragElastic={0.1}
+                                                    whileDrag={{ scale: 1.05, zIndex: 100, cursor: 'grabbing' }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                                                     onMouseDown={() => setSelectedElementId('location')}
                                                     onTouchStart={() => setSelectedElementId('location')}
                                                     style={{
-                                                        x: formData.locationPos.x, y: formData.locationPos.y, cursor: 'move',
+                                                        x: formData.locationPos.x, y: formData.locationPos.y, cursor: 'grab',
                                                         outline: selectedElementId === 'location' ? '2px dashed #00d2f3' : 'none',
-                                                        outlineOffset: '4px', borderRadius: '30px'
+                                                        outlineOffset: '4px', borderRadius: '30px',
+                                                        pointerEvents: 'auto'
                                                     }}
                                                     onDragEnd={(e, info) => set('locationPos', { x: formData.locationPos.x + info.offset.x, y: formData.locationPos.y + info.offset.y })}
                                                 >
@@ -2493,7 +2966,7 @@ const AdminAnnouncements = () => {
                                 )}
                             </div>
                         </>
-                    )}
+                    
                 </main>
 
                 {/* Side Panel: Mis Anuncios (Right Drawer) - NEW REFACTORED COMPONENT */}
@@ -2732,6 +3205,14 @@ const AdminAnnouncements = () => {
                 </div>
             )}
 
+            <ConfirmationModal 
+                show={confirmConfig.show}
+                title={confirmConfig.title}
+                message={confirmConfig.message}
+                type={confirmConfig.type}
+                onConfirm={confirmConfig.onConfirm}
+                onCancel={() => setConfirmConfig(p => ({ ...p, show: false }))}
+            />
         </div>
     );
 };

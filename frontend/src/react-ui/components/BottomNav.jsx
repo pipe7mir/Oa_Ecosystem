@@ -23,13 +23,16 @@ const NAV_ITEMS = [
     { to: '/peticiones', label: 'Orar', Icon: MessageCircleHeart },
 ];
 
-const ADMIN_ITEM = { to: '/admin', label: 'Admin', Icon: ShieldCheck };
+const ADMIN_ITEM = { to: '/admin', label: 'Gestión', Icon: ShieldCheck };
+const LOGIN_ITEM = { to: '/login', label: 'Acceso', Icon: ShieldCheck };
 
 const BottomNav = () => {
     const { pathname } = useLocation();
-    const { canAccessAdmin } = useAuth();
-
-    const items = canAccessAdmin ? [...NAV_ITEMS.slice(0, 4), ADMIN_ITEM] : NAV_ITEMS;
+    const { canAccessAdmin, user } = useAuth();
+    
+    // Si tiene acceso, mostramos Gestión (Dashboard). Si no, mostramos Acceso (Login).
+    const adminToggleItem = canAccessAdmin ? ADMIN_ITEM : LOGIN_ITEM;
+    const items = [...NAV_ITEMS.slice(0, 4), adminToggleItem];
 
     return (
         <>

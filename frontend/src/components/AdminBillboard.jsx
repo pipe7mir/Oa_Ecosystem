@@ -1,78 +1,69 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';
+import { uploadToCloudinary } from '../api/cloudinary';
 import GlassCard from '../react-ui/components/GlassCard';
 import Button from '../react-ui/components/Button';
-import { theme } from '../react-ui/styles/theme';
+import { useToast } from '../react-ui/components/Toast';
+import * as LucideIcons from 'lucide-react';
+import ConfirmationModal from '../react-ui/components/ConfirmationModal';
+import { useTheme } from '../react-ui/ThemeContext';
 
-/**
- * Componente AdminBillboard - Versión Visual Mejorada
- * -----------------------------------------------------
- * Interfaz administrativa avanzada para gestionar la cartelera (Hero).
- * ✨ Nuevas características:
- * - Vista previa en tiempo real (Live Preview)
- * - Biblioteca de imágenes reutilizables
- * - Editor de estilos (colores, tipografías)
- * - Autoplay/Slideshow con intervalo configurable
- * - UI más visual con iconos
- */
-
-// Estilos para animación pulse
-const styles = `
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.5;
-    }
-}
-`;
-
-// Utilidad local para convertir un File a base64 (data URL)
-const fileToBase64 = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-});
+const {
+    Check, Trash2, ListChecks, Square, CheckSquare, X, Play, Image, Pencil, Plus, Trash, ExternalLink, Move
+} = LucideIcons;
 
 const AdminBillboard = () => {
-    // ESTADOS: Datos principales
+    const { theme } = useTheme();
+
+    const billboardStyles = `
+    @keyframes oasisFadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .admin-billboard-input {
+        background: ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)'} !important;
+        border-radius: 12px !important;
+        border: 1px solid ${theme.colors.border} !important;
+        padding: 14px 18px !important;
+        color: ${theme.colors.text.primary} !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+    .admin-billboard-input:focus {
+        background: ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'} !important;
+        border-color: ${theme.colors.primary} !important;
+        box-shadow: 0 0 0 4px ${theme.colors.primary}22 !important;
+        outline: none !important;
+    }
+    .admin-billboard-label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: ${theme.colors.primary};
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    `;
+    // ESTADOS
     const [billboards, setBillboards] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editingItem, setEditingItem] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
     const [uploading, setUploading] = useState(false);
-
-    // ESTADOS: Biblioteca de imágenes
-    const [imageGallery, setImageGallery] = useState([
-        'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&h=1080',
-        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1920&h=1080',
-        'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1920&h=1080',
-        'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&h=1080',
-    ]);
+    const [selectedIds, setSelectedIds] = useState([]);
     const [showGallery, setShowGallery] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
-
-    // ESTADOS: Vista previa en tiempo real
     const [livePreviewMode, setLivePreviewMode] = useState(true);
-    const [autoplayEnabled, setAutoplayEnabled] = useState(false);
-    const [autoplayInterval, setAutoplayInterval] = useState(5);
-    const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-    const autoplayTimerRef = useRef(null);
-
-    // ESTADOS: Editor de estilos
-    const [styleEditor, setStyleEditor] = useState({
-        titleColor: '#ffffff',
-        titleFont: 'ModernAge, sans-serif',
-        titleSize: '3.5rem',
-        descColor: '#ffffff',
-        descFont: 'system-ui, sans-serif',
-        descSize: '1.25rem',
-        overlayOpacity: 0.7,
+    const [confirmModal, setConfirmModal] = useState({
+        show: false,
+        title: '',
+        message: '',
+        onConfirm: null
     });
+    const { showToast } = useToast();
 
     const [formData, setFormData] = useState({
         title: '',
@@ -86,68 +77,217 @@ const AdminBillboard = () => {
         styles: {}
     });
 
+    const [styleEditor, setStyleEditor] = useState({
+        titleColor: '#ffffff',
+        titleFont: 'ModernAge, sans-serif',
+        titleSize: '3.5rem',
+        descColor: '#ffffff',
+        descFont: 'AdventSans, sans-serif',
+        descSize: '1.25rem',
+        overlayOpacity: 0.7,
+        textOpacity: 1,
+        iconName: '',
+        iconSize: '40',
+        iconColor: '#ffffff',
+    });
+
+    const FONT_OPTIONS = [
+        { label: 'Modern Age (Default)', value: 'ModernAge, sans-serif' },
+        { label: 'Advent Sans', value: 'AdventSans, sans-serif' },
+        { label: 'Moon Rising', value: 'MoonRising, sans-serif' },
+        { label: 'Inter', value: 'Inter, sans-serif' },
+        { label: 'Outfit', value: 'Outfit, sans-serif' },
+        { label: 'Georgia', value: 'Georgia, serif' },
+    ];
+
+    const ICON_OPTIONS = [
+        { name: 'Ninguno', value: '' },
+        { name: 'Sol', value: 'Sun' },
+        { name: 'Nube', value: 'Cloud' },
+        { name: 'Luna', value: 'Moon' },
+        { name: 'Corazón', value: 'Heart' },
+        { name: 'Estrella', value: 'Star' },
+        { name: 'Rayo', value: 'Zap' },
+        { name: 'Cruz', value: 'Cross' },
+        { name: 'Hoja', value: 'Leaf' },
+        { name: 'Montaña', value: 'Mountain' },
+        { name: 'Música', value: 'Music' },
+        { name: 'Viento', value: 'Wind' },
+        { name: 'Gota', value: 'Droplets' },
+    ];
+
+    // Galería estática Categorizada
+    const [categorizedGallery] = useState({
+        'Naturaleza & Paisajes': [
+            'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&q=80',
+            'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1920&q=80',
+            'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80',
+            'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1920&q=80',
+            'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1920&q=80',
+            'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=1920&q=80',
+            'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1920&q=80',
+        ],
+        'Clima & Cielo': [
+            'https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?w=1920&q=80',
+            'https://images.unsplash.com/photo-1473580044384-7ba9967e16a0?w=1920&q=80',
+            'https://images.unsplash.com/photo-1464802686167-b939a67e06a1?w=1920&q=80',
+            'https://images.unsplash.com/photo-1514632595-4944383f2737?w=1920&q=80',
+            'https://images.unsplash.com/photo-1534088568595-a066f7104218?w=1920&q=80',
+            'https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?w=1920&q=80',
+        ],
+        'Fe & Arquitectura': [
+            'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=1920&q=80',
+            'https://images.unsplash.com/photo-1518391846015-55a9cc003b25?w=1920&q=80',
+            'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1920&q=80',
+            'https://images.unsplash.com/photo-1491153049914-d5399639ae52?w=1920&q=80',
+            'https://images.unsplash.com/photo-1548625313-04249f658dc1?w=1920&q=80',
+        ],
+        'Abstracción & Fondos': [
+            'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
+            'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1920&q=80',
+            'https://images.unsplash.com/photo-1502691876148-a84978e59af8?w=1920&q=80',
+            'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1920&q=80',
+        ]
+    });
+
     useEffect(() => {
         fetchBillboards();
     }, []);
 
-    // Autoplay para vista previa
-    useEffect(() => {
-        if (autoplayEnabled && billboards.length > 0) {
-            autoplayTimerRef.current = setInterval(() => {
-                setCurrentSlideIndex(prev => (prev + 1) % billboards.length);
-            }, autoplayInterval * 1000);
-        }
-        return () => {
-            if (autoplayTimerRef.current) {
-                clearInterval(autoplayTimerRef.current);
-            }
-        };
-    }, [autoplayEnabled, autoplayInterval, billboards.length]);
-
     const fetchBillboards = async () => {
         try {
             setLoading(true);
-            const { data } = await apiClient.get('/admin/billboards');
-            const normalizedItems = (data || []).map((item) => ({
-                ...item,
-                media_url: item.media_url || item.mediaUrl || '',
-                media_type: item.media_type || item.mediaType || 'image',
-                button_text: item.button_text || item.buttonText || '',
-                button_link: item.button_link || item.buttonLink || '',
-                is_active: item.is_active ?? item.isActive ?? true,
-            }));
-            setBillboards(normalizedItems);
+            const response = await apiClient.get('/admin/billboards');
+            setBillboards(response.data.sort((a, b) => a.order - b.order));
         } catch (e) {
-            console.error('Error al cargar la cartelera:', e);
+            console.error('Error al cargar billboards:', e);
+            showToast('Error al cargar datos', 'error');
         } finally {
             setLoading(false);
         }
     };
 
+    const normalizeMediaUrl = (url) => {
+        if (!url) return '';
+        if (url.startsWith('http')) return url;
+        if (url.startsWith('uploads/')) return `${apiClient.defaults.baseURL.replace('/api', '')}/${url}`;
+        return url;
+    };
+
     const handleEdit = (item) => {
         setEditingItem(item);
         setFormData({
-            title: item.title || '',
-            description: item.description || '',
-            media_url: item.media_url || item.mediaUrl || '',
-            media_type: item.media_type || item.mediaType || 'image',
-            button_text: item.button_text || item.buttonText || '',
-            button_link: item.button_link || item.buttonLink || '',
-            order: item.order || 1,
-            is_active: item.is_active ?? item.isActive ?? true,
+            ...item,
             styles: item.styles || {}
         });
-
-        // Cargar estilos guardados
         if (item.styles) {
             setStyleEditor(prev => ({ ...prev, ...item.styles }));
         }
+        setPreviewUrl(normalizeMediaUrl(item.media_url));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const handleReset = () => {
+    const handleDelete = (id) => {
+        setConfirmModal({
+            show: true,
+            title: '¿Eliminar Slide?',
+            message: 'Esta acción no se puede deshacer y el contenido desaparecerá del sitio principal.',
+            type: 'danger',
+            onConfirm: async () => {
+                try {
+                    await apiClient.delete(`/admin/billboards/${id}`);
+                    showToast('Slide eliminado correctamente', 'success');
+                    fetchBillboards();
+                    setConfirmModal(prev => ({ ...prev, show: false }));
+                } catch (e) {
+                    showToast('Error al eliminar', 'error');
+                }
+            }
+        });
+    };
+
+    const handleBulkDelete = () => {
+        if (selectedIds.length === 0) return;
+        setConfirmModal({
+            show: true,
+            title: '¿Eliminar selección?',
+            message: `Vas a eliminar ${selectedIds.length} diapositivas permanentemente.`,
+            type: 'danger',
+            onConfirm: async () => {
+                try {
+                    const response = await apiClient.post('/admin/billboards/bulk-delete', { ids: selectedIds });
+                    if (response.data.success) {
+                        showToast('Elementos eliminados correctamente', 'success');
+                        setSelectedIds([]);
+                        fetchBillboards();
+                        setConfirmModal(prev => ({ ...prev, show: false }));
+                    } else {
+                        showToast('Error: ' + (response.data.message || 'No se pudo completar'), 'error');
+                    }
+                } catch (e) {
+                    showToast('Error en eliminación por lotes', 'error');
+                }
+            }
+        });
+    };
+
+    const toggleSelect = (id) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.length === billboards.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(billboards.map(b => b.id));
+        }
+    };
+
+    const handleSelectFromGallery = (url) => {
+        setFormData({ ...formData, media_url: url, media_type: 'image' });
+        setPreviewUrl(url);
+        setShowGallery(false);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setUploading(true);
+        try {
+            let mediaUrlToSave = formData.media_url;
+
+            if (selectedFile) {
+                console.log('🚀 Iniciando subida a Cloudinary...');
+                const uploadRes = await uploadToCloudinary(selectedFile);
+                mediaUrlToSave = uploadRes.secure_url;
+            }
+
+            const dataToSave = {
+                ...formData,
+                media_url: mediaUrlToSave,
+                styles: styleEditor
+            };
+
+            if (editingItem) {
+                await apiClient.put(`/admin/billboards/${editingItem.id}`, dataToSave);
+            } else {
+                await apiClient.post('/admin/billboards', dataToSave);
+            }
+
+            showToast('¡Guardado exitosamente!', 'success');
+            resetForm();
+            fetchBillboards();
+        } catch (e) {
+            console.error('Error al guardar:', e);
+            showToast('Error al guardar: ' + (e.response?.data?.message || e.message), 'error');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const resetForm = () => {
         setEditingItem(null);
-        setSelectedFile(null);
-        setPreviewUrl(null);
         setFormData({
             title: '',
             description: '',
@@ -155,1324 +295,684 @@ const AdminBillboard = () => {
             media_type: 'image',
             button_text: '',
             button_link: '',
-            order: billboards.length + 1,
+            order: 1,
             is_active: true,
             styles: {}
         });
-        setStyleEditor({
-            titleColor: '#ffffff',
-            titleFont: 'ModernAge, sans-serif',
-            titleSize: '3.5rem',
-            descColor: '#ffffff',
-            descFont: 'system-ui, sans-serif',
-            descSize: '1.25rem',
-            overlayOpacity: 0.7,
-        });
-        const fileInput = document.getElementById('mediaFile');
-        if (fileInput) fileInput.value = '';
+        setPreviewUrl(null);
+        setSelectedFile(null);
     };
 
-    useEffect(() => {
-        return () => {
-            if (previewUrl && previewUrl.startsWith('blob:')) {
-                URL.revokeObjectURL(previewUrl);
-            }
-        };
-    }, [previewUrl]);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        try {
-            setUploading(true);
-            let mediaUrl = formData.media_url;
-
-            if (selectedFile) {
-                console.log('📤 Preparando imagen para subida...');
-
-                // Convertir archivo a base64 para enviarlo al backend
-                const base64Data = await fileToBase64(selectedFile);
-                console.log('📸 Imagen convertida a Base64, tamaño:', (base64Data.length / 1024).toFixed(1), 'KB');
-
-                console.log('☁️ Subiendo imagen a Cloudinary vía backend...');
-                const { data } = await apiClient.post('/billboards/upload-image', {
-                    imageBase64: base64Data
-                });
-
-                if (data.success) {
-                    mediaUrl = data.imageUrl;
-                    console.log('✅ Cloudinary URL:', mediaUrl);
-                } else {
-                    throw new Error(data.message || 'No fue posible subir la imagen a Cloudinary');
-                }
-            }
-
-            // Validar que media_url no esté vacía
-            if (!mediaUrl) {
-                alert('⚠️ Debes seleccionar una imagen para el billboard');
-                setUploading(false);
-                return;
-            }
-
-            const itemToSave = {
-                ...formData,
-                media_url: mediaUrl,
-                mediaUrl,
-                media_type: formData.media_type,
-                mediaType: formData.media_type,
-                button_text: formData.button_text,
-                buttonText: formData.button_text,
-                button_link: formData.button_link,
-                buttonLink: formData.button_link,
-                is_active: formData.is_active,
-                isActive: formData.is_active,
-                styles: styleEditor
-            };
-            console.log('💾 Guardando billboard en DB:', itemToSave);
-            console.log('📸 URL de imagen:', mediaUrl);
-
-            if (editingItem) {
-                await apiClient.put(`/admin/billboards/${editingItem.id}`, itemToSave);
-            } else {
-                await apiClient.post('/admin/billboards', itemToSave);
-            }
-
-            fetchBillboards();
-            handleReset();
-            alert('¡Guardado exitosamente!');
-        } catch (e) {
-            console.error('Error al guardar:', e);
-            alert('Error al guardar. Verifica que todos los campos sean correctos.');
-        } finally {
-            setUploading(false);
-        }
-    };
-
-    const handleDelete = async (id) => {
-        if (!window.confirm('¿Estás seguro de eliminar este elemento?')) return;
-        try {
-            await apiClient.delete(`/admin/billboards/${id}`);
-            fetchBillboards();
-        } catch (e) {
-            console.error('Error al eliminar:', e);
-        }
-    };
-
-    const normalizeMediaUrl = (url) => {
-        if (!url) return null;
-
-        // Si ya es una URL completa (http/https), devuélvela tal cual
-        if (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) {
-            return url;
-        }
-
-        // Determinar la base de la API (por defecto localhost:3000)
-        let apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
-        // Normalizar la base: quitar /api y asegurar que no termine en /
-        const backendUrl = apiBase.replace(/\/api\/?$/, '').replace(/\/$/, '');
-
-        // Si es una ruta relativa que empieza con /uploads, concatenar
-        if (typeof url === 'string' && url.startsWith('/uploads/')) {
-            return `${backendUrl}${url}`;
-        }
-
-        // Si es solo el nombre del archivo (ej: "billboard-123.jpg")
-        if (typeof url === 'string' && !url.includes('/') && (url.endsWith('.jpg') || url.endsWith('.png') || url.endsWith('.jpeg'))) {
-            return `${backendUrl}/uploads/${url}`;
-        }
-
-        return url || null;
-    };
-
-    // Seleccionar imagen de la galería
-    const handleSelectFromGallery = (url) => {
-        setFormData(prev => ({ ...prev, media_url: url }));
-        setPreviewUrl(url);
-        setShowGallery(false);
-    };
-
-    // Agregar nueva imagen a la galería
-    const handleAddToGallery = (url) => {
-        if (url && !imageGallery.includes(url)) {
-            setImageGallery(prev => [...prev, url]);
-        }
-    };
-
-    // Renderizar vista previa en tiempo real
     const renderLivePreview = () => {
-        const displayData = livePreviewMode ? formData : (billboards[currentSlideIndex] || formData);
-        const displayUrl = livePreviewMode
-            ? (previewUrl || normalizeMediaUrl(formData.media_url))
-            : normalizeMediaUrl(displayData.media_url);
-
-        const currentStyles = livePreviewMode ? styleEditor : (displayData.styles || styleEditor);
+        const displayUrl = previewUrl || (formData.media_url ? normalizeMediaUrl(formData.media_url) : '');
 
         return (
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                layout
                 style={{
                     width: '100%',
-                    height: '500px',
-                    borderRadius: '16px',
+                    height: '400px',
+                    borderRadius: '24px',
                     overflow: 'hidden',
                     position: 'relative',
-                    boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-                    border: `3px solid ${livePreviewMode ? theme.colors.primary : '#6c757d'}`
+                    background: '#000',
+                    boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+                    border: `1px solid rgba(255,255,255,0.1)`
                 }}
             >
-                {/* Fondo */}
+                {/* Background */}
                 <div style={{
                     position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                    backgroundImage: displayUrl ? `url(${displayUrl})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    backgroundImage: displayUrl ? `url(${displayUrl})` : 'linear-gradient(to bottom, #0a0a0f, #1a1a2e)',
+                    backgroundSize: 'cover', backgroundPosition: 'center',
                     transition: 'all 0.5s ease'
                 }} />
 
                 {/* Overlay */}
                 <div style={{
                     position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                    background: `linear-gradient(to right, rgba(0,0,0,${currentStyles.overlayOpacity}) 0%, rgba(0,0,0,${currentStyles.overlayOpacity * 0.5}) 50%, rgba(0,0,0,${currentStyles.overlayOpacity * 0.2}) 100%)`
+                    background: `linear-gradient(to right, rgba(0,0,0,${styleEditor.overlayOpacity + 0.1}) 0%, rgba(0,0,0,${styleEditor.overlayOpacity - 0.2}) 100%)`
                 }} />
 
-                {/* Contenido */}
+                {/* Content */}
                 <div style={{
-                    position: 'relative', zIndex: 1, color: '#fff',
-                    height: '100%', display: 'flex', alignItems: 'center',
-                    padding: '0 40px'
+                    position: 'relative', zIndex: 2, height: '100%',
+                    display: 'flex', alignItems: 'center', padding: '0 40px'
                 }}>
-                    <div style={{ maxWidth: '600px' }}>
-                        <h1 style={{
-                            fontFamily: currentStyles.titleFont,
-                            fontSize: currentStyles.titleSize,
-                            fontWeight: 'bold',
-                            marginBottom: '1rem',
-                            lineHeight: 1.2,
-                            textShadow: '0 4px 15px rgba(0,0,0,0.5)',
-                            color: currentStyles.titleColor,
-                            transition: 'all 0.3s'
-                        }}>
-                            {displayData.title || 'Título del Hero'}
-                        </h1>
-                        <p style={{
-                            fontFamily: currentStyles.descFont,
-                            fontSize: currentStyles.descSize,
-                            marginBottom: '1.5rem',
-                            opacity: 0.95,
-                            lineHeight: 1.6,
-                            textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-                            color: currentStyles.descColor,
-                            transition: 'all 0.3s'
-                        }}>
-                            {displayData.description || 'Descripción de la diapositiva'}
-                        </p>
-                        {displayData.button_text && (
+                        <div style={{ opacity: styleEditor.textOpacity, transition: 'opacity 0.3s' }}>
+                            {styleEditor.iconName && (
+                                <div className="mb-3" style={{ color: styleEditor.iconColor }}>
+                                    {React.createElement(
+                                        LucideIcons[styleEditor.iconName] || LucideIcons.Star, 
+                                        { size: parseInt(styleEditor.iconSize) }
+                                    )}
+                                </div>
+                            )}
+                            <h2 style={{
+                                color: styleEditor.titleColor,
+                                fontFamily: styleEditor.titleFont,
+                                fontSize: `clamp(1.5rem, 5vw, ${styleEditor.titleSize})`,
+                                fontWeight: 'bold',
+                                lineHeight: 1.1,
+                                marginBottom: '1rem',
+                                textShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                            }}>
+                                {formData.title || 'Título de ejemplo'}
+                            </h2>
+                            <p style={{
+                                color: styleEditor.descColor,
+                                fontFamily: styleEditor.descFont,
+                                fontSize: styleEditor.descSize,
+                                opacity: 1,
+                                marginBottom: '1.5rem',
+                                textShadow: '0 2px 8px rgba(0,0,0,0.5)'
+                            }}>
+                                {formData.description || 'Esta es una descripción de ejemplo para el Hero.'}
+                            </p>
+                        </div>
+                        {formData.button_text && (
                             <button style={{
                                 padding: '12px 28px',
                                 borderRadius: '12px',
                                 border: 'none',
                                 background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
                                 color: '#fff',
-                                fontWeight: 'bold',
-                                fontSize: '1rem',
-                                cursor: 'pointer',
-                                boxShadow: '0 6px 20px rgba(91,46,166,0.4)',
-                                transition: 'all 0.3s'
+                                fontWeight: 'bold'
                             }}>
-                                {displayData.button_text}
+                                {formData.button_text}
                             </button>
                         )}
                     </div>
-                </div>
 
-                {/* Badge de modo */}
                 <div style={{
                     position: 'absolute', top: '16px', right: '16px',
-                    background: livePreviewMode
-                        ? 'linear-gradient(135deg, #ff6b6b, #ee5a6f)'
-                        : 'rgba(255,255,255,0.2)',
-                    backdropFilter: 'blur(10px)',
-                    padding: '6px 14px',
-                    borderRadius: '20px',
-                    color: '#fff',
-                    fontSize: '0.75rem',
-                    fontWeight: '600',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
+                    background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)',
+                    padding: '6px 12px', borderRadius: '20px', color: '#fff', fontSize: '0.75rem', fontWeight: 600
                 }}>
-                    <i className={`bi ${livePreviewMode ? 'bi-circle-fill' : 'bi-play-circle'}`}
-                        style={{ fontSize: '0.6rem', animation: livePreviewMode ? 'pulse 2s infinite' : 'none' }}></i>
-                    {livePreviewMode ? 'LIVE' : `Slide ${currentSlideIndex + 1}/${billboards.length}`}
+                    LIVE PREVIEW
                 </div>
-
-                {/* Controles de navegación */}
-                {!livePreviewMode && billboards.length > 1 && (
-                    <div style={{
-                        position: 'absolute', bottom: '16px', left: '50%',
-                        transform: 'translateX(-50%)',
-                        display: 'flex',
-                        gap: '8px'
-                    }}>
-                        {billboards.map((_, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => setCurrentSlideIndex(idx)}
-                                style={{
-                                    width: currentSlideIndex === idx ? '32px' : '8px',
-                                    height: '8px',
-                                    borderRadius: '4px',
-                                    border: 'none',
-                                    background: currentSlideIndex === idx
-                                        ? '#fff'
-                                        : 'rgba(255,255,255,0.4)',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s'
-                                }}
-                            />
-                        ))}
-                    </div>
-                )}
             </motion.div>
         );
     };
 
-    // Renderizar vista previa fullscreen del Hero
-    const renderPreview = () => {
-        const displayUrl = previewUrl || normalizeMediaUrl(formData.media_url);
+    return (
+        <div style={{ padding: '0', maxWidth: '100%', margin: '0 auto', color: theme.colors.text.primary }}>
+            <style>{billboardStyles}</style>
 
-        return (
-            <AnimatePresence>
-                <motion.div
-                    onClick={() => setShowPreview(false)}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    style={{
-                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                        background: 'rgba(0,0,0,0.95)', zIndex: 9999,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        padding: '20px',
-                        backdropFilter: 'blur(10px)'
-                    }}
-                >
-                    <motion.div
-                        onClick={e => e.stopPropagation()}
-                        initial={{ scale: 0.9, y: 50 }}
-                        animate={{ scale: 1, y: 0 }}
-                        transition={{ type: 'spring', damping: 25 }}
-                        style={{
-                            width: '100%', maxWidth: '1400px', height: '80vh',
-                            position: 'relative', borderRadius: '20px', overflow: 'hidden',
-                            boxShadow: '0 25px 80px rgba(102, 126, 234, 0.4)',
-                            border: `2px solid ${theme.colors.primary}`
+            {/* Header Area Area */}
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5 gap-3 p-4 rounded-4 shadow-sm"
+                style={{
+                    background: theme.glass.background,
+                    backdropFilter: theme.glass.backdropFilter,
+                    border: theme.glass.border,
+                    borderRadius: theme.glass.borderRadius,
+                    boxShadow: theme.glass.boxShadow
+                }}>
+                <div>
+                    <h1 style={{
+                        fontWeight: '900',
+                        fontFamily: theme.fonts.accent,
+                        fontSize: '2.2rem',
+                        letterSpacing: '1px',
+                        marginBottom: '8px',
+                        color: theme.colors.text.primary,
+                        textTransform: 'uppercase'
+                    }}>
+                        Gestión <span style={{ color: theme.colors.primary }}>Cartelera</span>
+                    </h1>
+                    <p style={{ color: theme.colors.text.secondary, margin: 0, fontWeight: 500, fontSize: '1.1rem' }}>
+                        Diseña la experiencia visual de bienvenida en Oasis.
+                    </p>
+                </div>
+                <div className="d-flex gap-2">
+                    <button
+                        onClick={toggleSelectAll}
+                        style={{ 
+                            borderRadius: '16px', padding: '12px 20px', 
+                            fontWeight: '700', fontSize: '0.9rem',
+                            background: 'rgba(255,255,255,0.05)',
+                            border: `1px solid ${theme.colors.border}`,
+                            color: theme.colors.text.primary,
+                            display: 'flex', alignItems: 'center', gap: '10px',
+                            transition: 'all 0.2s'
                         }}
                     >
-                        {/* Botón cerrar */}
-                        <button
-                            onClick={() => setShowPreview(false)}
-                            style={{
-                                position: 'absolute', top: '20px', right: '20px', zIndex: 10,
-                                background: 'rgba(255,255,255,0.2)', border: 'none',
-                                borderRadius: '50%', width: '40px', height: '40px',
-                                color: '#fff', fontSize: '1.5rem', cursor: 'pointer',
-                                backdropFilter: 'blur(10px)'
-                            }}
-                        >
-                            ×
-                        </button>
+                        {selectedIds.length === billboards.length ? <CheckSquare size={18} /> : <Square size={18} />}
+                        {selectedIds.length === billboards.length ? 'Desmarcar' : 'Seleccionar'}
+                    </button>
+                    <button
+                        onClick={() => window.location.href = '/'}
+                        style={{ 
+                            borderRadius: '16px', padding: '12px 20px', 
+                            fontWeight: '700', fontSize: '0.9rem',
+                            background: theme.colors.primary,
+                            border: 'none',
+                            color: '#fff',
+                            display: 'flex', alignItems: 'center', gap: '10px',
+                            boxShadow: `0 8px 24px ${theme.colors.primary}33`
+                        }}
+                    >
+                        <ExternalLink size={18} /> Sitio
+                    </button>
+                </div>
+            </div>
 
-                        {/* Fondo */}
-                        <div style={{
-                            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                            backgroundImage: displayUrl ? `url(${displayUrl})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            backgroundSize: 'cover', backgroundPosition: 'center'
-                        }} />
-
-                        {/* Overlay */}
-                        <div style={{
-                            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                            background: 'linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%)'
-                        }} />
-
-                        {/* Contenido */}
-                        <div style={{
-                            position: 'relative', zIndex: 1, color: '#fff',
-                            height: '100%', display: 'flex', alignItems: 'center',
-                            padding: '0 60px'
-                        }}>
-                            <div style={{ maxWidth: '700px' }}>
-                                <h1 style={{
-                                    fontFamily: 'ModernAge, sans-serif',
-                                    fontSize: 'clamp(2.5rem, 8vw, 4.5rem)',
-                                    fontWeight: 'bold',
-                                    marginBottom: '1.5rem',
-                                    lineHeight: 1.1,
-                                    textShadow: '0 4px 15px rgba(0,0,0,0.5)',
-                                    background: `linear-gradient(135deg, #ffffff 0%, ${theme.colors.secondary} 100%)`,
-                                    WebkitBackgroundClip: 'text',
-                                    WebkitTextFillColor: 'transparent'
-                                }}>
-                                    {formData.title || 'Título del Hero'}
-                                </h1>
-                                <p style={{
-                                    fontSize: 'clamp(1rem, 2.5vw, 1.25rem)',
-                                    marginBottom: '2rem',
-                                    opacity: 0.9,
-                                    lineHeight: 1.6,
-                                    textShadow: '0 2px 8px rgba(0,0,0,0.5)'
-                                }}>
-                                    {formData.description || 'Descripción de la diapositiva del hero'}
-                                </p>
-                                {formData.button_text && (
-                                    <button style={{
-                                        padding: '14px 32px',
-                                        borderRadius: '16px',
-                                        border: 'none',
-                                        background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-                                        color: '#fff',
-                                        fontWeight: 'bold',
-                                        fontSize: '1.1rem',
-                                        cursor: 'pointer',
-                                        boxShadow: '0 8px 24px rgba(91,46,166,0.4)',
-                                        transition: 'all 0.3s'
-                                    }}>
-                                        {formData.button_text}
-                                    </button>
-                                )}
-                            </div>
+            <div className="row g-4">
+                {/* Form & Styling */}
+                <div className="col-lg-7">
+                    <div className="d-flex flex-column gap-4">
+                        {/* Live Preview Card */}
+                        <div className="mb-2">
+                            {renderLivePreview()}
                         </div>
 
-                        {/* Badge de vista previa */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3 }}
-                            style={{
-                                position: 'absolute', bottom: '20px', right: '20px',
-                                background: 'rgba(255,255,255,0.2)',
-                                backdropFilter: 'blur(10px)',
-                                padding: '8px 16px',
-                                borderRadius: '20px',
-                                color: '#fff',
-                                fontSize: '0.85rem',
-                                fontWeight: '600'
-                            }}>
-                            <i className="bi bi-eye me-2"></i>Vista Previa
-                        </motion.div>
-                    </motion.div>
-                </motion.div>
-            </AnimatePresence>
-        );
-    };
-
-    return (
-        <>
-            <style>{styles}</style>
-            <div style={{ padding: '20px', maxWidth: '1600px', margin: '0 auto' }}>
-                {/* Header con controles */}
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h2 style={{
-                            fontFamily: 'ModernAge, sans-serif',
-                            background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            fontWeight: 'bold',
-                            fontSize: '2rem',
-                            marginBottom: '8px'
-                        }}>
-                            <i className="bi bi-images" style={{
-                                background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent'
-                            }}></i> Cartelera Hero
-                        </h2>
-                        <p style={{ fontSize: '0.85rem', color: '#6c757d', marginBottom: 0 }}>
-                            <i className="bi bi-lightbulb"></i> Vista previa en tiempo real con control de estilos
-                        </p>
-                    </div>
-                    <div className="d-flex gap-2 align-items-center">
-                        {/* Toggle Live Preview */}
-                        <button
-                            type="button"
-                            onClick={() => setLivePreviewMode(prev => !prev)}
-                            style={{
-                                padding: '8px 16px',
-                                borderRadius: '12px',
-                                border: `2px solid ${livePreviewMode ? theme.colors.primary : '#dee2e6'}`,
-                                background: livePreviewMode ? theme.colors.primary : 'transparent',
-                                color: livePreviewMode ? '#fff' : theme.colors.primary,
-                                fontWeight: '600',
-                                fontSize: '0.85rem',
-                                cursor: 'pointer',
-                                transition: 'all 0.3s',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px'
-                            }}
-                        >
-                            <i className={`bi ${livePreviewMode ? 'bi-broadcast-pin' : 'bi-broadcast'}`}></i>
-                            {livePreviewMode ? 'Live' : 'Slideshow'}
-                        </button>
-
-                        {/* Toggle Autoplay */}
-                        <button
-                            type="button"
-                            onClick={() => setAutoplayEnabled(prev => !prev)}
-                            style={{
-                                padding: '8px 16px',
-                                borderRadius: '12px',
-                                border: `2px solid ${autoplayEnabled ? '#28a745' : '#dee2e6'}`,
-                                background: autoplayEnabled ? '#28a745' : 'transparent',
-                                color: autoplayEnabled ? '#fff' : '#28a745',
-                                fontWeight: '600',
-                                fontSize: '0.85rem',
-                                cursor: 'pointer',
-                                transition: 'all 0.3s',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px'
-                            }}
-                        >
-                            <i className={`bi ${autoplayEnabled ? 'bi-pause-circle' : 'bi-play-circle'}`}></i>
-                            {autoplayEnabled ? 'Pausar' : 'Autoplay'}
-                        </button>
-
-                        {editingItem && (
-                            <Button variant="outline" onClick={handleReset}>
-                                <i className="bi bi-x-circle me-1"></i>Cancelar
-                            </Button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Vista Previa en Tiempo Real */}
-                <GlassCard style={{ padding: '30px', marginBottom: '30px' }}>
-                    {renderLivePreview()}
-                </GlassCard>
-
-                <div className="row g-4">
-                    {/* Form Section */}
-                    <div className="col-lg-6">
-                        <GlassCard style={{ padding: '30px' }}>
-                            <form onSubmit={handleSubmit} className="d-flex flex-column gap-3">
-                                {/* Campos principales con iconos */}
-                                <div style={{
-                                    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05))',
-                                    borderRadius: '16px',
-                                    padding: '20px',
-                                    border: '1px solid rgba(102, 126, 234, 0.2)'
-                                }}>
-                                    <div className="mb-3">
-                                        <div className="d-flex align-items-center gap-2 mb-2">
-                                            <div style={{
-                                                width: '32px', height: '32px',
-                                                borderRadius: '8px',
-                                                background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                color: '#fff',
-                                                fontSize: '1rem'
-                                            }}>
-                                                <i className="bi bi-type-h1"></i>
-                                            </div>
-                                            <label className="form-label mb-0 fw-bold" style={{ fontSize: '0.9rem', color: theme.colors.primary }}>
-                                                Título del Hero
-                                            </label>
-                                        </div>
+                        {/* Form Card */}
+                        <GlassCard style={{ padding: theme.spacing(4), background: '#ffffff' }}>
+                            <form onSubmit={handleSubmit}>
+                                <div className="row g-3">
+                                    <div className="col-12">
+                                        <label className="admin-billboard-label">Título del Slide</label>
                                         <input
                                             type="text"
-                                            className="form-control"
-                                            style={{
-                                                borderRadius: '12px',
-                                                border: '2px solid rgba(102, 126, 234, 0.2)',
-                                                padding: '12px 16px'
-                                            }}
-                                            placeholder="Ej: Bienvenido a OASIS"
+                                            className="form-control admin-billboard-input"
                                             value={formData.title}
-                                            onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                            placeholder="Escribe un título impactante..."
                                         />
                                     </div>
 
-                                    <div>
-                                        <div className="d-flex align-items-center gap-2 mb-2">
-                                            <div style={{
-                                                width: '32px', height: '32px',
-                                                borderRadius: '8px',
-                                                background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                color: '#fff',
-                                                fontSize: '1rem'
-                                            }}>
-                                                <i className="bi bi-text-paragraph"></i>
-                                            </div>
-                                            <label className="form-label mb-0 fw-bold" style={{ fontSize: '0.9rem', color: theme.colors.primary }}>
-                                                Descripción
-                                            </label>
-                                        </div>
+                                    <div className="col-12">
+                                        <label className="admin-billboard-label">Descripción</label>
                                         <textarea
-                                            className="form-control"
-                                            style={{
-                                                borderRadius: '12px',
-                                                border: '2px solid rgba(102, 126, 234, 0.2)',
-                                                padding: '12px 16px'
-                                            }}
+                                            className="form-control admin-billboard-input"
                                             rows="3"
-                                            placeholder="Breve descripción del slide..."
                                             value={formData.description}
-                                            onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                        ></textarea>
+                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                            placeholder="Breve explicación del anuncio..."
+                                        />
                                     </div>
-                                </div>
-
-                                {/* Sección de Imagen con Galería */}
-                                <div style={{
-                                    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05))',
-                                    borderRadius: '16px',
-                                    padding: '20px',
-                                    border: '1px solid rgba(102, 126, 234, 0.2)'
-                                }}>
-                                    <div className="d-flex align-items-center gap-2 mb-3">
-                                        <div style={{
-                                            width: '32px', height: '32px',
-                                            borderRadius: '8px',
-                                            background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: '#fff',
-                                            fontSize: '1rem'
-                                        }}>
-                                            <i className="bi bi-image"></i>
-                                        </div>
-                                        <label className="form-label mb-0 fw-bold" style={{ fontSize: '0.9rem', color: theme.colors.primary }}>
-                                            Imagen de Fondo
-                                        </label>
-                                    </div>
-
-                                    {/* Botones de carga */}
-                                    <div className="d-flex gap-2 mb-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => document.getElementById('mediaFile').click()}
-                                            style={{
-                                                flex: 1,
-                                                padding: '12px',
-                                                borderRadius: '12px',
-                                                border: '2px dashed rgba(102, 126, 234, 0.4)',
-                                                background: 'rgba(102, 126, 234, 0.05)',
-                                                color: theme.colors.primary,
-                                                fontWeight: '600',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.3s',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: '8px'
-                                            }}
-                                        >
-                                            <i className="bi bi-cloud-upload" style={{ fontSize: '1.2rem' }}></i>
-                                            Subir Archivo
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowGallery(true)}
-                                            style={{
-                                                flex: 1,
-                                                padding: '12px',
-                                                borderRadius: '12px',
-                                                border: '2px solid rgba(102, 126, 234, 0.4)',
-                                                background: 'transparent',
-                                                color: theme.colors.primary,
-                                                fontWeight: '600',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.3s',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: '8px'
-                                            }}
-                                        >
-                                            <i className="bi bi-collection" style={{ fontSize: '1.2rem' }}></i>
-                                            Galería
-                                        </button>
-                                    </div>
-
-                                    <input
-                                        type="file"
-                                        id="mediaFile"
-                                        style={{ display: 'none' }}
-                                        accept="image/*"
-                                        onChange={(e) => {
-                                            const file = e.target.files[0];
-                                            if (file) {
-                                                if (file.size > 20 * 1024 * 1024) {
-                                                    alert('La imagen no debe exceder 20MB');
-                                                    return;
-                                                }
-                                                setSelectedFile(file);
-                                                setFormData({ ...formData, media_type: 'image' });
-                                                const objectUrl = URL.createObjectURL(file);
-                                                setPreviewUrl(objectUrl);
-                                                handleAddToGallery(objectUrl);
-                                                console.log(`✅ Archivo: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
-                                            }
-                                        }}
-                                    />
-
-                                    {selectedFile && (
-                                        <div style={{
-                                            padding: '12px',
-                                            borderRadius: '12px',
-                                            background: 'rgba(40, 167, 69, 0.1)',
-                                            border: '1px solid rgba(40, 167, 69, 0.3)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '12px'
-                                        }}>
-                                            <i className="bi bi-check-circle-fill" style={{ color: '#28a745', fontSize: '1.2rem' }}></i>
-                                            <div style={{ flex: 1 }}>
-                                                <div style={{ fontWeight: '600', fontSize: '0.85rem', color: '#28a745' }}>
-                                                    {selectedFile.name}
-                                                </div>
-                                                <div style={{ fontSize: '0.75rem', color: '#6c757d' }}>
-                                                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB • Sin overhead de Base64
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Configuración adicional */}
-                                <div className="row g-3">
-                                    <div className="col-6">
-                                        <div className="d-flex align-items-center gap-2 mb-2">
-                                            <i className="bi bi-cursor" style={{ color: theme.colors.primary }}></i>
-                                            <label className="form-label mb-0 fw-bold" style={{ fontSize: '0.85rem' }}>
-                                                Texto Botón
-                                            </label>
-                                        </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label fw-bold">Texto del Botón</label>
                                         <input
                                             type="text"
-                                            className="form-control"
-                                            style={{ borderRadius: '12px', border: '2px solid #dee2e6' }}
-                                            placeholder="Ej: Ver más"
+                                            className="form-control admin-billboard-input"
                                             value={formData.button_text}
                                             onChange={e => setFormData({ ...formData, button_text: e.target.value })}
                                         />
                                     </div>
-                                    <div className="col-6">
-                                        <div className="d-flex align-items-center gap-2 mb-2">
-                                            <i className="bi bi-link-45deg" style={{ color: theme.colors.primary }}></i>
-                                            <label className="form-label mb-0 fw-bold" style={{ fontSize: '0.85rem' }}>
-                                                Link Botón
-                                            </label>
-                                        </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label fw-bold">Link del Botón</label>
                                         <input
                                             type="text"
-                                            className="form-control"
-                                            style={{ borderRadius: '12px', border: '2px solid #dee2e6' }}
-                                            placeholder="/ruta"
+                                            className="form-control admin-billboard-input"
                                             value={formData.button_link}
                                             onChange={e => setFormData({ ...formData, button_link: e.target.value })}
                                         />
                                     </div>
-                                    <div className="col-6">
-                                        <div className="d-flex align-items-center gap-2 mb-2">
-                                            <i className="bi bi-sort-numeric-down" style={{ color: theme.colors.primary }}></i>
-                                            <label className="form-label mb-0 fw-bold" style={{ fontSize: '0.85rem' }}>
-                                                Orden
-                                            </label>
+
+                                    <div className="col-12 mt-4">
+                                        <div className="d-flex gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowGallery(true)}
+                                                className="btn btn-outline-primary w-100 py-3 d-flex align-items-center justify-content-center gap-2"
+                                                style={{ borderRadius: '16px', fontWeight: 'bold' }}
+                                            >
+                                                <Image size={20} /> Elegir de Galería
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => document.getElementById('fileUpload').click()}
+                                                className="btn btn-dark w-100 py-3 d-flex align-items-center justify-content-center gap-2"
+                                                style={{ borderRadius: '16px', fontWeight: 'bold' }}
+                                            >
+                                                <Plus size={20} /> Subir Imagen
+                                            </button>
                                         </div>
                                         <input
-                                            type="number"
-                                            className="form-control"
-                                            style={{ borderRadius: '12px', border: '2px solid #dee2e6' }}
-                                            min="1" max="10"
-                                            value={formData.order}
-                                            onChange={e => setFormData({ ...formData, order: parseInt(e.target.value) })}
+                                            type="file"
+                                            id="fileUpload"
+                                            hidden
+                                            onChange={e => {
+                                                const file = e.target.files[0];
+                                                if (file) {
+                                                    setSelectedFile(file);
+                                                    setPreviewUrl(URL.createObjectURL(file));
+                                                }
+                                            }}
                                         />
                                     </div>
-                                    <div className="col-6 d-flex align-items-end">
-                                        <div className="form-check form-switch" style={{ paddingLeft: '2.5rem', paddingBottom: '8px' }}>
-                                            <input
-                                                className="form-check-input"
-                                                type="checkbox"
-                                                id="isActive"
-                                                style={{ width: '50px', height: '24px', cursor: 'pointer' }}
-                                                checked={formData.is_active}
-                                                onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
-                                            />
-                                            <label className="form-check-label fw-bold" htmlFor="isActive" style={{ fontSize: '0.85rem', color: theme.colors.primary }}>
-                                                <i className="bi bi-power me-1"></i>Activo
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                {/* Botones de acción */}
-                                <div className="d-flex gap-2 mt-3">
-                                    <Button
-                                        type="submit"
-                                        disabled={uploading}
-                                        style={{ flex: 1 }}
-                                    >
-                                        {uploading ? (
-                                            <>
-                                                <span className="spinner-border spinner-border-sm me-2"></span>
-                                                Subiendo...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <i className={`bi ${editingItem ? 'bi-arrow-repeat' : 'bi-plus-circle'} me-2`}></i>
-                                                {editingItem ? 'Actualizar' : 'Crear Slide'}
-                                            </>
+                                    <div className="col-12 d-flex gap-2 mt-4">
+                                        <button
+                                            type="submit"
+                                            disabled={uploading}
+                                            className="btn btn-primary flex-grow-1 py-3"
+                                            style={{ 
+                                                borderRadius: '16px', 
+                                                fontWeight: '800', 
+                                                fontSize: '1.1rem',
+                                                background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
+                                                border: 'none',
+                                                color: '#fff'
+                                            }}
+                                        >
+                                            {uploading ? 'Guardando...' : editingItem ? 'Actualizar Slide' : 'Crear nuevo Slide'}
+                                        </button>
+                                        {editingItem && (
+                                            <button
+                                                type="button"
+                                                onClick={resetForm}
+                                                className="btn btn-light py-3 px-4"
+                                                style={{ borderRadius: '16px' }}
+                                            >
+                                                <X size={24} />
+                                            </button>
                                         )}
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        variant="secondary"
-                                        onClick={handleReset}
-                                    >
-                                        <i className="bi bi-x-circle"></i>
-                                    </Button>
+                                    </div>
                                 </div>
                             </form>
                         </GlassCard>
 
-                        {/* Editor de Estilos */}
-                        <GlassCard style={{ padding: '30px', marginTop: '20px' }}>
-                            <div className="d-flex align-items-center gap-2 mb-3">
-                                <div style={{
-                                    width: '32px', height: '32px',
-                                    borderRadius: '8px',
-                                    background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: '#fff',
-                                    fontSize: '1rem'
-                                }}>
-                                    <i className="bi bi-palette"></i>
-                                </div>
-                                <h5 className="mb-0 fw-bold" style={{ color: theme.colors.primary }}>
-                                    Editor de Estilos
-                                </h5>
-                            </div>
-
-                            <div className="d-flex flex-column gap-3">
-                                {/* Título */}
-                                <div style={{
-                                    padding: '16px',
-                                    borderRadius: '12px',
-                                    background: 'rgba(102, 126, 234, 0.05)',
-                                    border: '1px solid rgba(102, 126, 234, 0.2)'
-                                }}>
-                                    <div className="d-flex align-items-center gap-2 mb-2">
-                                        <i className="bi bi-type-h1" style={{ color: theme.colors.primary }}></i>
-                                        <span className="fw-bold" style={{ fontSize: '0.85rem' }}>Título</span>
-                                    </div>
-                                    <div className="row g-2">
-                                        <div className="col-4">
-                                            <label style={{ fontSize: '0.7rem', color: '#6c757d', display: 'block', marginBottom: '4px' }}>
-                                                <i className="bi bi-palette-fill me-1"></i>Color
-                                            </label>
-                                            <input
-                                                type="color"
-                                                className="form-control form-control-color"
-                                                style={{ width: '100%', height: '40px', borderRadius: '8px' }}
-                                                value={styleEditor.titleColor}
-                                                onChange={e => setStyleEditor({ ...styleEditor, titleColor: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="col-4">
-                                            <label style={{ fontSize: '0.7rem', color: '#6c757d', display: 'block', marginBottom: '4px' }}>
-                                                <i className="bi bi-fonts me-1"></i>Fuente
-                                            </label>
-                                            <select
-                                                className="form-select"
-                                                style={{ borderRadius: '8px', fontSize: '0.8rem' }}
-                                                value={styleEditor.titleFont}
-                                                onChange={e => setStyleEditor({ ...styleEditor, titleFont: e.target.value })}
-                                            >
-                                                <option value="ModernAge, sans-serif">Modern Age</option>
-                                                <option value="Arial, sans-serif">Arial</option>
-                                                <option value="Georgia, serif">Georgia</option>
-                                                <option value="'Courier New', monospace">Courier</option>
-                                                <option value="'Times New Roman', serif">Times</option>
-                                            </select>
-                                        </div>
-                                        <div className="col-4">
-                                            <label style={{ fontSize: '0.7rem', color: '#6c757d', display: 'block', marginBottom: '4px' }}>
-                                                <i className="bi bi-text-paragraph me-1"></i>Tamaño
-                                            </label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                style={{ borderRadius: '8px', fontSize: '0.8rem' }}
-                                                value={styleEditor.titleSize}
-                                                onChange={e => setStyleEditor({ ...styleEditor, titleSize: e.target.value })}
-                                            />
+                        {/* Style Editor */}
+                        <GlassCard style={{ padding: '24px' }}>
+                            <h5 className="fw-bold mb-4 d-flex align-items-center gap-2">
+                                <Pencil size={20} /> Estilos Visuales
+                            </h5>
+                            <div className="row g-4">
+                                {/* Tipografía y Colores de Título */}
+                                <div className="col-md-6">
+                                    <div className="p-3 rounded-4 bg-light border">
+                                        <h6 className="fw-bold mb-3 small text-uppercase">Configuración de Título</h6>
+                                        <div className="d-flex flex-column gap-3">
+                                            <div>
+                                                <label className="form-label small text-muted">Tipografía Título</label>
+                                                <select 
+                                                    className="form-select admin-billboard-input" 
+                                                    value={styleEditor.titleFont}
+                                                    onChange={e => setStyleEditor({ ...styleEditor, titleFont: e.target.value })}
+                                                >
+                                                    {FONT_OPTIONS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+                                                </select>
+                                            </div>
+                                            <div className="row g-2">
+                                                <div className="col-6">
+                                                    <label className="form-label small text-muted">Color</label>
+                                                    <input
+                                                        type="color"
+                                                        className="form-control form-control-color w-100"
+                                                        style={{ height: '45px' }}
+                                                        value={styleEditor.titleColor}
+                                                        onChange={e => setStyleEditor({ ...styleEditor, titleColor: e.target.value })}
+                                                    />
+                                                </div>
+                                                <div className="col-6">
+                                                    <label className="form-label small text-muted">Tamaño</label>
+                                                    <input
+                                                        type="text"
+                                                        className="form-control admin-billboard-input"
+                                                        value={styleEditor.titleSize}
+                                                        onChange={e => setStyleEditor({ ...styleEditor, titleSize: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Descripción */}
-                                <div style={{
-                                    padding: '16px',
-                                    borderRadius: '12px',
-                                    background: 'rgba(102, 126, 234, 0.05)',
-                                    border: '1px solid rgba(102, 126, 234, 0.2)'
-                                }}>
-                                    <div className="d-flex align-items-center gap-2 mb-2">
-                                        <i className="bi bi-text-paragraph" style={{ color: theme.colors.primary }}></i>
-                                        <span className="fw-bold" style={{ fontSize: '0.85rem' }}>Descripción</span>
-                                    </div>
-                                    <div className="row g-2">
-                                        <div className="col-4">
-                                            <label style={{ fontSize: '0.7rem', color: '#6c757d', display: 'block', marginBottom: '4px' }}>
-                                                <i className="bi bi-palette-fill me-1"></i>Color
-                                            </label>
-                                            <input
-                                                type="color"
-                                                className="form-control form-control-color"
-                                                style={{ width: '100%', height: '40px', borderRadius: '8px' }}
-                                                value={styleEditor.descColor}
-                                                onChange={e => setStyleEditor({ ...styleEditor, descColor: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="col-4">
-                                            <label style={{ fontSize: '0.7rem', color: '#6c757d', display: 'block', marginBottom: '4px' }}>
-                                                <i className="bi bi-fonts me-1"></i>Fuente
-                                            </label>
-                                            <select
-                                                className="form-select"
-                                                style={{ borderRadius: '8px', fontSize: '0.8rem' }}
-                                                value={styleEditor.descFont}
-                                                onChange={e => setStyleEditor({ ...styleEditor, descFont: e.target.value })}
-                                            >
-                                                <option value="ModernAge, sans-serif">Modern Age</option>
-                                                <option value="Arial, sans-serif">Arial</option>
-                                                <option value="Georgia, serif">Georgia</option>
-                                                <option value="'Courier New', monospace">Courier</option>
-                                                <option value="'Times New Roman', serif">Times</option>
-                                            </select>
-                                        </div>
-                                        <div className="col-4">
-                                            <label style={{ fontSize: '0.7rem', color: '#6c757d', display: 'block', marginBottom: '4px' }}>
-                                                <i className="bi bi-text-paragraph me-1"></i>Tamaño
-                                            </label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                style={{ borderRadius: '8px', fontSize: '0.8rem' }}
-                                                value={styleEditor.descSize}
-                                                onChange={e => setStyleEditor({ ...styleEditor, descSize: e.target.value })}
-                                            />
+                                {/* Tipografía y Colores de Descripción */}
+                                <div className="col-md-6">
+                                    <div className="p-3 rounded-4 bg-light border">
+                                        <h6 className="fw-bold mb-3 small text-uppercase">Configuración de Descripción</h6>
+                                        <div className="d-flex flex-column gap-3">
+                                            <div>
+                                                <label className="form-label small text-muted">Tipografía Descripción</label>
+                                                <select 
+                                                    className="form-select admin-billboard-input" 
+                                                    value={styleEditor.descFont}
+                                                    onChange={e => setStyleEditor({ ...styleEditor, descFont: e.target.value })}
+                                                >
+                                                    {FONT_OPTIONS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+                                                </select>
+                                            </div>
+                                            <div className="row g-2">
+                                                <div className="col-6">
+                                                    <label className="form-label small text-muted">Color</label>
+                                                    <input
+                                                        type="color"
+                                                        className="form-control form-control-color w-100"
+                                                        style={{ height: '45px' }}
+                                                        value={styleEditor.descColor}
+                                                        onChange={e => setStyleEditor({ ...styleEditor, descColor: e.target.value })}
+                                                    />
+                                                </div>
+                                                <div className="col-6">
+                                                    <label className="form-label small text-muted">Tamaño</label>
+                                                    <input
+                                                        type="text"
+                                                        className="form-control admin-billboard-input"
+                                                        value={styleEditor.descSize}
+                                                        onChange={e => setStyleEditor({ ...styleEditor, descSize: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Overlay Opacity */}
-                                <div style={{
-                                    padding: '16px',
-                                    borderRadius: '12px',
-                                    background: 'rgba(102, 126, 234, 0.05)',
-                                    border: '1px solid rgba(102, 126, 234, 0.2)'
-                                }}>
-                                    <div className="d-flex align-items-center justify-content-between mb-2">
-                                        <div className="d-flex align-items-center gap-2">
-                                            <i className="bi bi-transparency" style={{ color: theme.colors.primary }}></i>
-                                            <span className="fw-bold" style={{ fontSize: '0.85rem' }}>Opacidad Overlay</span>
+                                {/* Iconos & Color Icono */}
+                                <div className="col-12">
+                                    <div className="p-3 rounded-4 bg-dark text-white shadow-lg" style={{ border: `1px solid ${theme.colors.primary}33` }}>
+                                        <div className="row g-4">
+                                            <div className="col-md-4 border-end border-secondary">
+                                                <h6 className="fw-bold mb-3 small text-uppercase text-secondary">Icono del Slide</h6>
+                                                <div className="d-flex flex-column gap-3">
+                                                    <div>
+                                                        <label className="form-label small opacity-75">Seleccionar Icono</label>
+                                                        <select 
+                                                            className="form-select bg-secondary border-0 text-white" 
+                                                            value={styleEditor.iconName}
+                                                            onChange={e => setStyleEditor({ ...styleEditor, iconName: e.target.value })}
+                                                        >
+                                                            {ICON_OPTIONS.map(i => <option key={i.value} value={i.value} style={{ background: '#333' }}>{i.name}</option>)}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="form-label small opacity-75">Color del Icono</label>
+                                                        <input
+                                                            type="color"
+                                                            className="form-control form-control-color w-100 bg-transparent border-0"
+                                                            style={{ height: '35px' }}
+                                                            value={styleEditor.iconColor}
+                                                            onChange={e => setStyleEditor({ ...styleEditor, iconColor: e.target.value })}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-4 border-end border-secondary">
+                                                <h6 className="fw-bold mb-3 small text-uppercase text-secondary">Tamaño Icono</h6>
+                                                <div className="d-flex flex-column justify-content-center h-100 pb-4">
+                                                    <label className="form-label small opacity-75 text-center mb-3">{styleEditor.iconSize}px</label>
+                                                    <input
+                                                        type="range"
+                                                        className="form-range"
+                                                        min="20" max="150"
+                                                        value={styleEditor.iconSize}
+                                                        onChange={e => setStyleEditor({ ...styleEditor, iconSize: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <h6 className="fw-bold mb-3 small text-uppercase text-secondary">Transparencias</h6>
+                                                <div className="d-flex flex-column gap-3">
+                                                    <div>
+                                                        <label className="form-label small opacity-75">Opacidad Fondo ({Math.round(styleEditor.overlayOpacity * 100)}%)</label>
+                                                        <input
+                                                            type="range"
+                                                            className="form-range"
+                                                            min="0" max="1" step="0.05"
+                                                            value={styleEditor.overlayOpacity}
+                                                            onChange={e => setStyleEditor({ ...styleEditor, overlayOpacity: parseFloat(e.target.value) })}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="form-label small opacity-75">Opacidad Texto ({Math.round(styleEditor.textOpacity * 100)}%)</label>
+                                                        <input
+                                                            type="range"
+                                                            className="form-range"
+                                                            min="0" max="1" step="0.05"
+                                                            value={styleEditor.textOpacity}
+                                                            onChange={e => setStyleEditor({ ...styleEditor, textOpacity: parseFloat(e.target.value) })}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <span style={{ fontSize: '0.8rem', fontWeight: '600', color: theme.colors.primary }}>
-                                            {Math.round(styleEditor.overlayOpacity * 100)}%
-                                        </span>
                                     </div>
-                                    <input
-                                        type="range"
-                                        className="form-range"
-                                        min="0"
-                                        max="1"
-                                        step="0.05"
-                                        value={styleEditor.overlayOpacity}
-                                        onChange={e => setStyleEditor({ ...styleEditor, overlayOpacity: parseFloat(e.target.value) })}
-                                    />
                                 </div>
-
-                                {/* Botón reset */}
-                                <button
-                                    type="button"
-                                    onClick={() => setStyleEditor({
-                                        titleColor: '#ffffff',
-                                        titleFont: 'ModernAge, sans-serif',
-                                        titleSize: '3.5rem',
-                                        descColor: '#ffffff',
-                                        descFont: 'ModernAge, sans-serif',
-                                        descSize: '1.15rem',
-                                        overlayOpacity: 0.7
-                                    })}
-                                    style={{
-                                        padding: '10px',
-                                        borderRadius: '10px',
-                                        border: '2px solid #dee2e6',
-                                        background: 'transparent',
-                                        color: '#6c757d',
-                                        fontWeight: '600',
-                                        fontSize: '0.85rem',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.3s'
-                                    }}
-                                >
-                                    <i className="bi bi-arrow-clockwise me-2"></i>
-                                    Restaurar Estilos
-                                </button>
                             </div>
                         </GlassCard>
                     </div>
-
-                    {/* List Section */}
-                    <div className="col-lg-6">
-                        <div className="row g-3">
-                            {loading ? (
-                                <div className="col-12 text-center py-5">
-                                    <div className="spinner-border text-primary" role="status"></div>
-                                </div>
-                            ) : billboards.length === 0 ? (
-                                <motion.div
-                                    className="col-12 text-center py-5"
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                >
-                                    <div style={{
-                                        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
-                                        borderRadius: '20px',
-                                        padding: '40px',
-                                        border: `2px dashed ${theme.colors.primary}`
-                                    }}>
-                                        <i className="bi bi-images" style={{ fontSize: '3rem', color: theme.colors.primary, opacity: 0.5 }}></i>
-                                        <p className="text-muted mt-3 mb-0">
-                                            <i className="bi bi-arrow-left me-2"></i>
-                                            Crea tu primera diapositiva
-                                        </p>
-                                    </div>
-                                </motion.div>
-                            ) : billboards.map((item, idx) => (
-                                <motion.div
-                                    key={item.id}
-                                    className="col-12"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                >
-                                    <GlassCard style={{
-                                        padding: '16px',
-                                        borderLeft: `4px solid ${item.is_active ? theme.colors.primary : '#6c757d'}`,
-                                        cursor: 'pointer',
-                                        transition: 'all 0.3s'
-                                    }}>
-                                        <div className="d-flex gap-3">
-                                            <div style={{
-                                                width: '140px',
-                                                height: '90px',
-                                                borderRadius: '12px',
-                                                overflow: 'hidden',
-                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                flexShrink: 0,
-                                                position: 'relative',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }}>
-                                                {item.media_type === 'image' && item.media_url ? (
-                                                    <img
-                                                        src={normalizeMediaUrl(item.media_url)}
-                                                        alt="thumbnail"
-                                                        style={{
-                                                            width: '100%',
-                                                            height: '100%',
-                                                            objectFit: 'cover',
-                                                            display: 'block'
-                                                        }}
-                                                        onError={(e) => {
-                                                            console.warn('⚠️ Error cargando imagen:', e.target.src);
-                                                            e.target.style.display = 'none';
-                                                        }}
-                                                    />
-                                                ) : null}
-                                                {(!item.media_url || !item.media_type === 'image') && (
-                                                    <div style={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        color: '#fff'
-                                                    }}>
-                                                        <i className="bi bi-image" style={{ fontSize: '1.5rem', opacity: 0.5 }}></i>
-                                                    </div>
-                                                )}
-                                                <div
-                                                    className="w-100 h-100 d-flex align-items-center justify-content-center text-white position-absolute top-0 start-0"
-                                                    style={{ display: item.media_type === 'video' ? 'flex' : 'none', background: 'rgba(0,0,0,0.5)' }}
-                                                >
-                                                    <i className="bi bi-play-circle-fill fs-2"></i>
-                                                </div>
-                                                {/* Badge de tipo */}
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    top: '8px',
-                                                    right: '8px',
-                                                    background: 'rgba(0,0,0,0.6)',
-                                                    backdropFilter: 'blur(10px)',
-                                                    borderRadius: '8px',
-                                                    padding: '2px 8px',
-                                                    fontSize: '0.7rem',
-                                                    color: '#fff'
-                                                }}>
-                                                    <i className={`bi ${item.media_type === 'video' ? 'bi-play-btn' : 'bi-image'} me-1`}></i>
-                                                </div>
-                                            </div>
-                                            <div className="flex-grow-1">
-                                                <div className="d-flex justify-content-between align-items-start mb-1">
-                                                    <h6 className="mb-0 fw-bold" style={{ color: theme.colors.text }}>
-                                                        {item.title || 'Sin Título'}
-                                                    </h6>
-                                                    <div className="d-flex gap-1 align-items-center">
-                                                        {item.is_active && (
-                                                            <span
-                                                                className="badge"
-                                                                style={{
-                                                                    background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-                                                                    fontSize: '0.65rem'
-                                                                }}
-                                                            >
-                                                                <i className="bi bi-circle-fill me-1" style={{ fontSize: '0.5rem' }}></i>
-                                                                Activo
-                                                            </span>
-                                                        )}
-                                                        <span
-                                                            className="badge bg-light text-dark"
-                                                            style={{ fontSize: '0.65rem' }}
-                                                            title="Orden de aparición"
-                                                        >
-                                                            #{item.order}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <p className="small text-muted mb-2 text-truncate" style={{ maxWidth: '400px', fontSize: '0.8rem' }}>
-                                                    {item.description || 'Sin descripción'}
-                                                </p>
-                                                {item.button_text && (
-                                                    <div className="mb-2">
-                                                        <span className="badge bg-secondary" style={{ fontSize: '0.7rem' }}>
-                                                            <i className="bi bi-mouse me-1"></i>{item.button_text}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                <div className="d-flex gap-2">
-                                                    <button
-                                                        className="btn btn-sm px-3"
-                                                        onClick={() => handleEdit(item)}
-                                                        style={{
-                                                            background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-                                                            border: 'none',
-                                                            color: '#fff',
-                                                            borderRadius: '8px',
-                                                            fontSize: '0.8rem'
-                                                        }}
-                                                        title="Editar diapositiva"
-                                                    >
-                                                        <i className="bi bi-pencil-square"></i>
-                                                    </button>
-                                                    <button
-                                                        className="btn btn-sm btn-outline-danger px-3"
-                                                        onClick={() => handleDelete(item.id)}
-                                                        style={{ borderRadius: '8px', fontSize: '0.8rem' }}
-                                                        title="Eliminar diapositiva"
-                                                    >
-                                                        <i className="bi bi-trash3"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </GlassCard>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </div>
                 </div>
 
-                {/* Modal de Galería de Imágenes */}
-                {showGallery && (
-                    <AnimatePresence>
-                        <motion.div
-                            onClick={() => setShowGallery(false)}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            style={{
-                                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                                background: 'rgba(0,0,0,0.9)', zIndex: 9999,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                padding: '40px',
-                                backdropFilter: 'blur(10px)'
-                            }}
-                        >
-                            <motion.div
-                                onClick={e => e.stopPropagation()}
-                                initial={{ scale: 0.9, y: 50 }}
-                                animate={{ scale: 1, y: 0 }}
-                                transition={{ type: 'spring', damping: 25 }}
-                                style={{
-                                    width: '100%', maxWidth: '1200px', maxHeight: '90vh',
-                                    background: '#fff',
-                                    borderRadius: '24px',
-                                    padding: '40px',
-                                    overflow: 'auto',
-                                    boxShadow: '0 25px 80px rgba(102, 126, 234, 0.6)',
-                                    border: `3px solid ${theme.colors.primary}`
-                                }}
-                            >
-                                {/* Header */}
-                                <div className="d-flex justify-content-between align-items-center mb-4">
-                                    <div>
-                                        <h3 style={{
-                                            fontFamily: 'ModernAge, sans-serif',
-                                            background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-                                            WebkitBackgroundClip: 'text',
-                                            WebkitTextFillColor: 'transparent',
-                                            fontWeight: 'bold',
-                                            marginBottom: '8px'
-                                        }}>
-                                            <i className="bi bi-collection"></i> Galería de Imágenes
-                                        </h3>
-                                        <p style={{ fontSize: '0.9rem', color: '#6c757d', marginBottom: 0 }}>
-                                            Selecciona una imagen de la biblioteca o sube una nueva
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={() => setShowGallery(false)}
-                                        style={{
-                                            background: 'rgba(108, 117, 125, 0.1)',
-                                            border: 'none',
-                                            borderRadius: '50%',
-                                            width: '40px', height: '40px',
-                                            color: '#6c757d',
-                                            fontSize: '1.5rem',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.3s',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}
-                                    >
-                                        ×
-                                    </button>
-                                </div>
+                {/* List Section */}
+                <div className="col-lg-5">
+                    <h5 className="fw-bold mb-4 d-flex align-items-center gap-2">
+                        <ListChecks size={22} /> Diapositivas Existentes
+                    </h5>
 
-                                {/* Grid de imágenes */}
-                                <div style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                                    gap: '16px'
+                    <div className="d-flex flex-column gap-3">
+                        {loading ? (
+                            <div className="text-center py-5">
+                                <div className="spinner-border text-primary" />
+                            </div>
+                        ) : billboards.length === 0 ? (
+                            <div className="text-center py-5 bg-light rounded-4 border-2 border-dashed">
+                                No hay diapositivas registradas
+                            </div>
+                        ) : billboards.map((item) => (
+                            <motion.div
+                                key={item.id}
+                                layout
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                            >
+                                <GlassCard style={{
+                                    padding: '16px',
+                                    borderLeft: editingItem?.id === item.id ? `6px solid ${theme.colors.primary}` : '1px solid rgba(255,255,255,0.05)',
+                                    background: theme.colors.surface,
+                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                                 }}>
-                                    {imageGallery.map((imageUrl, idx) => (
-                                        <motion.div
-                                            key={idx}
-                                            initial={{ opacity: 0, scale: 0.9 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            transition={{ delay: idx * 0.05 }}
-                                            onClick={() => handleSelectFromGallery(imageUrl)}
+                                    <div className="d-flex gap-3 align-items-center">
+                                        <div
+                                            onClick={() => toggleSelect(item.id)}
                                             style={{
-                                                width: '100%',
-                                                aspectRatio: '16/10',
-                                                borderRadius: '16px',
-                                                overflow: 'hidden',
-                                                cursor: 'pointer',
-                                                position: 'relative',
-                                                border: formData.media_url === imageUrl || previewUrl === imageUrl
-                                                    ? `4px solid ${theme.colors.primary}`
-                                                    : '2px solid #dee2e6',
-                                                transition: 'all 0.3s',
-                                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                                width: '26px', height: '26px',
+                                                borderRadius: '8px',
+                                                border: `2px solid ${selectedIds.includes(item.id) ? theme.colors.primary : '#dee2e6'}`,
+                                                background: selectedIds.includes(item.id) ? theme.colors.primary : 'transparent',
+                                                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                color: '#fff',
+                                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
                                             }}
                                         >
-                                            <img
-                                                src={imageUrl}
-                                                alt={`Imagen ${idx + 1}`}
-                                                style={{
-                                                    width: '100%',
-                                                    height: '100%',
-                                                    objectFit: 'cover',
-                                                    transition: 'transform 0.3s'
-                                                }}
-                                                onMouseEnter={e => e.target.style.transform = 'scale(1.1)'}
-                                                onMouseLeave={e => e.target.style.transform = 'scale(1)'}
-                                            />
-                                            {(formData.media_url === imageUrl || previewUrl === imageUrl) && (
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    top: '8px', right: '8px',
-                                                    background: theme.colors.primary,
-                                                    borderRadius: '50%',
-                                                    width: '32px', height: '32px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    color: '#fff',
-                                                    fontSize: '1rem',
-                                                    boxShadow: '0 4px 12px rgba(102, 126, 234, 0.6)'
-                                                }}>
-                                                    <i className="bi bi-check2"></i>
-                                                </div>
-                                            )}
-                                        </motion.div>
-                                    ))}
-                                </div>
+                                            {selectedIds.includes(item.id) && <Check size={18} />}
+                                        </div>
 
-                                {/* Botón para subir nueva */}
-                                <div className="mt-4 text-center">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            document.getElementById('mediaFile').click();
-                                            setShowGallery(false);
-                                        }}
-                                        style={{
-                                            padding: '16px 32px',
-                                            borderRadius: '16px',
-                                            border: `2px dashed ${theme.colors.primary}`,
-                                            background: 'rgba(102, 126, 234, 0.05)',
-                                            color: theme.colors.primary,
-                                            fontWeight: '600',
-                                            fontSize: '1rem',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.3s',
-                                            display: 'inline-flex',
+                                        <div style={{
+                                            width: '90px', height: '55px',
+                                            borderRadius: '12px', overflow: 'hidden',
+                                            background: '#eee',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                                        }}>
+                                            <img
+                                                src={normalizeMediaUrl(item.media_url)}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                alt="thumb"
+                                            />
+                                        </div>
+
+                                        <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                                            <h6 className="mb-0 fw-bold text-truncate" style={{ color: '#fff', fontSize: '1rem' }}>{item.title || 'Sín Título'}</h6>
+                                            <div className="d-flex align-items-center gap-2 mt-1">
+                                                <span style={{ fontSize: '0.7rem', color: theme.colors.text.secondary, fontWeight: 600 }}>
+                                                    #{item.order}
+                                                </span>
+                                                {item.is_active ? 
+                                                    <span className="badge rounded-pill" style={{ background: `${theme.colors.success}22`, color: theme.colors.success, fontSize: '0.65rem', border: `1px solid ${theme.colors.success}44` }}>Activo</span> :
+                                                    <span className="badge rounded-pill" style={{ background: `rgba(255,255,255,0.05)`, color: '#888', fontSize: '0.65rem', border: `1px solid rgba(255,255,255,0.1)` }}>Inactivo</span>
+                                                }
+                                            </div>
+                                        </div>
+
+                                        <div className="d-flex gap-2">
+                                            <button
+                                                onClick={() => handleEdit(item)}
+                                                className="btn btn-sm p-2"
+                                                style={{ borderRadius: '10px', background: 'rgba(255,255,255,0.05)', color: theme.colors.primary, border: 'none' }}
+                                            >
+                                                <Pencil size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(item.id)}
+                                                className="btn btn-sm p-2"
+                                                style={{ borderRadius: '10px', background: 'rgba(255, 59, 48, 0.1)', color: theme.colors.error, border: 'none' }}
+                                            >
+                                                <Trash size={18} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </GlassCard>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Bulk Actions Bar */}
+            <AnimatePresence>
+                {selectedIds.length > 0 && (
+                    <motion.div
+                        initial={{ y: 100 }}
+                        animate={{ y: 0 }}
+                        exit={{ y: 100 }}
+                        style={{
+                            position: 'fixed', bottom: '32px', left: '50%', x: '-50%',
+                            background: theme.colors.surface, color: '#fff', padding: '16px 32px',
+                            borderRadius: '24px', boxShadow: theme.shadows.floating,
+                            zIndex: 1000, display: 'flex', alignItems: 'center', gap: '24px',
+                            border: `1px solid ${theme.colors.primary}44`,
+                            backdropFilter: 'blur(24px)'
+                        }}
+                    >
+                        <span className="fw-bold">
+                            <span style={{
+                                background: theme.colors.primary,
+                                padding: '4px 10px',
+                                borderRadius: '8px',
+                                marginRight: '10px'
+                            }}>
+                                {selectedIds.length}
+                            </span>
+                            Seleccionados
+                        </span>
+                        <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.2)' }} />
+                        <button
+                            onClick={handleBulkDelete}
+                            className="btn btn-danger d-flex align-items-center gap-2"
+                            style={{ borderRadius: '12px', padding: '8px 20px', fontWeight: 'bold' }}
+                        >
+                            <Trash2 size={18} /> Eliminar Lote
+                        </button>
+                        <button
+                            onClick={() => setSelectedIds([])}
+                            className="btn btn-outline-light d-flex align-items-center gap-2"
+                            style={{ borderRadius: '12px', padding: '8px 20px' }}
+                        >
+                            Cancelar
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Image Gallery Modal */}
+            <AnimatePresence>
+                {showGallery && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{
+                            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                            background: 'rgba(0,0,0,0.92)', zIndex: 10000,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            padding: isMobile ? '20px' : '60px', backdropFilter: 'blur(16px)'
+                        }}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, y: 30 }}
+                            animate={{ scale: 1, y: 0 }}
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                                width: '100%', maxWidth: '1200px', background: theme.colors.surface,
+                                border: `1px solid ${theme.colors.border}`,
+                                borderRadius: '32px', padding: isMobile ? '24px' : '48px', maxHeight: '90vh', overflowY: 'auto',
+                                boxShadow: theme.shadows.floating
+                            }}
+                        >
+                            <div className="d-flex justify-content-between align-items-center mb-5">
+                                <h2 style={{ fontWeight: 900, color: '#fff', fontSize: '2rem', letterSpacing: '-1px' }}>Galería Master</h2>
+                                <button 
+                                    onClick={() => setShowGallery(false)}
+                                    style={{ 
+                                        background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', 
+                                        width: '44px', height: '44px', borderRadius: '50%',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    }}
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
+                            <div className="d-flex flex-column gap-5">
+                                {Object.entries(categorizedGallery).map(([category, images]) => (
+                                    <div key={category}>
+                                        <h5 style={{ 
+                                            color: theme.colors.primary, 
+                                            fontSize: '0.8rem', 
+                                            fontWeight: 800, 
+                                            textTransform: 'uppercase', 
+                                            letterSpacing: '2px',
+                                            marginBottom: '24px',
+                                            display: 'flex',
                                             alignItems: 'center',
                                             gap: '12px'
-                                        }}
-                                    >
-                                        <i className="bi bi-cloud-upload" style={{ fontSize: '1.5rem' }}></i>
-                                        Subir Nueva Imagen
-                                    </button>
-                                </div>
-                            </motion.div>
+                                        }}>
+                                            <span style={{ width: '40px', height: '2px', background: theme.colors.primary }} />
+                                            {category}
+                                        </h5>
+                                        <div style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+                                            gap: '24px'
+                                        }}>
+                                            {images.map((url, i) => (
+                                                <motion.div
+                                                    key={url}
+                                                    whileHover={{ scale: 1.04, y: -5 }}
+                                                    whileTap={{ scale: 0.96 }}
+                                                    onClick={() => {
+                                                        if (window.navigator.vibrate) window.navigator.vibrate(10);
+                                                        handleSelectFromGallery(url);
+                                                    }}
+                                                    style={{
+                                                        aspectRatio: '16/9', borderRadius: '20px', overflow: 'hidden',
+                                                        cursor: 'pointer', 
+                                                        border: formData.media_url === url ? `4px solid ${theme.colors.primary}` : '2px solid transparent',
+                                                        boxShadow: theme.shadows.medium,
+                                                        background: '#000'
+                                                    }}
+                                                >
+                                                    <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} alt="gallery" />
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </motion.div>
-                    </AnimatePresence>
+                    </motion.div>
                 )}
-
-                {/* Modal de Vista Previa */}
-                {showPreview && renderPreview()}
-            </div>
-        </>
+            </AnimatePresence>
+            {/* Confirmation Modal */}
+            <ConfirmationModal 
+                show={confirmModal.show}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type || 'warning'}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={() => setConfirmModal(prev => ({ ...prev, show: false }))}
+            />
+        </div>
     );
 };
 

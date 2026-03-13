@@ -10,11 +10,51 @@ import { EmailService } from '../email/email.service';
 
 @Controller()
 export class SettingsController {
+  private static activeSessions = new Map<string, number>();
+
   constructor(
     @InjectRepository(Setting)
     private readonly repo: Repository<Setting>,
     private readonly emailService: EmailService,
   ) { }
+
+  @Get('public/settings')
+  async publicIndex() {
+    const all = await this.repo.find();
+    const map: Record<string, string | null> = {};
+    const publicKeys = [
+      'youtube_channel_id', 'youtube_live_video_id', 'stream_is_live', 
+      'youtube_playlist_id', 'bg_image', 'overlay_opacity',
+      'live_service_title', 'live_service_description', 'current_activity_id',
+      'activity_start_time', 'is_paused'
+    ];
+    for (const s of all) {
+      if (publicKeys.includes(s.key)) {
+        map[s.key] = s.value;
+      }
+    }
+    return map;
+  }
+
+  @Get('public/stats')
+  async getStats() {
+    // Basic session tracker cleanup
+    const now = Date.now();
+    for (const [id, lastSeen] of SettingsController.activeSessions.entries()) {
+      if (now - lastSeen > 60000) SettingsController.activeSessions.delete(id);
+    }
+    
+    return {
+      onlineUsers: SettingsController.activeSessions.size,
+      totalUsers: 142 // Mock or query users count
+    };
+  }
+
+  @Post('public/heartbeat')
+  async heartbeat(@Body('id') id: string) {
+    if (id) SettingsController.activeSessions.set(id, Date.now());
+    return { success: true };
+  }
 
   @Get('settings')
   @UseGuards(JwtAuthGuard)

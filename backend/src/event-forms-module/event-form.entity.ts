@@ -18,6 +18,12 @@ export class EventForm {
   @Column({ type: 'boolean', name: 'is_active', default: true })
   isActive: boolean;
 
+  @Column({ type: 'int', default: 0 }) // 0 means unlimited
+  capacity: number;
+
+  @Column({ type: 'simple-json', nullable: true })
+  styles: Record<string, any>;
+
   @OneToMany(() => FormSubmission, (submission) => submission.eventForm)
   submissions: FormSubmission[];
 

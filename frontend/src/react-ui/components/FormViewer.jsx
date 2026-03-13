@@ -49,7 +49,7 @@ const FormViewer = ({ form, onComplete }) => {
 
     return (
         <div style={{ animation: 'fadeIn 0.5s ease' }}>
-            <h2 style={{ fontFamily: theme.fonts.titles, color: theme.colors.primary, marginBottom: theme.spacing(2) }}>
+            <h2 style={{ fontFamily: theme.fonts.titles, color: form.styles?.primaryColor || theme.colors.primary, marginBottom: theme.spacing(2) }}>
                 {form.title}
             </h2>
             <p className="text-muted mb-4">{form.description}</p>
@@ -110,7 +110,11 @@ const FormViewer = ({ form, onComplete }) => {
                 <Button
                     type="submit"
                     disabled={submitting}
-                    style={{ marginTop: theme.spacing(2), py: 3, fontSize: '1.1rem' }}
+                    style={{ 
+                        marginTop: theme.spacing(2), py: 3, fontSize: '1.1rem',
+                        background: form.styles?.primaryColor || theme.colors.primary,
+                        border: 'none'
+                    }}
                 >
                     {submitting ? 'Enviando...' : 'Completar Inscripción'}
                 </Button>
