@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../react-ui/ThemeContext';
 import GlassCard from '../react-ui/components/GlassCard';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { 
     Users, 
     HeartHandshake, 
@@ -60,6 +62,29 @@ const Dashboard = () => {
     const [secondsRemaining, setSecondsRemaining] = useState(0);
     const [liveSettings, setLiveSettings] = useState(null);
     const [ordenCulto, setOrdenCulto] = useState([]);
+
+    const handleExportPDF = async (elementId, filename = 'reporte-oasis.pdf') => {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        try {
+            const canvas = await html2canvas(element, {
+                scale: 2,
+                backgroundColor: mode === 'dark' ? '#1a1a1a' : '#ffffff',
+                logging: false,
+                useCORS: true
+            });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('l', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(filename);
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+        }
+    };
 
     // Mock Chart Data
     const attendanceData = [45, 62, 58, 85, 92, 78, 95];
@@ -187,13 +212,13 @@ const Dashboard = () => {
     );
 
     const StatHighlight = ({ label, value, icon: Icon, color }) => (
-        <div className="d-flex align-items-center gap-3 px-3 py-2 rounded-4" style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: `1px solid ${theme.colors.border}`, minWidth: '160px' }}>
-            <div style={{ padding: '8px', borderRadius: '12px', background: `${color}15` }}>
-                <Icon size={18} color={color} />
+        <div className="d-flex align-items-center gap-3 px-3 py-3 rounded-4 h-100" style={{ background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: `1px solid ${theme.colors.border}` }}>
+            <div style={{ padding: '10px', borderRadius: '14px', background: `${color}15` }}>
+                <Icon size={20} color={color} />
             </div>
-            <div>
-                <div className="fw-900" style={{ fontSize: '1.2rem', lineHeight: 1 }}>{value}</div>
-                <div className="x-small text-muted fw-bold text-uppercase tracking-wider" style={{ fontSize: '0.6rem' }}>{label}</div>
+            <div style={{ minWidth: 0 }}>
+                <div className="fw-900" style={{ fontSize: 'clamp(1rem, 4vw, 1.4rem)', lineHeight: 1 }}>{value}</div>
+                <div className="x-small text-muted fw-bold text-uppercase tracking-wider text-truncate" style={{ fontSize: '0.65rem' }}>{label}</div>
             </div>
         </div>
     );
@@ -237,40 +262,61 @@ const Dashboard = () => {
             </header>
 
             {/* Quick Stats Highlights */}
-            <div className="d-flex flex-wrap gap-3 mb-5">
-                <StatHighlight label="Peticiones" value={stats.pendingRequests} icon={Inbox} color="#F59E0B" />
-                <StatHighlight label="Oasis Press" value={stats.activeAnnouncements} icon={Newspaper} color="#10B981" />
-                <StatHighlight label="Impacto Media" value={stats.totalResources} icon={Database} color={PURPLE_AMETHYST} />
-                <StatHighlight label="Admin Online" value="3" icon={UserCheck} color="#3B82F6" />
+            <div className="row g-3 mb-5">
+                <div className="col-6 col-md-3">
+                    <StatHighlight label="Peticiones" value={stats.pendingRequests} icon={Inbox} color="#F59E0B" />
+                </div>
+                <div className="col-6 col-md-3">
+                    <StatHighlight label="Oasis Press" value={stats.activeAnnouncements} icon={Newspaper} color="#10B981" />
+                </div>
+                <div className="col-6 col-md-3">
+                    <StatHighlight label="Impacto Media" value={stats.totalResources} icon={Database} color={PURPLE_AMETHYST} />
+                </div>
+                <div className="col-6 col-md-3">
+                    <StatHighlight label="Admin Online" value="3" icon={UserCheck} color="#3B82F6" />
+                </div>
                 
                 {stats.nextEvent && (
-                    <motion.div 
-                        initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
-                        className="ms-md-auto px-4 py-2 rounded-pill d-flex align-items-center gap-3 shadow-lg text-white" 
-                        style={{ background: `linear-gradient(135deg, ${PURPLE_AMETHYST}, #4F46E5)`, cursor: 'pointer' }}
-                        onClick={() => navigate('/admin/culto')}
-                    >
-                        <Clock size={18} />
-                        <div>
-                            <span className="x-small fw-bold text-uppercase opacity-75 d-block">PROX: {stats.nextEvent.actividad}</span>
-                            <span className="fw-900 small">{stats.nextEvent.hora}</span>
-                        </div>
-                    </motion.div>
+                    <div className="col-12 mt-2">
+                        <motion.div 
+                            initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+                            className="px-4 py-3 rounded-4 d-flex align-items-center justify-content-between shadow-lg text-white" 
+                            style={{ background: `linear-gradient(135deg, ${PURPLE_AMETHYST}, #4F46E5)`, cursor: 'pointer' }}
+                            onClick={() => navigate('/admin/culto')}
+                        >
+                            <div className="d-flex align-items-center gap-3">
+                                <Clock size={20} />
+                                <div>
+                                    <span className="x-small fw-bold text-uppercase opacity-75 d-block">Próximo Evento</span>
+                                    <span className="fw-900">{stats.nextEvent.actividad}</span>
+                                </div>
+                            </div>
+                            <div className="text-end">
+                                <span className="fw-900 h4 mb-0">{stats.nextEvent.hora}</span>
+                            </div>
+                        </motion.div>
+                    </div>
                 )}
             </div>
 
             {/* Main Content Areas */}
             <div className="row g-4 mb-5">
                 <div className="col-lg-8">
-                    <GlassCard style={{ height: '420px', padding: '32px', borderRadius: '32px' }}>
-                        <div className="d-flex justify-content-between align-items-center mb-5">
+                    <GlassCard id="alcance-card" style={{ height: 'auto', minHeight: '420px', padding: isMobile ? '24px' : '32px', borderRadius: '32px' }}>
+                        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-5 gap-3">
                             <div>
                                 <h4 className="fw-900 mb-1">Alcance Communitario</h4>
                                 <p className="text-muted small fw-bold">Interacciones y asistencia proyectada</p>
                             </div>
                             <div className="d-flex gap-2">
-                                <button className="btn btn-xs rounded-pill px-3 py-1 bg-light-soft fw-bold small"><Download size={12} className="me-1" /> PDF</button>
-                                <select className="form-select-sm border-0 bg-light-soft rounded-pill px-3 fw-bold">
+                                <button 
+                                    onClick={() => handleExportPDF('alcance-card', 'alcance-comunitario.pdf')}
+                                    className="btn btn-xs rounded-pill px-3 py-1 bg-light-soft fw-bold small transition-all"
+                                    style={{ border: '1px solid rgba(0,0,0,0.05)' }}
+                                >
+                                    <Download size={12} className="me-1" /> PDF
+                                </button>
+                                <select className="form-select-sm border-0 bg-light-soft rounded-pill px-3 fw-bold outline-none">
                                     <option>Ultimos 7 días</option>
                                     <option>Este Mes</option>
                                 </select>
@@ -300,7 +346,9 @@ const Dashboard = () => {
                             </div>
                         </div>
                     </GlassCard>
-                </div>                <div className="col-lg-4">
+                </div>
+                
+                <div className="col-lg-4">
                     <GlassCard style={{ height: '420px', padding: '32px', borderRadius: '32px', background: isDark ? 'rgba(109, 40, 217, 0.05)' : 'rgba(109, 40, 217, 0.02)', border: `1px solid ${PURPLE_AMETHYST}33` }}>
                         <div className="d-flex justify-content-between align-items-start mb-5">
                             <div>
