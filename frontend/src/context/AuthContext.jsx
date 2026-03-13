@@ -86,6 +86,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         isAdmin: user?.role === 'admin',
         isEditor: user?.role === 'editor', 
+        role: user?.role,
         canAccessAdmin, // admin o editor pueden ver el panel
     };
 
