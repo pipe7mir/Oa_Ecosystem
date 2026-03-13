@@ -60,11 +60,10 @@ async function bootstrap() {
 
   // CORS - ALLOW ALL ORIGINS temporarily to resolve the "very broken" status
   app.enableCors({
-    origin: (origin, callback) => callback(null, true),
+    origin: true,
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Cache-Control, cache-control, Pragma, pragma, X-CSRF-Token',
-    exposedHeaders: 'Content-Range, X-Content-Range',
+    allowedHeaders: '*',
   });
 
   // Global pipes

@@ -40,9 +40,7 @@ const Hero = () => {
 
     const fetchBillboards = async () => {
         try {
-            const { data } = await apiClient.get(`/billboards?t=${Date.now()}`, {
-                headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
-            });
+            const { data } = await apiClient.get(`/billboards?t=${Date.now()}`);
             const activeItems = (data || []).map((item) => ({
                 ...item,
                 media_url: item.media_url || item.mediaUrl || '',
