@@ -19,11 +19,12 @@ import { useTheme } from '../ThemeContext';
 
 const AdminBottomNav = () => {
     const { pathname } = useLocation();
-    const { signOut, role } = useAuth();
+    const { signOut, role, user } = useAuth();
     const [showMore, setShowMore] = useState(false);
     const { theme } = useTheme();
-
-    const isAdmin = role === 'admin';
+    
+    // Verificación robusta de rol de administrador
+    const isAdmin = role === 'admin' || user?.role === 'admin';
 
     const mainItems = [
         { to: '/admin/solicitudes', label: 'Dashboard', Icon: LayoutDashboard },

@@ -19,6 +19,8 @@ export const AuthProvider = ({ children }) => {
                     // Cargar usuario del localStorage
                     const parsedUser = JSON.parse(storedUser);
                     setUser(parsedUser);
+                    console.log('AuthContext: Initial user role from localStorage:', parsedUser?.role || parsedUser?.role_name);
+
 
                     // Verificar token en segundo plano (sin cerrar sesión si falla)
                     apiClient.get('/user').then(res => {
@@ -26,6 +28,7 @@ export const AuthProvider = ({ children }) => {
                         if (res.data && (res.data.email || res.data.name)) {
                             setUser(res.data);
                             localStorage.setItem('user', JSON.stringify(res.data));
+                            console.log('AuthContext: User role updated from API:', res.data?.role || res.data?.role_name);
                         }
                     }).catch(err => {
                         // Si es 401 (token expirado), cerrar sesión
@@ -57,6 +60,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('user', JSON.stringify(userData));
             setSession({ access_token: token });
             setUser(userData);
+            console.log('AuthContext: User signed in, role:', userData?.role || userData?.role_name);
         }
         return response;
     };
@@ -71,6 +75,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('user');
             setSession(null);
             setUser(null);
+            console.log('AuthContext: User signed out.');
         }
     };
 
@@ -86,8 +91,8 @@ export const AuthProvider = ({ children }) => {
         loading,
         isAdmin: user?.role === 'admin',
         isEditor: user?.role === 'editor', 
-        role: user?.role,
-        canAccessAdmin, // admin o editor pueden ver el panel
+        role: user?.role || user?.role_name || '', // Fallback for role field name
+        canAccessAdmin,
     };
 
     return (

@@ -37,7 +37,8 @@ import apiClient from '../api/client';
 
 const Dashboard = () => {
     const { theme, mode } = useTheme();
-    const { role } = useAuth();
+    const { role, user } = useAuth();
+    const isUserAdmin = role === 'admin' || user?.role === 'admin';
     const isDark = mode === 'dark';
     const navigate = useNavigate();
 
@@ -364,7 +365,7 @@ const Dashboard = () => {
                     { title: 'Equipo & Roles', info: 'Gestión de voluntarios', icon: Users2, link: '/admin/users', color: '#EC4899', adminOnly: true },
                     { title: 'Identidad (About)', info: 'Textos institucionales', icon: InfoIcon, link: '/admin/about', color: '#22D3EE' },
                     { title: 'Configuración', info: 'SMTP / WhatsApp / API', icon: Settings, link: '/admin/ajustes', color: '#6B7280', adminOnly: true },
-                ].filter(m => !m.adminOnly || role === 'admin').map((module, i) => (
+                ].filter(m => !m.adminOnly || isUserAdmin).map((module, i) => (
                     <div key={i} className="col-6 col-md-4 col-xl-2-4">
                         <ModuleCard {...module} />
                     </div>

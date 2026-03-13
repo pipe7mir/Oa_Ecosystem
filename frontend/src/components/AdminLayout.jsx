@@ -53,7 +53,9 @@ const AdminLayout = () => {
         { to: '/admin/users', label: 'Equipo', Icon: Users, adminOnly: true },
     ];
 
-    const links = allLinks.filter(l => !l.adminOnly || role === 'admin');
+    // Verificación robusta de rol de administrador
+    const isUserAdmin = role === 'admin' || user?.role === 'admin';
+    const links = allLinks.filter(l => !l.adminOnly || isUserAdmin);
 
     const sidebarWidth = isCollapsed ? '90px' : '280px';
 
